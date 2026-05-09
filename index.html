@@ -199,8 +199,11 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 <div class="pg" id="page-dre">
   <div class="ph"><div><div class="pt">DRE</div><div class="ps" id="sub-dre">—</div></div></div>
   <div class="g2">
-    <div class="cd"><div class="ch"><span class="ct">Sorveteria</span></div><div class="cb" id="dre-sorv"></div></div>
-    <div class="cd"><div class="ch"><span class="ct">Particular</span></div><div class="cb" id="dre-part"></div></div>
+    <div class="cd"><div class="ch"><span class="ct">📊 Demonstrativo — Sorveteria</span></div><div class="cb" id="dre-sorv"></div></div>
+    <div>
+      <div class="cd" style="margin-bottom:16px;"><div class="ch"><span class="ct">💸 Detalhe por Categoria</span></div><div class="cb" id="dre-sorv-det"></div></div>
+      <div class="cd"><div class="ch"><span class="ct">🏠 Particular</span></div><div class="cb" id="dre-part"></div></div>
+    </div>
   </div>
 </div>
 
@@ -260,7 +263,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   </div>
   <div id="th-rec" style="display:none;">
     <div style="margin-bottom:10px;"><input id="srch-rec" class="fc" type="text" placeholder="🔍 Filtrar por competência, tipo, forma de pagamento..." oninput="renderTabelaRec(filtrar(ALL_REC))" style="max-width:480px;"></div>
-    <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Tipo</th><th>Forma</th><th>Tipo Pag.</th><th class="tx-r">Valor</th></tr></thead><tbody id="tbody-rec"></tbody></table></div></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Tipo</th><th>Forma</th><th>Tipo Pag.</th><th class="tx-r">Valor</th><th></th></tr></thead><tbody id="tbody-rec"></tbody></table></div></div>
   </div>
 </div>
 
@@ -280,18 +283,26 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   </div>
   <div id="th-desp" style="display:none;">
     <div style="margin-bottom:10px;"><input id="srch-desp" class="fc" type="text" placeholder="🔍 Filtrar por local, categoria, despesa..." oninput="renderTabelaDesp(filtrar(ALL_DESP))" style="max-width:480px;"></div>
-    <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Local</th><th>Tipo</th><th>Categoria</th><th>Despesa</th><th class="tx-r">Valor</th></tr></thead><tbody id="tbody-desp"></tbody></table></div></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Local</th><th>Tipo</th><th>Categoria</th><th>Despesa</th><th class="tx-r">Valor</th><th></th></tr></thead><tbody id="tbody-desp"></tbody></table></div></div>
   </div>
 </div>
 
 <!-- ===== PRODUÇÃO LANÇAMENTO ===== -->
 <div class="pg" id="page-producao-lanc">
   <div class="ph"><div><div class="pt">Lançamento de Produção</div></div></div>
-  <div class="fs2">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this,'tf-prod')">Novo Lançamento</button>
+    <button class="tab" onclick="switchTab(this,'th-prod')">Histórico Completo</button>
+  </div>
+  <div id="tf-prod" class="fs2">
     <div class="fg"><div class="fgr"><label class="fgl">Competência</label><input type="month" class="fc" id="prod-comp" value=""></div><div class="fgr"><label class="fgl">Data</label><input type="date" class="fc" id="prod-data" onchange="updDia('prod')"></div></div>
     <div class="fg fg3"><div class="fgr"><label class="fgl">Dia da Semana</label><input type="text" class="fc" id="prod-dia" readonly style="color:var(--mu)"></div><div class="fgr"><label class="fgl">Sabor</label><select class="fc" id="prod-sabor"></select></div><div class="fgr"><label class="fgl">Litros</label><input type="number" class="fc" id="prod-lts" value="10" step="5"></div></div>
     <div class="fg"><div class="fgr"><label class="fgl">Quantidade (tachos)</label><input type="number" class="fc" id="prod-qtd" value="1"></div></div>
     <div class="fa"><button class="btn btn-p" onclick="salvarProd()">💾 Salvar</button></div>
+  </div>
+  <div id="th-prod" style="display:none;">
+    <div style="margin-bottom:10px;"><input id="srch-prod-lanc" class="fc" type="text" placeholder="🔍 Filtrar por sabor, data..." oninput="renderTabelaProd(filtrar(ALL_PROD))" style="max-width:480px;"></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Produção</span><span class="chip" id="chip-prod-lanc">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Sabor</th><th>Litros</th><th>Qtd</th><th></th></tr></thead><tbody id="tbody-prod-lanc"></tbody></table></div></div>
   </div>
 </div>
 
@@ -335,12 +346,27 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 </main>
 <div class="toast" id="toast"></div>
 
+<!-- ===== MODAL DE EDIÇÃO ===== -->
+<div id="edit-modal" onclick="if(event.target===this)closeEditModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:24px;width:520px;max-width:95vw;max-height:92vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-family:'DM Serif Display',serif;font-size:18px;" id="edit-modal-title">Editar</div>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:20px;line-height:1;">✕</button>
+    </div>
+    <div id="edit-modal-body"></div>
+    <div class="fa" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--bd);">
+      <button class="btn btn-p" onclick="saveEdit()">💾 Salvar Alterações</button>
+      <button class="btn btn-g" onclick="closeEditModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ================================================================
 //  COLE AQUI A URL DO SEU APPS SCRIPT (termina em /exec)
 //  Exemplo: https://script.google.com/macros/s/AKfy.../exec
 // ================================================================
-const API = 'https://script.google.com/macros/s/AKfycbxCuzvNipvqHFkUdBngbeHW0KWg5ASgl5VlR7bPJI3JRdBvFmsk4IXZ5M7kHx8oTg04fA/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxNk3kWP2dNDUL6keXpTTNHAVlSgcnD7J4SkFYPLoaRWKC5TVNFVA7CnjKGMR2nXf-Njg/exec';
 
 // Meses em português
 const PT_MONTHS={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
@@ -401,11 +427,9 @@ function normComp(v){
   if(m){const mn=PT_MONTHS[(m[1]||'').toLowerCase().slice(0,3)];if(mn){const yr=m[2].length===2?'20'+m[2]:m[2];return yr+'-'+String(mn).padStart(2,'0');}}
   return s.slice(0,7);
 }
-function toRec(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_tipo:(r.DS_MOVIMENTACAO||r.TIPO||'').trim(),_forma:r.DS_FORMA_PAGAMENTO||r.FORMA_PAGAMENTO||'',_tipag:r.DS_TIPO_PAGAMENTO||r.TIPO_PAGAMENTO||'',_val:pVal(r.VALOR),_raw:r};}
-function toDesp(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_local:(r.DS_LOCAL||r.LOCAL||'').trim(),_cc:r.DS_CENTRO_CUSTO||r.CENTRO_CUSTO||'',_tipo:(r.DS_TIPO_DESPESA||r.TIPO||'').trim(),_cat:r.DS_CATEGORIA_DESPESA||'',_desp:r.DS_DESPESA||'',_val:pVal(r.VALOR),_raw:r};}
-function toProd(r){
-  return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_sabor:r.DS_SABOR||r.SABOR||'',_lts:pVal(r.LITROS),_qtd:parseInt(r.QUANTIDADE)||1,_raw:r};
-}
+function toRec(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_tipo:(r.DS_MOVIMENTACAO||r.TIPO||'').trim(),_forma:r.DS_FORMA_PAGAMENTO||r.FORMA_PAGAMENTO||'',_tipag:r.DS_TIPO_PAGAMENTO||r.TIPO_PAGAMENTO||'',_val:pVal(r.VALOR),_row:parseInt(r._ROW)||0,_raw:r};}
+function toDesp(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_local:(r.DS_LOCAL||r.LOCAL||'').trim(),_cc:r.DS_CENTRO_CUSTO||r.CENTRO_CUSTO||'',_tipo:(r.DS_TIPO_DESPESA||r.TIPO||'').trim(),_cat:r.DS_CATEGORIA_DESPESA||'',_desp:r.DS_DESPESA||'',_val:pVal(r.VALOR),_row:parseInt(r._ROW)||0,_raw:r};}
+function toProd(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_sabor:r.DS_SABOR||r.SABOR||'',_lts:pVal(r.LITROS),_qtd:parseInt(r.QUANTIDADE)||1,_row:parseInt(r._ROW)||0,_raw:r};}
 
 // ── Filtros ───────────────────────────────────────────────────
 function getAno(){return document.getElementById('filtro-ano').value;}
@@ -500,6 +524,7 @@ function renderPage(p,REC,DESP,PROD){
   else if(p==='producao-dash'){renderProdDash(PROD);}
   else if(p==='receitas'){renderTabelaRec(REC);}
   else if(p==='despesas'){renderTabelaDesp(DESP);}
+  else if(p==='producao-lanc'){renderTabelaProd(PROD);}
 }
 
 function renderKPIs(REC,DESP,PROD){
@@ -575,16 +600,62 @@ function renderDespCats(DESP){
 }
 
 function renderDRE(REC,DESP){
-  const recB=soma(REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';}));
-  const dS=DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';}),bT={};
-  dS.forEach(function(d){const k=d._cat||d._tipo||'Outros';bT[k]=(bT[k]||0)+d._val;});
-  const row=function(r){return'<div class="dr '+(r.cls||'')+' '+(r.i?'ind':'')+'"><span>'+r.l+'</span>'+(r.v!=null?'<span class="fm '+(r.v<0?'tx-rd':r.v>0?'tx-gn':'')+'">'+(r.v<0?'('+brl(-r.v)+')':brl(r.v))+'</span>':'')+'</div>';};
-  const sortedS=Object.entries(bT).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{l:x[0],v:-x[1],i:true};});
-  document.getElementById('dre-sorv').innerHTML=[{l:'RECEITA OPERACIONAL BRUTA',v:null,cls:'sec'},{l:'(+) Receita Bruta',v:recB,i:true},{l:'DEDUÇÕES E DESPESAS',v:null,cls:'sec'}].concat(sortedS).concat([{l:'RESULTADO LÍQUIDO',v:recB-soma(dS),cls:'tot'}]).map(row).join('');
-  const dP=DESP.filter(function(d){return(d._local||'').toUpperCase()==='PARTICULAR';}),bP={};
-  dP.forEach(function(d){bP[d._tipo]=(bP[d._tipo]||0)+d._val;});
+  // ── Medidas (igual ao Power BI) ─────────────────────────────
+  const rob=soma(REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';}));
+  const taxas=0; // TAXA SOBRE VENDA — não disponível na planilha atual
+  const rlo=rob-taxas;
+
+  const dSorv=DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';});
+  // Classifica por categoria: PRODUÇÃO / OPERACIONAL / ADMINISTRATIVA
+  const catMatch=function(d,kw){return(d._cat||d._tipo||'').toUpperCase().indexOf(kw)>=0;};
+  const vProd=soma(dSorv.filter(function(d){return catMatch(d,'PRODU');}));
+  const vOper=soma(dSorv.filter(function(d){return catMatch(d,'OPERA');}));
+  const vAdm =soma(dSorv.filter(function(d){return catMatch(d,'ADMINI');}));
+  // Despesas não categorizadas (Outros)
+  const vOutros=soma(dSorv.filter(function(d){return!catMatch(d,'PRODU')&&!catMatch(d,'OPERA')&&!catMatch(d,'ADMINI');}));
+  const vTotDesp=vProd+vOper+vAdm+vOutros;
+  const lucBruto=rlo-vProd-vOper;   // RLO − custos variáveis
+  const resultado=rlo-vTotDesp;
+  const mgm=rob>0?resultado/rob*100:0;
+
+  const row=function(r){
+    const vc=r.v!=null?(r.v<0?'tx-rd':r.v>0?'tx-gn':'tx-mu'):'';
+    const vf=r.v!=null?'<span class="fm '+vc+'">'+(r.v<0?'('+brl(-r.v)+')':brl(r.v))+'</span>':'';
+    return'<div class="dr '+(r.cls||'')+' '+(r.i?'ind':'')+'"><span>'+r.l+'</span>'+vf+'</div>';
+  };
+
+  // Detalhes por subcat dentro de Sorveteria
+  const subcatRows=[];
+  const subcats={};
+  dSorv.forEach(function(d){const k=d._cat||d._tipo||'Outros';subcats[k]=(subcats[k]||0)+d._val;});
+  Object.entries(subcats).sort(function(a,b){return b[1]-a[1];}).forEach(function(x){subcatRows.push({l:'    · '+x[0],v:-x[1],i:true});});
+
+  document.getElementById('dre-sorv').innerHTML=[
+    {l:'RECEITA',cls:'sec'},
+    {l:'(+) Receita Bruta Operacional (ROB)',v:rob,i:true},
+    {l:'(-) Impostos / Taxas sobre Vendas',v:-taxas,i:true},
+    {l:'(=) Receita Líquida Operacional',v:rlo,cls:'tot'},
+    {l:'DEDUÇÕES',cls:'sec'},
+    {l:'(-) Despesas Variáveis de Produção',v:-vProd,i:true},
+    {l:'(-) Despesas Variáveis Operacional',v:-vOper,i:true},
+    {l:'(=) Lucro Bruto',v:lucBruto,cls:'tot'},
+    {l:'(-) Despesas Administrativas',v:-vAdm,i:true},
+    vOutros>0?{l:'(-) Outras Despesas',v:-vOutros,i:true}:null,
+    {l:'(=) Total Deduções',v:-vTotDesp,cls:'tot'},
+    {l:'RESULTADO LÍQUIDO',v:resultado,cls:'tot'},
+    {l:'Margem: '+mgm.toFixed(1)+'%',cls:'sec'},
+  ].filter(Boolean).map(row).join('');
+
+  // Detalhes das subcategorias em card separado
+  const detEl=document.getElementById('dre-sorv-det');
+  if(detEl)detEl.innerHTML=subcatRows.map(row).join('');
+
+  // ── Particular ──────────────────────────────────────────────
+  const dPart=DESP.filter(function(d){return(d._local||'').toUpperCase()==='PARTICULAR';});
+  const bP={};
+  dPart.forEach(function(d){bP[d._cat||d._tipo||'Outros']=(bP[d._cat||d._tipo||'Outros']||0)+d._val;});
   const sortedP=Object.entries(bP).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{l:x[0],v:-x[1],i:true};});
-  document.getElementById('dre-part').innerHTML=[{l:'DESPESAS PESSOAIS',v:null,cls:'sec'}].concat(sortedP).concat([{l:'TOTAL DESPESAS PARTICULARES',v:-soma(dP),cls:'tot'}]).map(row).join('');
+  document.getElementById('dre-part').innerHTML=[{l:'DESPESAS PESSOAIS',cls:'sec'}].concat(sortedP).concat([{l:'TOTAL DESPESAS PARTICULARES',v:-soma(dPart),cls:'tot'}]).map(row).join('');
 }
 
 // ── Produção Avançada ─────────────────────────────────────────
@@ -813,14 +884,25 @@ function renderTabelaRec(REC){
   const tb=document.getElementById('tbody-rec');if(!tb)return;
   const q=(document.getElementById('srch-rec')||{}).value||'';
   const filtRec=q?REC.filter(function(r){const t=(r._comp+r._data+r._tipo+r._forma+r._tipag).toLowerCase();return t.indexOf(q.toLowerCase())>=0;}):REC;
-  tb.innerHTML=filtRec.length?filtRec.map(function(r){return'<tr><td class="tx-mu fm">'+r._comp+'</td><td>'+fData(r._data)+'</td><td class="tx-mu">'+r._dia+'</td><td><span class="bge bg-gn">'+(r._tipo||'—')+'</span></td><td>'+(r._forma||'—')+'</td><td><span class="bge bg-bl">'+(r._tipag||'—')+'</span></td><td class="tx-r tx-gn fm">'+brl(r._val)+'</td></tr>';}).join(''):'<tr><td colspan="7" class="empty">Nenhum resultado</td></tr>';
+  // Guarda snapshot para edição
+  window._REC_SNAP=filtRec;
+  tb.innerHTML=filtRec.length?filtRec.map(function(r,i){return'<tr><td class="tx-mu fm">'+r._comp+'</td><td>'+fData(r._data)+'</td><td class="tx-mu">'+r._dia+'</td><td><span class="bge bg-gn">'+(r._tipo||'—')+'</span></td><td>'+(r._forma||'—')+'</td><td><span class="bge bg-bl">'+(r._tipag||'—')+'</span></td><td class="tx-r tx-gn fm">'+brl(r._val)+'</td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditRec('+i+')">✏️</button></td></tr>';}).join(''):'<tr><td colspan="8" class="empty">Nenhum resultado</td></tr>';
 }
 function renderTabelaDesp(DESP){
   const ch=document.getElementById('chip-desp');if(ch)ch.textContent='Total Sorveteria: '+brl(soma(DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';})))+' ('+DESP.length+' lançamentos)';
   const tb=document.getElementById('tbody-desp');if(!tb)return;
   const q=(document.getElementById('srch-desp')||{}).value||'';
   const filtDesp=q?DESP.filter(function(d){const t=(d._comp+d._data+d._local+d._tipo+d._cc).toLowerCase();return t.indexOf(q.toLowerCase())>=0;}):DESP;
-  tb.innerHTML=filtDesp.length?filtDesp.map(function(d){const loc=(d._local||'').toUpperCase();return'<tr><td class="tx-mu fm">'+d._comp+'</td><td>'+fData(d._data)+'</td><td class="tx-mu">'+d._dia+'</td><td><span class="bge '+(loc==='SORVETERIA'?'bg-yw':'bg-bl')+'">'+(d._local||'—')+'</span></td><td class="tx-mu">'+(d._tipo||'—')+'</td><td>'+(d._cat||'—')+'</td><td>'+(d._desp||'—')+'</td><td class="tx-r tx-rd fm">'+brl(d._val)+'</td></tr>';}).join(''):'<tr><td colspan="8" class="empty">Nenhum resultado</td></tr>';
+  window._DESP_SNAP=filtDesp;
+  tb.innerHTML=filtDesp.length?filtDesp.map(function(d,i){const loc=(d._local||'').toUpperCase();return'<tr><td class="tx-mu fm">'+d._comp+'</td><td>'+fData(d._data)+'</td><td class="tx-mu">'+d._dia+'</td><td><span class="bge '+(loc==='SORVETERIA'?'bg-yw':'bg-bl')+'">'+(d._local||'—')+'</span></td><td class="tx-mu">'+(d._tipo||'—')+'</td><td>'+(d._cat||'—')+'</td><td>'+(d._desp||'—')+'</td><td class="tx-r tx-rd fm">'+brl(d._val)+'</td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditDesp('+i+')">✏️</button></td></tr>';}).join(''):'<tr><td colspan="9" class="empty">Nenhum resultado</td></tr>';
+}
+function renderTabelaProd(PROD){
+  const ch=document.getElementById('chip-prod-lanc');if(ch)ch.textContent='Total: '+PROD.length+' lotes';
+  const tb=document.getElementById('tbody-prod-lanc');if(!tb)return;
+  const q=(document.getElementById('srch-prod-lanc')||{}).value||'';
+  const filtP=q?PROD.filter(function(p){return(p._sabor+p._data+p._dia).toLowerCase().indexOf(q.toLowerCase())>=0;}):PROD;
+  window._PROD_SNAP=filtP;
+  tb.innerHTML=filtP.length?filtP.map(function(p,i){return'<tr><td class="tx-mu fm">'+p._comp+'</td><td>'+fData(p._data)+'</td><td class="tx-mu">'+p._dia+'</td><td>'+(p._sabor||'—')+'</td><td class="tx-yw fm">'+p._lts+'L</td><td class="tx-mu">'+p._qtd+'</td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditProd('+i+')">✏️</button></td></tr>';}).join(''):'<tr><td colspan="7" class="empty">Nenhum resultado</td></tr>';
 }
 
 // ── Salvar ────────────────────────────────────────────────────
@@ -891,22 +973,69 @@ function renderCadList(sheet,dsField,listId,chipId){
   const rows=CAD_DATA[sheet]||[];
   const chip=document.getElementById(chipId);if(chip)chip.textContent=rows.length+' registros';
   const el=document.getElementById(listId);if(!el)return;
-  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Status</th></tr></thead><tbody>'+
+  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Status</th><th></th></tr></thead><tbody>'+
     rows.map(function(r,i){
       const nm=r[dsField]||'—';
       const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
-      return'<tr><td class="tx-mu">'+(i+1)+'</td><td>'+nm+'</td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td></tr>';
+      const rowNum=parseInt(r._ROW)||0;
+      return'<tr><td class="tx-mu">'+(i+1)+'</td><td>'+nm+'</td>'+
+        '<td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td>'+
+        '<td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleAtivoCad(\''+sheet+'\','+rowNum+',\''+dsField+'\','+i+')">'+
+        (ativo?'⛔ Inativar':'✅ Ativar')+'</button></td></tr>';
     }).join('')+'</tbody></table>':'<p class="empty">Sem registros</p>';
 }
 function renderCadFuncionarios(){
   const rows=CAD_DATA['CAD_FUNCIONARIO']||[];
   const chip=document.getElementById('chip-cad-func');if(chip)chip.textContent=rows.length+' registros';
   const el=document.getElementById('list-cad-func');if(!el)return;
-  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Cargo</th><th>Status</th></tr></thead><tbody>'+
+  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Cargo</th><th>Status</th><th></th></tr></thead><tbody>'+
     rows.map(function(r,i){
       const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
-      return'<tr><td class="tx-mu">'+(i+1)+'</td><td>'+r.DS_FUNCIONARIO+'</td><td class="tx-mu">'+r.CARGO_FUNCIONARIO+'</td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td></tr>';
+      const rowNum=parseInt(r._ROW)||0;
+      return'<tr><td class="tx-mu">'+(i+1)+'</td><td>'+(r.DS_FUNCIONARIO||'—')+'</td><td class="tx-mu">'+(r.CARGO_FUNCIONARIO||'—')+'</td>'+
+        '<td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td>'+
+        '<td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleAtivoFunc('+rowNum+','+i+')">'+
+        (ativo?'⛔ Inativar':'✅ Ativar')+'</button></td></tr>';
     }).join('')+'</tbody></table>':'<p class="empty">Sem registros</p>';
+}
+async function toggleAtivoCad(sheet,rowNum,dsField,idx){
+  if(!rowNum||rowNum<2){showToast('Linha inválida — recarregue os dados','error');return;}
+  const rows=CAD_DATA[sheet]||[];
+  const r=rows[idx];if(!r)return;
+  const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
+  const newAtivo=ativo?'FALSE':'TRUE';
+  setSS('💾 Salvando...');
+  try{
+    const res=await api({action:'update',sheet:sheet,rowNum:rowNum,data:encodeURIComponent(JSON.stringify({ATIVO:newAtivo}))});
+    if(res.ok){
+      showToast((newAtivo==='TRUE'?'Ativado':'Inativado')+' ✅','success');
+      delete CAD_DATA[sheet];
+      await loadCad(sheet);
+      // Refaz o render da tab atual
+      const activeTab=document.querySelector('.cad-tab[style*="block"]');
+      if(activeTab)renderCadTab(activeTab.id);
+      populateFormDropdowns();
+    }else showToast('Erro: '+(res.error||''),'error');
+  }catch(e){showToast('Erro ao atualizar','error');}
+  setSS('✅');
+}
+async function toggleAtivoFunc(rowNum,idx){
+  if(!rowNum||rowNum<2){showToast('Linha inválida — recarregue os dados','error');return;}
+  const rows=CAD_DATA['CAD_FUNCIONARIO']||[];
+  const r=rows[idx];if(!r)return;
+  const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
+  const newAtivo=ativo?'FALSE':'TRUE';
+  setSS('💾 Salvando...');
+  try{
+    const res=await api({action:'update',sheet:'CAD_FUNCIONARIO',rowNum:rowNum,data:encodeURIComponent(JSON.stringify({ATIVO:newAtivo}))});
+    if(res.ok){
+      showToast((newAtivo==='TRUE'?'Ativado':'Inativado')+' ✅','success');
+      delete CAD_DATA['CAD_FUNCIONARIO'];
+      await loadCad('CAD_FUNCIONARIO');
+      renderCadFuncionarios();
+    }else showToast('Erro: '+(res.error||''),'error');
+  }catch(e){showToast('Erro ao atualizar','error');}
+  setSS('✅');
 }
 async function salvarCad(sheet,field,inputId){
   const val=document.getElementById(inputId).value.trim().toUpperCase();
@@ -945,6 +1074,113 @@ async function salvarFuncionario(){
       delete CAD_DATA['CAD_FUNCIONARIO'];
       await loadCad('CAD_FUNCIONARIO');
       renderCadFuncionarios();
+    }else showToast('Erro: '+(r.error||''),'error');
+  }catch(e){showToast('Erro ao salvar','error');}
+  setSS('✅');
+}
+
+// ── Modal de Edição ───────────────────────────────────────────
+let _editCtx=null;
+
+function closeEditModal(){
+  document.getElementById('edit-modal').style.display='none';
+  _editCtx=null;
+}
+function _opt(list,cur){return list.map(function(o){return'<option'+(o===cur?' selected':'')+'>'+o+'</option>';}).join('');}
+function _field(lbl,el){return'<div class="fgr" style="margin-bottom:10px;"><label class="fgl">'+lbl+'</label>'+el+'</div>';}
+
+function openEditRec(idx){
+  const r=(window._REC_SNAP||[])[idx];if(!r)return;
+  _editCtx={type:'REC',row:r._row,sheet:'RECEITAS'};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Receita';
+  const tipoOpts=['ENTRADA','SAÍDA (RESGATE)','COFRINHO'];
+  document.getElementById('edit-modal-body').innerHTML=
+    '<div class="fg">'+
+    _field('Competência','<input type="month" class="fc" id="ed-comp" value="'+r._comp+'">')+
+    _field('Data','<input type="date" class="fc" id="ed-data" value="'+r._data+'" onchange="updDia_ed()">')+
+    '</div>'+
+    '<div class="fg">'+
+    _field('Dia da Semana','<input type="text" class="fc" id="ed-dia" value="'+r._dia+'" readonly style="color:var(--mu)">')+
+    _field('Tipo','<select class="fc" id="ed-tipo">'+_opt(tipoOpts,r._tipo)+'</select>')+
+    '</div>'+
+    '<div class="fg">'+
+    _field('Forma de Pagamento','<input type="text" class="fc" id="ed-forma" value="'+r._forma+'">')+
+    _field('Tipo de Pagamento','<input type="text" class="fc" id="ed-tipag" value="'+r._tipag+'">')+
+    '</div>'+
+    _field('Valor (R$)','<input type="number" class="fc" id="ed-val" value="'+r._val+'" step="0.01">');
+  document.getElementById('edit-modal').style.display='flex';
+}
+function openEditDesp(idx){
+  const d=(window._DESP_SNAP||[])[idx];if(!d)return;
+  _editCtx={type:'DESP',row:d._row,sheet:'DESPESAS'};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Despesa';
+  const localOpts=['SORVETERIA','PARTICULAR'];
+  const tipoOpts=['VARIÁVEL','FIXA'];
+  const catOpts=['OPERACIONAL','PRODUÇÃO','ADMINISTRATIVA','PARTICULAR'];
+  document.getElementById('edit-modal-body').innerHTML=
+    '<div class="fg">'+
+    _field('Competência','<input type="month" class="fc" id="ed-comp" value="'+d._comp+'">')+
+    _field('Data','<input type="date" class="fc" id="ed-data" value="'+d._data+'" onchange="updDia_ed()">')+
+    '</div>'+
+    '<div class="fg">'+
+    _field('Dia da Semana','<input type="text" class="fc" id="ed-dia" value="'+d._dia+'" readonly style="color:var(--mu)">')+
+    _field('Local','<select class="fc" id="ed-local">'+_opt(localOpts,d._local)+'</select>')+
+    '</div>'+
+    '<div class="fg">'+
+    _field('Tipo','<select class="fc" id="ed-tipo">'+_opt(tipoOpts,d._tipo)+'</select>')+
+    _field('Categoria','<select class="fc" id="ed-cat">'+_opt(catOpts,d._cat)+'</select>')+
+    '</div>'+
+    _field('Despesa / Fornecedor','<input type="text" class="fc" id="ed-desp" value="'+d._desp+'">')+
+    _field('Valor (R$)','<input type="number" class="fc" id="ed-val" value="'+d._val+'" step="0.01">');
+  document.getElementById('edit-modal').style.display='flex';
+}
+function openEditProd(idx){
+  const p=(window._PROD_SNAP||[])[idx];if(!p)return;
+  _editCtx={type:'PROD',row:p._row,sheet:'PRODUCAO'};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Produção';
+  const sabores=(CAD_DATA['CAD_SABORES']||[]).map(function(s){return s.DS_SABORES||'';}).filter(Boolean);
+  if(sabores.length===0)sabores.push(p._sabor);
+  document.getElementById('edit-modal-body').innerHTML=
+    '<div class="fg">'+
+    _field('Competência','<input type="month" class="fc" id="ed-comp" value="'+p._comp+'">')+
+    _field('Data','<input type="date" class="fc" id="ed-data" value="'+p._data+'" onchange="updDia_ed()">')+
+    '</div>'+
+    '<div class="fg">'+
+    _field('Dia da Semana','<input type="text" class="fc" id="ed-dia" value="'+p._dia+'" readonly style="color:var(--mu)">')+
+    _field('Sabor','<select class="fc" id="ed-sabor">'+_opt(sabores,p._sabor)+'</select>')+
+    '</div>'+
+    '<div class="fg">'+
+    _field('Litros','<input type="number" class="fc" id="ed-lts" value="'+p._lts+'" step="5">')+
+    _field('Quantidade (tachos)','<input type="number" class="fc" id="ed-qtd" value="'+p._qtd+'">')+
+    '</div>';
+  document.getElementById('edit-modal').style.display='flex';
+}
+function updDia_ed(){
+  const v=document.getElementById('ed-data').value;
+  if(!v)return;
+  const d=document.getElementById('ed-dia');
+  if(d)d.value=DS[new Date(v+'T12:00:00').getDay()];
+}
+function gv(id){const el=document.getElementById(id);return el?el.value:'';}
+async function saveEdit(){
+  if(!_editCtx)return;
+  const rowNum=_editCtx.row;
+  if(!rowNum||rowNum<2){showToast('Linha inválida — recarregue os dados','error');return;}
+  let data={};
+  if(_editCtx.type==='REC'){
+    data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_MOVIMENTACAO:gv('ed-tipo'),DS_FORMA_PAGAMENTO:gv('ed-forma'),DS_TIPO_PAGAMENTO:gv('ed-tipag'),VALOR:parseFloat(gv('ed-val'))||0};
+  }else if(_editCtx.type==='DESP'){
+    data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_LOCAL:gv('ed-local'),DS_TIPO_DESPESA:gv('ed-tipo'),DS_CATEGORIA_DESPESA:gv('ed-cat'),DS_DESPESA:gv('ed-desp'),VALOR:parseFloat(gv('ed-val'))||0};
+  }else if(_editCtx.type==='PROD'){
+    data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_SABOR:gv('ed-sabor'),LITROS:parseFloat(gv('ed-lts'))||0,QUANTIDADE:parseInt(gv('ed-qtd'))||1};
+  }
+  setSS('💾 Salvando...');
+  try{
+    const r=await api({action:'update',sheet:_editCtx.sheet,rowNum:rowNum,data:encodeURIComponent(JSON.stringify(data))});
+    if(r.ok){
+      showToast('Alteração salva ✅','success');
+      closeEditModal();
+      syncAll(true);
     }else showToast('Erro: '+(r.error||''),'error');
   }catch(e){showToast('Erro ao salvar','error');}
   setSS('✅');
