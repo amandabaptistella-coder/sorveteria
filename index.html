@@ -238,6 +238,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   </div>
   <div class="cd">
     <div class="ch"><span class="ct">Histórico Detalhado</span><span class="chip" id="prod-total-chip">—</span></div>
+    <div style="padding:10px 18px 0;"><input id="srch-prod" class="fc" type="text" placeholder="🔍 Filtrar por sabor, data..." oninput="_renderProdHist(filtrar(ALL_PROD))" style="max-width:360px;"></div>
     <div class="tsc"><table><thead><tr><th>Data</th><th>Dia</th><th>Sabor</th><th>Litros</th><th>Qtd</th></tr></thead><tbody id="tbody-prod-hist"></tbody></table></div>
   </div>
 </div>
@@ -256,6 +257,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarRec()">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('rec-val').value=''">Limpar</button></div>
   </div>
   <div id="th-rec" style="display:none;">
+    <div style="margin-bottom:10px;"><input id="srch-rec" class="fc" type="text" placeholder="🔍 Filtrar por competência, tipo, forma de pagamento..." oninput="renderTabelaRec(filtrar(ALL_REC))" style="max-width:480px;"></div>
     <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Tipo</th><th>Forma</th><th>Tipo Pag.</th><th class="tx-r">Valor</th></tr></thead><tbody id="tbody-rec"></tbody></table></div></div>
   </div>
 </div>
@@ -274,6 +276,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarDesp()">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('desp-val').value=''">Limpar</button></div>
   </div>
   <div id="th-desp" style="display:none;">
+    <div style="margin-bottom:10px;"><input id="srch-desp" class="fc" type="text" placeholder="🔍 Filtrar por local, tipo, centro de custo..." oninput="renderTabelaDesp(filtrar(ALL_DESP))" style="max-width:480px;"></div>
     <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Local</th><th>Tipo</th><th>Centro de Custo</th><th class="tx-r">Valor</th></tr></thead><tbody id="tbody-desp"></tbody></table></div></div>
   </div>
 </div>
@@ -298,7 +301,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 //  Exemplo: https://script.google.com/macros/s/AKfy.../exec
 // ================================================================
 const API = 'https://script.google.com/macros/s/AKfycbzhAIEbC1BO9lQ5FrQckFwFnTqFrH55rnZDyIbwzxtY1P6R_g3j9rZYispVZvF05dl_fA/exec';
- 
+
 const SABORES=['ABACAXI','ABACAXI AO VINHO','ABACAXI C/ HORTELÃ','AÇAÍ','ACEROLA C/ LARANJA','AMARO','AMARO SEM LACTOSE','AMEIXA','BANOFFE','BRIGADEIRO','CAJAMANGA','CAJÚ','CAMAFEU','CAPUCCINO','CEREJA','CÉU AZUL','CHEESE CAKE','CHOCOFEU','CHOCOLATE','CHOCOLATE DUBAI','CHOCONINHO','COCO BRANCO','COCO QUEIMADO','COCO SEM LACTOSE','CREME','DELICIA DE COCO','DIPLOMATA','DOCE LEITE','FERRERO ROCHER','FIOR DI LATTE PISTACH','FLOCOS','FLORESTA NEGRA','FRUTAS VERMELHAS','GOIABA','IOGURTE AMARENA','IOGURTE LARANJA','KINDER OVO','LAKA','LEITE CONDENSADO','LEITE NINHO','LEITE NINHO TRUFADO','LIMÃO','LUA DE MEL','MAMÃO','MANGA','MANJAR','MARACUJÁ','MELANCIA','MELÃO','MENTA','MERENGUE','MILHO','MORANGO','MORANGO S/ LACT','MORANGO TRUFADO','MORANGUINHO','NATA','OURO BRANCO DUBAI','PASSAS AO RUM'];
 const CC_S=['ADRIPAN','ÁGUA PALMARES','ALFA TRIGOS','ALIMENT. FORA','ALUGUEL','AMENDO HEALTHY','AQUISIÇÃO IMOBILIZADOS','ARIANE','BEATRIZ','BEBIDAS / ÁGUA','CARLA','CASA BRASIL','CASA DA MUSSARELA','CENTER PÃES','CERTIFICADO DIGITAL','DICOPEL','DINIZ DISTRIBUIDORA','DOCES SÃO LUIS','EMP. DOS FRIOS','EMPRESTIMO CARTÃO','ENERGISA','ENFASIS SISTEMA','ESCRIT.CONTABILIDADE','FGTS FUNCIONÁRIOS','FREE LANCER','FRUTAS','GEORDANA','HIGIENE / LIMPEZA','ICEFEST','INSS FUNCIONÁRIOS','INSS PRÓ LABORE','JHENNIFER','JÚNIOR','LATICINIO S.GABRIEL','MANUTENÇÃO','MESSIAS','MGM DISTRIBUIDORA','MIRA DISTRIBUIDORA','MONIQUE','NOTEBOOK SORVET','PICOLÉ','PREFEITURA / TAXAS','PRÓ LABORE ALE','PRÓ LABORE ANGELA','PROVISÃO 13° SALÁRIO','REI DO A GRANEL','SAEC','SANTANDER SEGURO'];
 const CC_P=['ACADEMIA','AÇOUGUE','ÁGUA','ALIMENT. FORA','ALUGUEL','CACHORROS','CARRO','CELULAR','ENERGIA','ESPORTE/ACADEMIA','FARMÁCIA','GASTOS PARTIC.','INTERNET','MÉDICO','MERCADO/AÇOUGUE/PADARIA','MOTO','PADARIA','PEDÁGIO','PSICOLOGA','RAÇÃO / REMÉDIO','SAEC','SANTANDER / TARIFAS','SUPERMERCADO','TIM','VETERINÁRIO','VIAGEM'];
@@ -343,9 +346,22 @@ const brl=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFract
 const fData=function(d){const i=pData(d);if(!i)return d||'';const p=i.split('-');return p[2]+'/'+p[1]+'/'+p[0];};
 const soma=function(arr){return arr.reduce(function(s,r){return s+r._val;},0);};
 
-function toRec(r){return{_comp:r.COMPETENCIA||'',_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_tipo:r.TIPO||'',_forma:r.FORMA_PAGAMENTO||'',_tipag:r.TIPO_PAGAMENTO||'',_val:pVal(r.VALOR),_raw:r};}
-function toDesp(r){return{_comp:r.COMPETENCIA||'',_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_local:r.LOCAL||'',_tipo:r.TIPO||'',_cc:r.CENTRO_CUSTO||'',_val:pVal(r.VALOR),_raw:r};}
-function toProd(r){return{_comp:r.COMPETENCIA||'',_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_sabor:r.SABOR||'',_lts:pVal(r.LITROS),_qtd:parseInt(r.QUANTIDADE)||1,_raw:r};}
+function normComp(v){
+  if(!v)return'';
+  const s=String(v).trim();
+  if(/^\d{4}-\d{2}/.test(s))return s.slice(0,7);           // AAAA-MM ou AAAA-MM-DD
+  if(/^\d{2}\/\d{4}$/.test(s))return s.slice(3)+'-'+s.slice(0,2); // MM/AAAA
+  if(/^\d{2}\/\d{2}\/\d{4}/.test(s))return s.slice(6,10)+'-'+s.slice(3,5); // DD/MM/AAAA
+  return s.slice(0,7);
+}
+function toRec(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_tipo:(r.TIPO||'').trim(),_forma:r.FORMA_PAGAMENTO||'',_tipag:r.TIPO_PAGAMENTO||'',_val:pVal(r.VALOR),_raw:r};}
+function toDesp(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_local:(r.LOCAL||'').trim(),_tipo:(r.TIPO||'').trim(),_cc:r.CENTRO_CUSTO||'',_val:pVal(r.VALOR),_raw:r};}
+function toProd(r){
+  const sabor=r.SABOR||r['Sabor']||r.PRODUTO||r['Produto']||r.FLAVOR||r['sabor']||'';
+  const lts=pVal(r.LITROS||r['Litros']||r.VOLUME||0);
+  const qtd=parseInt(r.QUANTIDADE||r['Quantidade']||r.QTD||r.TACHOS||1)||1;
+  return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_sabor:sabor,_lts:lts,_qtd:qtd,_raw:r};
+}
 
 // ── Filtros ───────────────────────────────────────────────────
 function getAno(){return document.getElementById('filtro-ano').value;}
@@ -421,34 +437,38 @@ function onAnoChange(){renderAll();}
 function onFiltroChange(){renderAll();}
 
 // ── Render ────────────────────────────────────────────────────
+function getActivePage(){
+  const el=document.querySelector('.pg.active');
+  return el?el.id.replace('page-',''):'dashboard';
+}
 function renderAll(){
   const REC=filtrar(ALL_REC),DESP=filtrar(ALL_DESP),PROD=filtrar(ALL_PROD);
   const lbl=labelFiltro();
   document.getElementById('sub-dash').textContent=lbl;
   document.getElementById('sub-dre').textContent='DRE · '+lbl;
   document.getElementById('sub-prod').textContent=lbl;
-  renderKPIs(REC,DESP,PROD);
-  renderBarChart(REC,DESP);
-  renderDonut(REC);
-  renderRecentes(REC,DESP);
-  renderDespCats(DESP);
-  renderDRE(REC,DESP);
-  renderProdDash(PROD);
-  renderTabelaRec(REC);
-  renderTabelaDesp(DESP);
+  renderPage(getActivePage(),REC,DESP,PROD);
+}
+function renderPage(p,REC,DESP,PROD){
+  if(!REC){REC=filtrar(ALL_REC);DESP=filtrar(ALL_DESP);PROD=filtrar(ALL_PROD);}
+  if(p==='dashboard'){renderKPIs(REC,DESP,PROD);renderBarChart(REC,DESP);renderDonut(REC);renderRecentes(REC,DESP);renderDespCats(DESP);}
+  else if(p==='dre'){renderDRE(REC,DESP);}
+  else if(p==='producao-dash'){renderProdDash(PROD);}
+  else if(p==='receitas'){renderTabelaRec(REC);}
+  else if(p==='despesas'){renderTabelaDesp(DESP);}
 }
 
 function renderKPIs(REC,DESP,PROD){
-  const recT=soma(REC.filter(function(r){return r._tipo==='ENTRADA';}));
-  const dspT=soma(DESP.filter(function(d){return d._local==='SORVETERIA';}));
+  const recT=soma(REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';}));
+  const dspT=soma(DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';}));
   const res=recT-dspT,lts=PROD.reduce(function(s,p){return s+p._lts;},0),mg=recT>0?res/recT*100:0;
   const ano=getAno(),mes=getMes();
   let vR=null,vD=null;
   if(ano&&mes){
     const m=parseInt(mes),y=parseInt(ano);
     const pc=m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0');
-    const pRec=soma(ALL_REC.filter(function(r){return r._comp===pc&&r._tipo==='ENTRADA';}));
-    const pDsp=soma(ALL_DESP.filter(function(d){return d._comp===pc&&d._local==='SORVETERIA';}));
+    const pRec=soma(ALL_REC.filter(function(r){return r._comp===pc&&(r._tipo||'').toUpperCase()==='ENTRADA';}));
+    const pDsp=soma(ALL_DESP.filter(function(d){return d._comp===pc&&(d._local||'').toUpperCase()==='SORVETERIA';}));
     if(pRec>0)vR=(recT-pRec)/pRec*100;
     if(pDsp>0)vD=(dspT-pDsp)/pDsp*100;
   }
@@ -465,20 +485,27 @@ function renderKPIs(REC,DESP,PROD){
 
 function renderBarChart(REC,DESP){
   const map={};
-  REC.forEach(function(r){if(!r._comp)return;if(!map[r._comp])map[r._comp]={rc:0,ds:0};map[r._comp].rc+=r._val;});
-  DESP.filter(function(d){return d._local==='SORVETERIA';}).forEach(function(d){if(!d._comp)return;if(!map[d._comp])map[d._comp]={rc:0,ds:0};map[d._comp].ds+=d._val;});
+  REC.forEach(function(r){if(!r._comp||r._comp.length<7)return;const k=r._comp.slice(0,7);if(!map[k])map[k]={rc:0,ds:0};map[k].rc+=r._val;});
+  DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';}).forEach(function(d){if(!d._comp||d._comp.length<7)return;const k=d._comp.slice(0,7);if(!map[k])map[k]={rc:0,ds:0};map[k].ds+=d._val;});
   const meses=Object.keys(map).sort();
   const el=document.getElementById('bar-chart');
-  if(!meses.length){el.innerHTML='<span class="empty">Sem dados</span>';return;}
-  const show=meses.slice(-12);
-  const mx=Math.max.apply(null,show.reduce(function(a,c){return a.concat([map[c].rc,map[c].ds]);},[]));
-  el.innerHTML=show.map(function(c){const p=c.split('-');return'<div class="bg"><div class="bw"><div class="br rc" style="height:'+map[c].rc/mx*100+'%"></div><div class="br ds" style="height:'+map[c].ds/mx*100+'%"></div></div><div class="bl2">'+MN[parseInt(p[1])-1]+' '+p[0].slice(2)+'</div></div>';}).join('');
+  if(!meses.length){el.innerHTML='<p class="empty">Sem dados no período</p>';return;}
+  const show=meses.slice(-18);
+  const vals=show.reduce(function(a,c){return a.concat([map[c].rc,map[c].ds]);},[]);
+  const mx=Math.max.apply(null,vals.concat([1]));
+  el.innerHTML=show.map(function(c){
+    const p=c.split('-');
+    const lbl=MN[parseInt(p[1])-1]+'/'+p[0].slice(2);
+    const hRc=Math.max(2,map[c].rc/mx*100);
+    const hDs=Math.max(map[c].ds>0?2:0,map[c].ds/mx*100);
+    return'<div class="bg"><div class="bw"><div class="br rc" style="height:'+hRc+'%" title="Receita: R$ '+map[c].rc.toFixed(2)+'"></div><div class="br ds" style="height:'+hDs+'%" title="Despesa: R$ '+map[c].ds.toFixed(2)+'"></div></div><div class="bl2">'+lbl+'</div></div>';
+  }).join('');
 }
 
 function renderDonut(REC){
   const cores=['#5bbfa3','#e8a045','#5b8fbf','#a07fd4','#d4574a','#e87070','#70b8e8'];
   const map={};
-  REC.filter(function(r){return r._tipo==='ENTRADA';}).forEach(function(r){const f=r._forma||'Outros';map[f]=(map[f]||0)+r._val;});
+  REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';}).forEach(function(r){const f=r._forma||'Outros';map[f]=(map[f]||0)+r._val;});
   const dados=Object.entries(map).sort(function(a,b){return b[1]-a[1];}).map(function(x,i){return{l:x[0],v:x[1],c:cores[i%cores.length]};});
   const svg=document.getElementById('donut-svg'),leg=document.getElementById('donut-leg');
   if(!dados.length){svg.innerHTML='';leg.innerHTML='<span class="empty">Sem dados</span>';return;}
@@ -498,19 +525,19 @@ function renderRecentes(REC,DESP){
 function renderDespCats(DESP){
   const cores=['#5bbfa3','#e8a045','#5b8fbf','#a07fd4','#d4574a'];
   const map={};
-  DESP.filter(function(d){return d._local==='SORVETERIA';}).forEach(function(d){map[d._tipo||'Outros']=(map[d._tipo||'Outros']||0)+d._val;});
+  DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';}).forEach(function(d){map[d._tipo||'Outros']=(map[d._tipo||'Outros']||0)+d._val;});
   const entries=Object.entries(map).sort(function(a,b){return b[1]-a[1];}),tot=entries.reduce(function(s,x){return s+x[1];},0)||1;
   document.getElementById('desp-cats').innerHTML=entries.length?entries.map(function(x,i){return'<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;">'+x[0]+'</span><span style="font-size:12px;color:var(--mu)">'+brl(x[1])+'</span></div><div class="pb"><div class="pf" style="width:'+x[1]/tot*100+'%;background:'+cores[i%cores.length]+'"></div></div></div>';}).join(''):'<p class="empty">Sem despesas no período</p>';
 }
 
 function renderDRE(REC,DESP){
-  const recB=soma(REC.filter(function(r){return r._tipo==='ENTRADA';}));
-  const dS=DESP.filter(function(d){return d._local==='SORVETERIA';}),bT={};
+  const recB=soma(REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';}));
+  const dS=DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';}),bT={};
   dS.forEach(function(d){bT[d._tipo]=(bT[d._tipo]||0)+d._val;});
   const row=function(r){return'<div class="dr '+(r.cls||'')+' '+(r.i?'ind':'')+'"><span>'+r.l+'</span>'+(r.v!=null?'<span class="fm '+(r.v<0?'tx-rd':r.v>0?'tx-gn':'')+'">'+(r.v<0?'('+brl(-r.v)+')':brl(r.v))+'</span>':'')+'</div>';};
   const sortedS=Object.entries(bT).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{l:x[0],v:-x[1],i:true};});
   document.getElementById('dre-sorv').innerHTML=[{l:'RECEITA OPERACIONAL BRUTA',v:null,cls:'sec'},{l:'(+) Receita Bruta',v:recB,i:true},{l:'DEDUÇÕES E DESPESAS',v:null,cls:'sec'}].concat(sortedS).concat([{l:'RESULTADO LÍQUIDO',v:recB-soma(dS),cls:'tot'}]).map(row).join('');
-  const dP=DESP.filter(function(d){return d._local==='PARTICULAR';}),bP={};
+  const dP=DESP.filter(function(d){return(d._local||'').toUpperCase()==='PARTICULAR';}),bP={};
   dP.forEach(function(d){bP[d._tipo]=(bP[d._tipo]||0)+d._val;});
   const sortedP=Object.entries(bP).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{l:x[0],v:-x[1],i:true};});
   document.getElementById('dre-part').innerHTML=[{l:'DESPESAS PESSOAIS',v:null,cls:'sec'}].concat(sortedP).concat([{l:'TOTAL DESPESAS PARTICULARES',v:-soma(dP),cls:'tot'}]).map(row).join('');
@@ -573,19 +600,18 @@ function _drawArea(){
   if(PROD_MODE==='anual'){
     const anos=[...new Set(ALL_PROD.map(function(p){return p._comp.slice(0,4);}))].filter(Boolean).sort();
     labels=anos;
-    const vals=anos.map(function(y){return ALL_PROD.filter(function(p){return p._comp.startsWith(y);}).reduce(function(s,p){return s+p._lts;},0);});
-    series=[{label:'Total',color:YC[0],pts:vals.map(function(v,i){return{l:anos[i],v:v};})}];
+    const vals=anos.map(function(y){return ALL_PROD.filter(function(p){return p._comp.startsWith(y);}).reduce(function(s,p){return s+p._qtd;},0);});
+    series=[{label:'Qtd',color:YC[0],pts:vals.map(function(v,i){return{l:anos[i],v:v};})}];
   }else if(PROD_MODE==='mensal'){
     labels=MN;
     const yearsArr=[...PROD_YEARS].sort();
-    const mes=getMes();
-    series=yearsArr.map(function(y){return{label:y,color:YCMAP[y]||YC[0],pts:MN.map(function(_,i){const m=String(i+1).padStart(2,'0');const sum=ALL_PROD.filter(function(p){return p._comp===y+'-'+m&&(!mes||m===mes);}).reduce(function(s,p){return s+p._lts;},0);return{l:MN[i],v:sum};})};});
+    series=yearsArr.map(function(y){return{label:y,color:YCMAP[y]||YC[0],pts:MN.map(function(_,i){const m=String(i+1).padStart(2,'0');const sum=ALL_PROD.filter(function(p){return p._comp===y+'-'+m;}).reduce(function(s,p){return s+p._qtd;},0);return{l:MN[i],v:sum};})};});
   }else{
     const dmap={};
-    PROD_CUR.forEach(function(p){if(p._data)dmap[p._data]=(dmap[p._data]||0)+p._lts;});
+    PROD_CUR.forEach(function(p){if(p._data)dmap[p._data]=(dmap[p._data]||0)+p._qtd;});
     const show=Object.keys(dmap).sort().slice(-60);
     labels=show;
-    series=[{label:'Litros',color:YC[0],pts:show.map(function(d){return{l:fData(d),v:dmap[d]||0};})}];
+    series=[{label:'Qtd',color:YC[0],pts:show.map(function(d){return{l:fData(d),v:dmap[d]||0};})}];
   }
   if(!labels.length){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" font-size="12" fill="#7a756e" font-family="DM Sans,sans-serif">Sem dados para o período</text>';return;}
   const allVals=series.reduce(function(a,s){return a.concat(s.pts.map(function(p){return p.v;}));}, []);
@@ -601,10 +627,17 @@ function _drawArea(){
     h+='<text x="'+(P.l-5)+'" y="'+(y+4)+'" text-anchor="end" class="chart-lbl">'+(v>0?v:'')+'</text>';
   });
   h+='<line x1="'+P.l+'" y1="'+(P.t+CH)+'" x2="'+(P.l+CW)+'" y2="'+(P.t+CH)+'" class="chart-axis"/>';
-  const step=Math.max(1,Math.ceil(n/10));
+  const step=PROD_MODE==='mensal'?1:Math.max(1,Math.ceil(n/12));
   labels.forEach(function(l,i){
     if(i%step===0||i===n-1){
-      const lbl=PROD_MODE==='diario'?l.slice(0,5):l;
+      let lbl;
+      if(PROD_MODE==='diario'){
+        // l é "AAAA-MM-DD" → formata como "DD/MM/AA"
+        const fd=fData(l);
+        lbl=fd.length>=8?fd.slice(0,5)+'/'+fd.slice(8,10):fd.slice(0,5);
+      }else{
+        lbl=l;
+      }
       h+='<text x="'+xOf(i)+'" y="'+(H-6)+'" text-anchor="middle" class="chart-lbl">'+lbl+'</text>';
     }
   });
@@ -635,7 +668,7 @@ function _drawArea(){
   svg.querySelectorAll('.svg-pt').forEach(function(c){
     c.addEventListener('mouseenter',function(){
       const t=document.getElementById('prod-area-tip');
-      t.innerHTML='<strong>'+c.dataset.lbl+'</strong><br>'+c.dataset.val+' L';
+      t.innerHTML='<strong>'+c.dataset.lbl+'</strong><br>'+c.dataset.val+' un.';
       const r=wrap.getBoundingClientRect(),er=c.getBoundingClientRect();
       t.style.left=(er.left-r.left+10)+'px';
       t.style.top=(er.top-r.top-36)+'px';
@@ -659,48 +692,67 @@ function _renderProdComp(){
     prev=ALL_PROD.filter(function(p){return p._comp.startsWith(py);});
     prevLbl='vs '+py;
   }else{
-    el.innerHTML='<p class="empty">Selecione um período para comparar</p>';
-    lbl.textContent='';return;
+    // Sem filtro: compara último ano com o anterior
+    const anos=[...new Set(ALL_PROD.map(function(p){return p._comp.slice(0,4);}))].filter(Boolean).sort();
+    if(anos.length>=2){
+      const curAno=anos[anos.length-1],prevAno=anos[anos.length-2];
+      cur=ALL_PROD.filter(function(p){return p._comp.startsWith(curAno);});
+      prev=ALL_PROD.filter(function(p){return p._comp.startsWith(prevAno);});
+      prevLbl='vs '+prevAno;
+    }else if(anos.length===1){
+      cur=ALL_PROD;prev=[];prevLbl='Sem período anterior';
+    }else{
+      el.innerHTML='<p class="empty">Sem dados</p>';lbl.textContent='';return;
+    }
   }
   lbl.textContent=prevLbl;
   const mc={},mp={};
-  cur.forEach(function(p){mc[p._sabor]=(mc[p._sabor]||0)+p._lts;});
-  prev.forEach(function(p){mp[p._sabor]=(mp[p._sabor]||0)+p._lts;});
-  const sabores=[...new Set(Object.keys(mc).concat(Object.keys(mp)))].sort(function(a,b){return(mc[b]||0)-(mc[a]||0);}).slice(0,20);
+  cur.forEach(function(p){if(p._sabor)mc[p._sabor]=(mc[p._sabor]||0)+p._qtd;});
+  prev.forEach(function(p){if(p._sabor)mp[p._sabor]=(mp[p._sabor]||0)+p._qtd;});
+  const sabores=[...new Set(Object.keys(mc).concat(Object.keys(mp)))].filter(Boolean).sort(function(a,b){return(mc[b]||0)-(mc[a]||0);}).slice(0,20);
   el.innerHTML=sabores.length?sabores.map(function(s){
     const c=mc[s]||0,p=mp[s]||0;
     const dlt=p>0?(c-p)/p*100:null;
     const dHtml=dlt!==null?'<span class="kb '+(dlt>=0?'pos':'neg')+'">'+(dlt>=0?'▲':'▼')+' '+Math.abs(dlt).toFixed(0)+'%</span>':(c>0?'<span class="chip" style="font-size:10px">Novo</span>':'—');
-    return'<div class="cmp-row"><span class="cmp-name">'+s+'</span><span class="cmp-val">'+c+'L</span><span class="cmp-delta">'+dHtml+'</span></div>';
-  }).join(''):'<p class="empty">Sem dados</p>';
+    return'<div class="cmp-row"><span class="cmp-name">'+s+'</span><span class="cmp-val">'+c+' un.</span><span class="cmp-delta">'+dHtml+'</span></div>';
+  }).join(''):'<p class="empty">Sem dados de sabores</p>';
 }
 function _renderProdRanking(PROD){
   const map={};
-  PROD.forEach(function(p){map[p._sabor]=(map[p._sabor]||0)+p._lts;});
-  const sorted=Object.entries(map).sort(function(a,b){return b[1]-a[1];});
+  PROD.forEach(function(p){if(p._sabor)map[p._sabor]=(map[p._sabor]||0)+p._qtd;});
+  const sorted=Object.entries(map).filter(function(x){return x[0];}).sort(function(a,b){return b[1]-a[1];});
   const mx=sorted.length?sorted[0][1]:1;
   document.getElementById('prod-rank-chip').textContent=sorted.length+' sabores';
   document.getElementById('prod-top-sabores').innerHTML=sorted.length
-    ?sorted.map(function(x,i){return'<div class="rank-row"><span class="rank-num">'+(i+1)+'</span><span class="rank-name">'+x[0]+'</span><div class="rank-bw"><div class="rank-bf" style="width:'+Math.round(x[1]/mx*100)+'%"></div></div><span class="rank-val">'+x[1]+'L</span></div>';}).join('')
-    :'<p class="empty">Sem produções</p>';
+    ?sorted.map(function(x,i){return'<div class="rank-row"><span class="rank-num">'+(i+1)+'</span><span class="rank-name">'+x[0]+'</span><div class="rank-bw"><div class="rank-bf" style="width:'+Math.round(x[1]/mx*100)+'%"></div></div><span class="rank-val">'+x[1]+' un.</span></div>';}).join('')
+    :'<p class="empty">Sem dados de sabores</p>';
 }
 function _renderProdHist(PROD){
-  document.getElementById('prod-total-chip').textContent='Total: '+PROD.reduce(function(s,p){return s+p._lts;},0)+'L em '+PROD.length+' lotes';
-  document.getElementById('tbody-prod-hist').innerHTML=PROD.length
-    ?PROD.map(function(p){return'<tr><td>'+fData(p._data)+'</td><td class="tx-mu">'+p._dia+'</td><td>'+p._sabor+'</td><td class="tx-yw fm">'+p._lts+'L</td><td class="tx-mu">'+p._qtd+'</td></tr>';}).join('')
+  const totQtd=PROD.reduce(function(s,p){return s+p._qtd;},0);
+  const totLts=PROD.reduce(function(s,p){return s+p._lts;},0);
+  document.getElementById('prod-total-chip').textContent='Total: '+totQtd+' un. · '+totLts.toFixed(0)+'L em '+PROD.length+' lotes';
+  // Filtro local da tabela
+  const q=(document.getElementById('srch-prod')||{}).value||'';
+  const filtProd=q?PROD.filter(function(p){const t=(p._sabor+p._data+p._dia).toLowerCase();return t.indexOf(q.toLowerCase())>=0;}):PROD;
+  document.getElementById('tbody-prod-hist').innerHTML=filtProd.length
+    ?filtProd.map(function(p){return'<tr><td>'+fData(p._data)+'</td><td class="tx-mu">'+p._dia+'</td><td>'+(p._sabor||'—')+'</td><td class="tx-yw fm">'+p._lts+'L</td><td class="tx-mu">'+p._qtd+'</td></tr>';}).join('')
     :'<tr><td colspan="5" class="empty">Sem lançamentos</td></tr>';
 }
 
 // ── Histórico ─────────────────────────────────────────────────
 function renderTabelaRec(REC){
-  const ch=document.getElementById('chip-rec');if(ch)ch.textContent='Total: '+brl(soma(REC))+' ('+REC.length+' lançamentos)';
+  const ch=document.getElementById('chip-rec');if(ch)ch.textContent='Total: '+brl(soma(REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';})))+' ('+REC.length+' lançamentos)';
   const tb=document.getElementById('tbody-rec');if(!tb)return;
-  tb.innerHTML=REC.length?REC.map(function(r){return'<tr><td class="tx-mu">'+r._comp+'</td><td>'+fData(r._data)+'</td><td class="tx-mu">'+r._dia+'</td><td><span class="bge bg-gn">'+r._tipo+'</span></td><td>'+r._forma+'</td><td><span class="bge bg-bl">'+r._tipag+'</span></td><td class="tx-r tx-gn fm">'+brl(r._val)+'</td></tr>';}).join(''):'<tr><td colspan="7" class="empty">Sem lançamentos</td></tr>';
+  const q=(document.getElementById('srch-rec')||{}).value||'';
+  const filtRec=q?REC.filter(function(r){const t=(r._comp+r._data+r._tipo+r._forma+r._tipag).toLowerCase();return t.indexOf(q.toLowerCase())>=0;}):REC;
+  tb.innerHTML=filtRec.length?filtRec.map(function(r){return'<tr><td class="tx-mu fm">'+r._comp+'</td><td>'+fData(r._data)+'</td><td class="tx-mu">'+r._dia+'</td><td><span class="bge bg-gn">'+(r._tipo||'—')+'</span></td><td>'+(r._forma||'—')+'</td><td><span class="bge bg-bl">'+(r._tipag||'—')+'</span></td><td class="tx-r tx-gn fm">'+brl(r._val)+'</td></tr>';}).join(''):'<tr><td colspan="7" class="empty">Nenhum resultado</td></tr>';
 }
 function renderTabelaDesp(DESP){
-  const ch=document.getElementById('chip-desp');if(ch)ch.textContent='Total: '+brl(soma(DESP))+' ('+DESP.length+' lançamentos)';
+  const ch=document.getElementById('chip-desp');if(ch)ch.textContent='Total Sorveteria: '+brl(soma(DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';})))+' ('+DESP.length+' lançamentos)';
   const tb=document.getElementById('tbody-desp');if(!tb)return;
-  tb.innerHTML=DESP.length?DESP.map(function(d){return'<tr><td class="tx-mu">'+d._comp+'</td><td>'+fData(d._data)+'</td><td class="tx-mu">'+d._dia+'</td><td><span class="bge '+(d._local==='SORVETERIA'?'bg-yw':'bg-bl')+'">'+d._local+'</span></td><td class="tx-mu" style="font-size:12px;">'+d._tipo+'</td><td>'+d._cc+'</td><td class="tx-r tx-rd fm">'+brl(d._val)+'</td></tr>';}).join(''):'<tr><td colspan="7" class="empty">Sem lançamentos</td></tr>';
+  const q=(document.getElementById('srch-desp')||{}).value||'';
+  const filtDesp=q?DESP.filter(function(d){const t=(d._comp+d._data+d._local+d._tipo+d._cc).toLowerCase();return t.indexOf(q.toLowerCase())>=0;}):DESP;
+  tb.innerHTML=filtDesp.length?filtDesp.map(function(d){const loc=(d._local||'').toUpperCase();return'<tr><td class="tx-mu fm">'+d._comp+'</td><td>'+fData(d._data)+'</td><td class="tx-mu">'+d._dia+'</td><td><span class="bge '+(loc==='SORVETERIA'?'bg-yw':'bg-bl')+'">'+(d._local||'—')+'</span></td><td class="tx-mu" style="font-size:12px;">'+(d._tipo||'—')+'</td><td>'+(d._cc||'—')+'</td><td class="tx-r tx-rd fm">'+brl(d._val)+'</td></tr>';}).join(''):'<tr><td colspan="7" class="empty">Nenhum resultado</td></tr>';
 }
 
 // ── Salvar ────────────────────────────────────────────────────
@@ -724,7 +776,7 @@ async function salvarProd(){
 }
 
 // ── Utils ─────────────────────────────────────────────────────
-function goTo(p,btn){document.querySelectorAll('.pg').forEach(function(x){x.classList.remove('active');});document.querySelectorAll('.ni').forEach(function(x){x.classList.remove('active');});document.getElementById('page-'+p).classList.add('active');btn.classList.add('active');}
+function goTo(p,btn){document.querySelectorAll('.pg').forEach(function(x){x.classList.remove('active');});document.querySelectorAll('.ni').forEach(function(x){x.classList.remove('active');});document.getElementById('page-'+p).classList.add('active');btn.classList.add('active');renderPage(p);}
 function switchTab(btn,id){btn.closest('.pg').querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');btn.closest('.pg').querySelectorAll('[id^="tf-"],[id^="th-"]').forEach(function(t){t.style.display='none';});document.getElementById(id).style.display='block';}
 function updDia(p){const v=document.getElementById(p+'-data').value;if(!v)return;document.getElementById(p+'-dia').value=DS[new Date(v+'T12:00:00').getDay()];}
 function updCC(){const l=document.getElementById('desp-local').value;document.getElementById('desp-cc').innerHTML=(l==='SORVETERIA'?CC_S:CC_P).map(function(i){return'<option>'+i+'</option>';}).join('');}
