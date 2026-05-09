@@ -315,6 +315,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <button class="tab" onclick="switchCadTab(this,'cad-despesas')">🏷️ Despesas</button>
     <button class="tab" onclick="switchCadTab(this,'cad-cc')">🏢 Centro de Custo</button>
     <button class="tab" onclick="switchCadTab(this,'cad-func')">👤 Funcionários</button>
+    <button class="tab" onclick="switchCadTab(this,'cad-taxas')">📊 Taxas Cartão</button>
   </div>
   <!-- Sabores -->
   <div id="cad-sabores" class="cad-tab">
@@ -340,6 +341,40 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   <div id="cad-func" class="cad-tab" style="display:none;">
     <div class="g2"><div class="cd"><div class="ch"><span class="ct">Novo Funcionário</span></div><div class="cb"><div class="fgr" style="margin-bottom:10px;"><label class="fgl">Nome</label><input type="text" class="fc" id="cad-func-nome" placeholder="Ex: MARIA SILVA" style="text-transform:uppercase"></div><div class="fgr" style="margin-bottom:14px;"><label class="fgl">Cargo</label><input type="text" class="fc" id="cad-func-cargo" placeholder="Ex: ATENDENTE" style="text-transform:uppercase"></div><div class="fa" style="margin-top:0;padding-top:14px;"><button class="btn btn-p" onclick="salvarFuncionario()">➕ Adicionar</button></div></div></div>
     <div class="cd"><div class="ch"><span class="ct">Funcionários</span><span class="chip" id="chip-cad-func">—</span></div><div class="tsc" id="list-cad-func"><p class="empty">Carregando...</p></div></div></div>
+  </div>
+  <!-- Taxas Cartão -->
+  <div id="cad-taxas" class="cad-tab" style="display:none;">
+    <div class="g2">
+      <div class="cd">
+        <div class="ch"><span class="ct">Nova Taxa</span></div>
+        <div class="cb">
+          <div style="background:rgba(232,160,69,.07);border:1px solid rgba(232,160,69,.2);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--mu);line-height:1.6;">
+            💡 Cadastre uma linha por combinação de <strong style="color:var(--tx)">Forma + Tipo de Pagamento</strong>.<br>
+            A taxa é usada para calcular o <strong style="color:var(--tx)">Imposto sobre Vendas</strong> automaticamente na DRE.
+          </div>
+          <div class="fg">
+            <div class="fgr"><label class="fgl">Forma de Pagamento</label><select class="fc" id="taxa-forma"><option value="">Selecione...</option></select></div>
+            <div class="fgr"><label class="fgl">Tipo de Pagamento</label><select class="fc" id="taxa-tipo"><option>CRÉDITO</option><option>DÉBITO</option><option>QR CODE</option><option>À VISTA</option><option>PIX</option><option>OUTROS</option></select></div>
+          </div>
+          <div class="fg">
+            <div class="fgr">
+              <label class="fgl">Taxa (%)</label>
+              <div style="position:relative;">
+                <input type="number" class="fc" id="taxa-perc" placeholder="Ex: 3.49" step="0.01" min="0" max="100" style="padding-right:30px;">
+                <span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:13px;pointer-events:none;">%</span>
+              </div>
+            </div>
+            <div class="fgr"><label class="fgl">Observação</label><input type="text" class="fc" id="taxa-obs" placeholder="Ex: Maquininha PAGBANK" style="text-transform:uppercase"></div>
+          </div>
+          <div class="fa" style="margin-top:0;padding-top:14px;"><button class="btn btn-p" onclick="salvarTaxa()">➕ Adicionar Taxa</button></div>
+        </div>
+      </div>
+      <div class="cd">
+        <div class="ch"><span class="ct">Taxas Cadastradas</span><span class="chip" id="chip-cad-taxas">—</span></div>
+        <div style="padding:8px 14px 4px;font-size:11px;color:var(--mu);">Taxa aplicada sobre o valor de cada recebimento por cartão na DRE.</div>
+        <div class="tsc" id="list-cad-taxas"><p class="empty">Carregando...</p></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -427,7 +462,7 @@ function normComp(v){
   if(m){const mn=PT_MONTHS[(m[1]||'').toLowerCase().slice(0,3)];if(mn){const yr=m[2].length===2?'20'+m[2]:m[2];return yr+'-'+String(mn).padStart(2,'0');}}
   return s.slice(0,7);
 }
-function toRec(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_tipo:(r.DS_MOVIMENTACAO||r.TIPO||'').trim(),_forma:r.DS_FORMA_PAGAMENTO||r.FORMA_PAGAMENTO||'',_tipag:r.DS_TIPO_PAGAMENTO||r.TIPO_PAGAMENTO||'',_val:pVal(r.VALOR),_row:parseInt(r._ROW)||0,_raw:r};}
+function toRec(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_tipo:(r.DS_MOVIMENTACAO||r.TIPO||'').trim(),_forma:r.DS_FORMA_PAGAMENTO||r.FORMA_PAGAMENTO||'',_tipag:r.DS_TIPO_PAGAMENTO||r.TIPO_PAGAMENTO||'',_val:pVal(r.VALOR),_taxa:pVal(r.TAXA_SOBRE_VENDA||r.TAXA||0),_row:parseInt(r._ROW)||0,_raw:r};}
 function toDesp(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_local:(r.DS_LOCAL||r.LOCAL||'').trim(),_cc:r.DS_CENTRO_CUSTO||r.CENTRO_CUSTO||'',_tipo:(r.DS_TIPO_DESPESA||r.TIPO||'').trim(),_cat:r.DS_CATEGORIA_DESPESA||'',_desp:r.DS_DESPESA||'',_val:pVal(r.VALOR),_row:parseInt(r._ROW)||0,_raw:r};}
 function toProd(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_sabor:r.DS_SABOR||r.SABOR||'',_lts:pVal(r.LITROS),_qtd:parseInt(r.QUANTIDADE)||1,_row:parseInt(r._ROW)||0,_raw:r};}
 
@@ -437,10 +472,11 @@ function getMes(){return document.getElementById('filtro-mes').value;}
 function filtrar(arr){
   const ano=getAno(),mes=getMes();
   return arr.filter(function(r){
-    if(!r._comp)return false;
-    const p=r._comp.split('-');
-    if(ano&&p[0]!==ano)return false;
-    if(mes&&p[1]!==mes)return false;
+    // Ano: usa DATA como fonte primária (mais confiável)
+    const anoReg=r._data?r._data.slice(0,4):(r._comp?r._comp.slice(0,4):'');
+    const mesReg=r._comp?r._comp.slice(5,7):'';
+    if(ano&&anoReg!==ano)return false;
+    if(mes&&mesReg!==mes)return false;
     return true;
   });
 }
@@ -474,6 +510,8 @@ async function syncAll(silent){
     ALL_REC=(rR.rows||[]).map(toRec);
     ALL_DESP=(rD.rows||[]).map(toDesp);
     ALL_PROD=(rP.rows||[]).map(toProd);
+    // Carrega tabela de taxas silenciosamente (necessária para DRE)
+    if(!CAD_DATA['CAD_TAXAS_CARTAO'])await loadCad('CAD_TAXAS_CARTAO');
     buildFiltros();
     setSS('✅ '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
     renderAll();
@@ -490,10 +528,17 @@ async function syncAll(silent){
 function buildFiltros(){
   const anos=new Set(),meses=new Set();
   ALL_REC.concat(ALL_DESP).concat(ALL_PROD).forEach(function(r){
-    if(!r._comp)return;
-    const p=r._comp.split('-');
-    if(p[0])anos.add(p[0]);
-    if(p[1])meses.add(p[1]);
+    // Prioriza o ANO da coluna DATA (mais confiável que COMPETENCIA)
+    const dataStr=r._data||'';
+    const anoData=dataStr.length>=4?dataStr.slice(0,4):'';
+    if(anoData&&/^\d{4}$/.test(anoData))anos.add(anoData);
+    // Mês vem da competência normalizada
+    if(r._comp){
+      const p=r._comp.split('-');
+      // Se não tiver ano via DATA, usa o da competência
+      if(!anoData&&p[0]&&/^\d{4}$/.test(p[0]))anos.add(p[0]);
+      if(p[1]&&/^\d{2}$/.test(p[1]))meses.add(p[1]);
+    }
   });
   const selAno=document.getElementById('filtro-ano'),curAno=selAno.value;
   selAno.innerHTML='<option value="">Todos os anos</option>'+[...anos].sort().reverse().map(function(y){return'<option value="'+y+'"'+(y===curAno?' selected':'')+'>'+y+'</option>';}).join('');
@@ -599,56 +644,100 @@ function renderDespCats(DESP){
   document.getElementById('desp-cats').innerHTML=entries.length?entries.map(function(x,i){return'<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;">'+x[0]+'</span><span style="font-size:12px;color:var(--mu)">'+brl(x[1])+'</span></div><div class="pb"><div class="pf" style="width:'+x[1]/tot*100+'%;background:'+cores[i%cores.length]+'"></div></div></div>';}).join(''):'<p class="empty">Sem despesas no período</p>';
 }
 
+// ── Classifica despesa nos 3 buckets do Power BI ─────────────
+// Power BI usa DESPESAS[TIPO] com valores:
+//   "DESPESAS VARIÁVEIS PRODUÇÃO"   → PROD
+//   "DESPESAS VARIÁVEIS OPERACIONAL"→ OPER  (+ LOCAL=SORVETERIA no filtro do PBI)
+//   "DESPESAS ADMINISTRATIVAS"      → ADM
+// Nosso form usa DS_TIPO_DESPESA=VARIÁVEL/FIXA + DS_CATEGORIA_DESPESA=PRODUÇÃO/OPERACIONAL/etc.
+// A função abaixo aceita ambos os formatos.
+function _catDesp(d){
+  const t=(d._tipo||'').toUpperCase();
+  const cat=(d._cat||'').toUpperCase();
+  // Formato Power BI — tipo com nome completo
+  if(t.indexOf('PRODU')>=0)return'PROD';
+  if(t.indexOf('OPERA')>=0)return'OPER';
+  if(t.indexOf('ADMINI')>=0)return'ADM';
+  // Formato novo form — combina tipo(VARIÁVEL/FIXA) + categoria
+  if(cat.indexOf('PRODU')>=0)return'PROD';
+  if(cat.indexOf('OPERA')>=0)return'OPER';
+  if(cat.indexOf('ADMINI')>=0)return'ADM';
+  // FIXA sem categoria clara → ADM
+  if(t==='FIXA')return'ADM';
+  return'OUTROS';
+}
+
 function renderDRE(REC,DESP){
-  // ── Medidas (igual ao Power BI) ─────────────────────────────
-  const rob=soma(REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';}));
-  const taxas=0; // TAXA SOBRE VENDA — não disponível na planilha atual
+  // ── Medidas (idêntico ao Power BI) ──────────────────────────
+  // vROB = RECEITA where DS_MOVIMENTACAO = "ENTRADA"
+  const recEntrada=REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';});
+  const rob=soma(recEntrada);
+
+  // vTAXASVENDAS = SUM(RECEITA[TAXA_SOBRE_VENDA])
+  // Estratégia: se a planilha tiver a coluna TAXA_SOBRE_VENDA, usa ela diretamente.
+  // Se não tiver (ou for 0), calcula pela tabela CAD_TAXAS_CARTAO: VALOR × taxa(forma,tipo)
+  const hasTaxaCol=recEntrada.some(function(r){return(r._taxa||0)>0;});
+  const taxas=recEntrada.reduce(function(s,r){
+    if(hasTaxaCol)return s+(r._taxa||0);
+    const rate=getTaxaRate(r._forma,r._tipag);
+    return s+(rate>0?r._val*rate:0);
+  },0);
   const rlo=rob-taxas;
 
+  // Despesas Sorveteria (DS_LOCAL = "SORVETERIA")
   const dSorv=DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';});
-  // Classifica por categoria: PRODUÇÃO / OPERACIONAL / ADMINISTRATIVA
-  const catMatch=function(d,kw){return(d._cat||d._tipo||'').toUpperCase().indexOf(kw)>=0;};
-  const vProd=soma(dSorv.filter(function(d){return catMatch(d,'PRODU');}));
-  const vOper=soma(dSorv.filter(function(d){return catMatch(d,'OPERA');}));
-  const vAdm =soma(dSorv.filter(function(d){return catMatch(d,'ADMINI');}));
-  // Despesas não categorizadas (Outros)
-  const vOutros=soma(dSorv.filter(function(d){return!catMatch(d,'PRODU')&&!catMatch(d,'OPERA')&&!catMatch(d,'ADMINI');}));
-  const vTotDesp=vProd+vOper+vAdm+vOutros;
-  const lucBruto=rlo-vProd-vOper;   // RLO − custos variáveis
-  const resultado=rlo-vTotDesp;
-  const mgm=rob>0?resultado/rob*100:0;
+
+  // vCUSTOPROD — despesas classificadas como PRODUÇÃO
+  const vProd=soma(dSorv.filter(function(d){return _catDesp(d)==='PROD';}));
+  // vCUSTOOPER — despesas classificadas como OPERACIONAL (já filtrado LOCAL=SORVETERIA acima)
+  const vOper=soma(dSorv.filter(function(d){return _catDesp(d)==='OPER';}));
+  // vCUSTOADM — despesas administrativas
+  const vAdm =soma(dSorv.filter(function(d){return _catDesp(d)==='ADM';}));
+  // Outros (não classificados)
+  const vOutros=soma(dSorv.filter(function(d){return _catDesp(d)==='OUTROS';}));
+
+  // Subtotais conforme Power BI
+  const vTotDesp=vProd+vOper+vAdm+vOutros;      // Total Custos e Despesas (linha 9)
+  const resOpBruto=rlo-vProd-vOper;              // Resultado Operacional Bruto (tipo_cat 2)
+  const lucroLiq=rlo-vTotDesp;                   // Lucro Líquido (linha 11)
+  const mgm=rob>0?lucroLiq/rob*100:0;
 
   const row=function(r){
-    const vc=r.v!=null?(r.v<0?'tx-rd':r.v>0?'tx-gn':'tx-mu'):'';
+    if(!r)return'';
+    const vc=r.v!=null?(r.v<0?'tx-rd':r.v>0?'tx-gn':''):'' ;
     const vf=r.v!=null?'<span class="fm '+vc+'">'+(r.v<0?'('+brl(-r.v)+')':brl(r.v))+'</span>':'';
-    return'<div class="dr '+(r.cls||'')+' '+(r.i?'ind':'')+'"><span>'+r.l+'</span>'+vf+'</div>';
+    const pct=r.pct!=null?'<span style="font-size:11px;color:var(--mu);margin-left:8px;">'+r.pct.toFixed(2)+'%</span>':'';
+    return'<div class="dr '+(r.cls||'')+' '+(r.i?'ind':'')+'"><span>'+r.l+(r.v!=null?pct:'')+'</span>'+vf+'</div>';
   };
-
-  // Detalhes por subcat dentro de Sorveteria
-  const subcatRows=[];
-  const subcats={};
-  dSorv.forEach(function(d){const k=d._cat||d._tipo||'Outros';subcats[k]=(subcats[k]||0)+d._val;});
-  Object.entries(subcats).sort(function(a,b){return b[1]-a[1];}).forEach(function(x){subcatRows.push({l:'    · '+x[0],v:-x[1],i:true});});
+  const p=function(v){return rob>0?v/rob*100:0;};
 
   document.getElementById('dre-sorv').innerHTML=[
-    {l:'RECEITA',cls:'sec'},
-    {l:'(+) Receita Bruta Operacional (ROB)',v:rob,i:true},
-    {l:'(-) Impostos / Taxas sobre Vendas',v:-taxas,i:true},
-    {l:'(=) Receita Líquida Operacional',v:rlo,cls:'tot'},
-    {l:'DEDUÇÕES',cls:'sec'},
-    {l:'(-) Despesas Variáveis de Produção',v:-vProd,i:true},
-    {l:'(-) Despesas Variáveis Operacional',v:-vOper,i:true},
-    {l:'(=) Lucro Bruto',v:lucBruto,cls:'tot'},
-    {l:'(-) Despesas Administrativas',v:-vAdm,i:true},
-    vOutros>0?{l:'(-) Outras Despesas',v:-vOutros,i:true}:null,
-    {l:'(=) Total Deduções',v:-vTotDesp,cls:'tot'},
-    {l:'RESULTADO LÍQUIDO',v:resultado,cls:'tot'},
-    {l:'Margem: '+mgm.toFixed(1)+'%',cls:'sec'},
+    // RECEITA
+    {l:'(=) RECEITA OPERACIONAL BRUTA',v:null,cls:'sec'},
+    {l:'(+) Receita Operacional Bruta',v:rob,i:true,pct:p(rob)},
+    // RLO
+    {l:'(=) RECEITA OPERACIONAL LÍQUIDA',v:rlo,cls:'tot',pct:p(rlo)},
+    {l:'(-) Imposto sobre Vendas (Taxas)',v:-taxas,i:true,pct:p(taxas)},
+    // Resultado Operacional Bruto
+    {l:'(=) RESULTADO OPERACIONAL BRUTO',v:resOpBruto,cls:'tot',pct:p(resOpBruto)},
+    {l:'(-) Custo Variável de Produção',v:-vProd,i:true,pct:p(vProd)},
+    {l:'(-) Custo Variável Operacional',v:-vOper,i:true,pct:p(vOper)},
+    {l:'(-) Despesas Administrativas',v:-vAdm,i:true,pct:p(vAdm)},
+    vOutros>0?{l:'(-) Outras Despesas Sorveteria',v:-vOutros,i:true,pct:p(vOutros)}:null,
+    {l:'(=) Total Custos e Despesas',v:-vTotDesp,cls:'tot',pct:p(vTotDesp)},
+    // Lucro Líquido
+    {l:'(=) LUCRO LÍQUIDO',v:lucroLiq,cls:'tot',pct:mgm},
   ].filter(Boolean).map(row).join('');
 
-  // Detalhes das subcategorias em card separado
+  // Detalhe por categoria (card lateral)
   const detEl=document.getElementById('dre-sorv-det');
-  if(detEl)detEl.innerHTML=subcatRows.map(row).join('');
+  if(detEl){
+    const subcats={};
+    dSorv.forEach(function(d){const k=d._cat||d._tipo||'Outros';subcats[k]=(subcats[k]||0)+d._val;});
+    detEl.innerHTML=Object.entries(subcats).sort(function(a,b){return b[1]-a[1];}).map(function(x){
+      return row({l:x[0],v:-x[1],i:true,pct:p(x[1])});
+    }).join('')||'<p class="empty">Sem despesas no período</p>';
+  }
 
   // ── Particular ──────────────────────────────────────────────
   const dPart=DESP.filter(function(d){return(d._local||'').toUpperCase()==='PARTICULAR';});
@@ -934,7 +1023,8 @@ async function loadCad(sheet){
 async function loadAllCad(){
   await Promise.all([
     loadCad('CAD_SABORES'),loadCad('CAD_FORMA_PAGAMENTO'),loadCad('CAD_TIPO_PAGAMENTO'),
-    loadCad('CAD_DESPESAS'),loadCad('CAD_CENTRO_CUSTO'),loadCad('CAD_FUNCIONARIO')
+    loadCad('CAD_DESPESAS'),loadCad('CAD_CENTRO_CUSTO'),loadCad('CAD_FUNCIONARIO'),
+    loadCad('CAD_TAXAS_CARTAO')
   ]);
 }
 function populateSelect(id,items,valFn){
@@ -947,6 +1037,12 @@ async function populateFormDropdowns(){
   populateSelect('rec-forma',CAD_DATA['CAD_FORMA_PAGAMENTO'],function(i){return i.DS_FORMA_PAGAMENTO||'';});
   populateSelect('rec-tipag',CAD_DATA['CAD_TIPO_PAGAMENTO']||[{DS_TIPO_PAGAMENTO:'À VISTA'},{DS_TIPO_PAGAMENTO:'DÉBITO'},{DS_TIPO_PAGAMENTO:'CRÉDITO'},{DS_TIPO_PAGAMENTO:'PIX'}],function(i){return i.DS_TIPO_PAGAMENTO||'';});
   updDespFields();
+  // Popula o select de forma no cadastro de taxas
+  const taxaFormaEl=document.getElementById('taxa-forma');
+  if(taxaFormaEl){
+    const fps=(CAD_DATA['CAD_FORMA_PAGAMENTO']||[]).filter(function(x){return(x.ATIVO||'').toString().toUpperCase()!=='FALSE';});
+    taxaFormaEl.innerHTML='<option value="">Selecione...</option>'+fps.map(function(x){return'<option>'+x.DS_FORMA_PAGAMENTO+'</option>';}).join('');
+  }
 }
 function updDespFields(){
   const local=(document.getElementById('desp-local')||{}).value||'SORVETERIA';
@@ -968,34 +1064,43 @@ function renderCadTab(tabId){
   else if(tabId==='cad-despesas')renderCadList('CAD_DESPESAS','DS_DESPESA','list-cad-despesas','chip-cad-desp');
   else if(tabId==='cad-cc')renderCadList('CAD_CENTRO_CUSTO','DS_CENTRO_CUSTO','list-cad-cc','chip-cad-cc');
   else if(tabId==='cad-func')renderCadFuncionarios();
+  else if(tabId==='cad-taxas')renderCadTaxas();
 }
 function renderCadList(sheet,dsField,listId,chipId){
   const rows=CAD_DATA[sheet]||[];
   const chip=document.getElementById(chipId);if(chip)chip.textContent=rows.length+' registros';
   const el=document.getElementById(listId);if(!el)return;
-  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Status</th><th></th></tr></thead><tbody>'+
+  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Status</th><th style="width:170px"></th></tr></thead><tbody>'+
     rows.map(function(r,i){
       const nm=r[dsField]||'—';
       const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
       const rowNum=parseInt(r._ROW)||0;
       return'<tr><td class="tx-mu">'+(i+1)+'</td><td>'+nm+'</td>'+
         '<td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td>'+
-        '<td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleAtivoCad(\''+sheet+'\','+rowNum+',\''+dsField+'\','+i+')">'+
-        (ativo?'⛔ Inativar':'✅ Ativar')+'</button></td></tr>';
+        '<td style="display:flex;gap:5px;padding:6px 11px;">'+
+        '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="openEditCad(\''+sheet+'\',\''+dsField+'\','+rowNum+',\''+nm.replace(/'/g,"\\'")+'\')">✏️ Editar</button>'+
+        '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="toggleAtivoCad(\''+sheet+'\','+rowNum+',\''+dsField+'\','+i+')">'+
+        (ativo?'⛔':'✅')+'</button>'+
+        '</td></tr>';
     }).join('')+'</tbody></table>':'<p class="empty">Sem registros</p>';
 }
 function renderCadFuncionarios(){
   const rows=CAD_DATA['CAD_FUNCIONARIO']||[];
   const chip=document.getElementById('chip-cad-func');if(chip)chip.textContent=rows.length+' registros';
   const el=document.getElementById('list-cad-func');if(!el)return;
-  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Cargo</th><th>Status</th><th></th></tr></thead><tbody>'+
+  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Cargo</th><th>Status</th><th style="width:170px"></th></tr></thead><tbody>'+
     rows.map(function(r,i){
       const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
       const rowNum=parseInt(r._ROW)||0;
+      const nm=(r.DS_FUNCIONARIO||'').replace(/'/g,"\\'");
+      const cargo=(r.CARGO_FUNCIONARIO||'').replace(/'/g,"\\'");
       return'<tr><td class="tx-mu">'+(i+1)+'</td><td>'+(r.DS_FUNCIONARIO||'—')+'</td><td class="tx-mu">'+(r.CARGO_FUNCIONARIO||'—')+'</td>'+
         '<td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td>'+
-        '<td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleAtivoFunc('+rowNum+','+i+')">'+
-        (ativo?'⛔ Inativar':'✅ Ativar')+'</button></td></tr>';
+        '<td style="display:flex;gap:5px;padding:6px 11px;">'+
+        '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="openEditFunc('+rowNum+',\''+nm+'\',\''+cargo+'\')">✏️ Editar</button>'+
+        '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="toggleAtivoFunc('+rowNum+','+i+')">'+
+        (ativo?'⛔':'✅')+'</button>'+
+        '</td></tr>';
     }).join('')+'</tbody></table>':'<p class="empty">Sem registros</p>';
 }
 async function toggleAtivoCad(sheet,rowNum,dsField,idx){
@@ -1079,6 +1184,130 @@ async function salvarFuncionario(){
   setSS('✅');
 }
 
+// ── Taxas de Cartão ───────────────────────────────────────────
+function renderCadTaxas(){
+  const rows=CAD_DATA['CAD_TAXAS_CARTAO']||[];
+  const chip=document.getElementById('chip-cad-taxas');if(chip)chip.textContent=rows.length+' taxas';
+  const el=document.getElementById('list-cad-taxas');if(!el)return;
+  if(!rows.length){el.innerHTML='<p class="empty">Nenhuma taxa cadastrada</p>';return;}
+  el.innerHTML='<table><thead><tr><th>Forma de Pagamento</th><th>Tipo</th><th class="tx-r">Taxa</th><th>Status</th><th style="width:120px"></th></tr></thead><tbody>'+
+    rows.map(function(r,i){
+      const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
+      const rowNum=parseInt(r._ROW)||0;
+      const taxa=parseFloat(r.TAXA||0);
+      const forma=(r.DS_FORMA_PAGAMENTO||'—').replace(/'/g,"\\'");
+      const tipo=(r.DS_TIPO_PAGAMENTO||'—').replace(/'/g,"\\'");
+      return'<tr>'+
+        '<td>'+(r.DS_FORMA_PAGAMENTO||'—')+'</td>'+
+        '<td><span class="bge bg-bl">'+(r.DS_TIPO_PAGAMENTO||'—')+'</span></td>'+
+        '<td class="tx-r tx-yw fm"><strong>'+taxa.toFixed(2)+'%</strong></td>'+
+        '<td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativa':'Inativa')+'</span></td>'+
+        '<td style="display:flex;gap:5px;padding:6px 11px;">'+
+        '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="openEditTaxa('+rowNum+',\''+forma+'\',\''+tipo+'\','+taxa+')">✏️</button>'+
+        '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="toggleAtivoTaxa('+rowNum+','+i+')">'+(ativo?'⛔':'✅')+'</button>'+
+        '</td></tr>';
+    }).join('')+'</tbody></table>';
+}
+async function salvarTaxa(){
+  const forma=document.getElementById('taxa-forma').value.trim();
+  const tipo=document.getElementById('taxa-tipo').value.trim();
+  const perc=parseFloat(document.getElementById('taxa-perc').value);
+  const obs=document.getElementById('taxa-obs').value.trim().toUpperCase();
+  if(!forma){showToast('Selecione a forma de pagamento','error');return;}
+  if(isNaN(perc)||perc<0){showToast('Taxa inválida','error');return;}
+  setSS('💾 Salvando...');
+  const rows=CAD_DATA['CAD_TAXAS_CARTAO']||[];
+  const data={DS_FORMA_PAGAMENTO:forma,DS_TIPO_PAGAMENTO:tipo,TAXA:perc,OBS:obs,ATIVO:'TRUE'};
+  try{
+    const r=await api({action:'append',sheet:'CAD_TAXAS_CARTAO',data:encodeURIComponent(JSON.stringify(data))});
+    if(r.ok){
+      showToast(forma+' '+tipo+' ('+perc.toFixed(2)+'%) adicionado ✅','success');
+      document.getElementById('taxa-perc').value='';
+      document.getElementById('taxa-obs').value='';
+      delete CAD_DATA['CAD_TAXAS_CARTAO'];
+      await loadCad('CAD_TAXAS_CARTAO');
+      renderCadTaxas();
+    }else showToast('Erro: '+(r.error||''),'error');
+  }catch(e){showToast('Erro ao salvar','error');}
+  setSS('✅');
+}
+async function toggleAtivoTaxa(rowNum,idx){
+  if(!rowNum||rowNum<2){showToast('Linha inválida','error');return;}
+  const rows=CAD_DATA['CAD_TAXAS_CARTAO']||[];
+  const r=rows[idx];if(!r)return;
+  const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
+  const newAtivo=ativo?'FALSE':'TRUE';
+  setSS('💾 Salvando...');
+  try{
+    const res=await api({action:'update',sheet:'CAD_TAXAS_CARTAO',rowNum:rowNum,data:encodeURIComponent(JSON.stringify({ATIVO:newAtivo}))});
+    if(res.ok){
+      showToast((newAtivo==='TRUE'?'Ativada':'Inativada')+' ✅','success');
+      delete CAD_DATA['CAD_TAXAS_CARTAO'];
+      await loadCad('CAD_TAXAS_CARTAO');
+      renderCadTaxas();
+    }else showToast('Erro: '+(res.error||''),'error');
+  }catch(e){showToast('Erro ao atualizar','error');}
+  setSS('✅');
+}
+function openEditTaxa(rowNum,forma,tipo,taxa){
+  _editCtx={type:'TAXA',row:rowNum};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Taxa';
+  // Selects de forma de pagamento
+  const fps=(CAD_DATA['CAD_FORMA_PAGAMENTO']||[]).map(function(x){return x.DS_FORMA_PAGAMENTO||'';}).filter(Boolean);
+  if(fps.indexOf(forma)<0)fps.unshift(forma);
+  const tipoOpts=['CRÉDITO','DÉBITO','QR CODE','À VISTA','PIX','OUTROS'];
+  document.getElementById('edit-modal-body').innerHTML=
+    '<div class="fg">'+
+    _field('Forma de Pagamento','<select class="fc" id="ed-taxa-forma">'+_opt(fps,forma)+'</select>')+
+    _field('Tipo de Pagamento','<select class="fc" id="ed-taxa-tipo">'+_opt(tipoOpts,tipo)+'</select>')+
+    '</div>'+
+    '<div class="fg">'+
+    _field('Taxa (%)','<div style="position:relative;"><input type="number" class="fc" id="ed-taxa-perc" value="'+taxa+'" step="0.01" min="0" max="100" style="padding-right:30px;"><span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:13px;">%</span></div>')+
+    _field('Observação','<input type="text" class="fc" id="ed-taxa-obs">');
+  document.getElementById('edit-modal').style.display='flex';
+}
+// Retorna a taxa (0-1) para uma receita com base na tabela CAD_TAXAS_CARTAO
+function getTaxaRate(forma,tipo){
+  const taxas=CAD_DATA['CAD_TAXAS_CARTAO']||[];
+  const fN=(forma||'').toUpperCase();
+  const tN=(tipo||'').toUpperCase();
+  // Busca match exato forma+tipo
+  for(var i=0;i<taxas.length;i++){
+    const t=taxas[i];
+    if((t.ATIVO||'').toString().toUpperCase()==='FALSE')continue;
+    const tf=(t.DS_FORMA_PAGAMENTO||'').toUpperCase();
+    const tt=(t.DS_TIPO_PAGAMENTO||'').toUpperCase();
+    if(tf===fN&&tt===tN)return parseFloat(t.TAXA||0)/100;
+  }
+  // Fallback: busca só por forma (caso tipo não tenha cadastro específico)
+  for(var j=0;j<taxas.length;j++){
+    const t=taxas[j];
+    if((t.ATIVO||'').toString().toUpperCase()==='FALSE')continue;
+    const tf=(t.DS_FORMA_PAGAMENTO||'').toUpperCase();
+    if(tf===fN)return parseFloat(t.TAXA||0)/100;
+  }
+  return 0;
+}
+
+// ── Editar Cadastros ──────────────────────────────────────────
+function openEditCad(sheet,dsField,rowNum,nomeAtual){
+  _editCtx={type:'CAD',sheet:sheet,dsField:dsField,row:rowNum};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Cadastro';
+  document.getElementById('edit-modal-body').innerHTML=
+    _field('Nome','<input type="text" class="fc" id="ed-cad-nome" value="'+nomeAtual+'" style="text-transform:uppercase">');
+  document.getElementById('edit-modal').style.display='flex';
+  setTimeout(function(){const el=document.getElementById('ed-cad-nome');if(el){el.focus();el.select();}},50);
+}
+function openEditFunc(rowNum,nomeAtual,cargoAtual){
+  _editCtx={type:'FUNC',row:rowNum};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Funcionário';
+  document.getElementById('edit-modal-body').innerHTML=
+    _field('Nome','<input type="text" class="fc" id="ed-func-nome" value="'+nomeAtual+'" style="text-transform:uppercase">')+
+    _field('Cargo','<input type="text" class="fc" id="ed-func-cargo" value="'+cargoAtual+'" style="text-transform:uppercase">');
+  document.getElementById('edit-modal').style.display='flex';
+  setTimeout(function(){const el=document.getElementById('ed-func-nome');if(el){el.focus();el.select();}},50);
+}
+
 // ── Modal de Edição ───────────────────────────────────────────
 let _editCtx=null;
 
@@ -1117,6 +1346,13 @@ function openEditDesp(idx){
   const localOpts=['SORVETERIA','PARTICULAR'];
   const tipoOpts=['VARIÁVEL','FIXA'];
   const catOpts=['OPERACIONAL','PRODUÇÃO','ADMINISTRATIVA','PARTICULAR'];
+  // Despesas vindas do cadastro CAD_DESPESAS
+  const despOpts=(CAD_DATA['CAD_DESPESAS']||[]).map(function(x){return x.DS_DESPESA||'';}).filter(Boolean);
+  // Garante que o valor atual esteja na lista mesmo que não seja cadastrado
+  if(d._desp&&despOpts.indexOf(d._desp)<0)despOpts.unshift(d._desp);
+  const despSel=despOpts.length
+    ?'<select class="fc" id="ed-desp">'+_opt(despOpts,d._desp)+'</select>'
+    :'<input type="text" class="fc" id="ed-desp" value="'+d._desp+'">';
   document.getElementById('edit-modal-body').innerHTML=
     '<div class="fg">'+
     _field('Competência','<input type="month" class="fc" id="ed-comp" value="'+d._comp+'">')+
@@ -1130,7 +1366,7 @@ function openEditDesp(idx){
     _field('Tipo','<select class="fc" id="ed-tipo">'+_opt(tipoOpts,d._tipo)+'</select>')+
     _field('Categoria','<select class="fc" id="ed-cat">'+_opt(catOpts,d._cat)+'</select>')+
     '</div>'+
-    _field('Despesa / Fornecedor','<input type="text" class="fc" id="ed-desp" value="'+d._desp+'">')+
+    _field('Despesa / Fornecedor',despSel)+
     _field('Valor (R$)','<input type="number" class="fc" id="ed-val" value="'+d._val+'" step="0.01">');
   document.getElementById('edit-modal').style.display='flex';
 }
@@ -1173,6 +1409,19 @@ async function saveEdit(){
     data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_LOCAL:gv('ed-local'),DS_TIPO_DESPESA:gv('ed-tipo'),DS_CATEGORIA_DESPESA:gv('ed-cat'),DS_DESPESA:gv('ed-desp'),VALOR:parseFloat(gv('ed-val'))||0};
   }else if(_editCtx.type==='PROD'){
     data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_SABOR:gv('ed-sabor'),LITROS:parseFloat(gv('ed-lts'))||0,QUANTIDADE:parseInt(gv('ed-qtd'))||1};
+  }else if(_editCtx.type==='CAD'){
+    const novoNome=gv('ed-cad-nome').trim().toUpperCase();
+    if(!novoNome){showToast('Preencha o nome','error');return;}
+    data={};data[_editCtx.dsField]=novoNome;
+  }else if(_editCtx.type==='FUNC'){
+    const nm=gv('ed-func-nome').trim().toUpperCase();
+    const cg=gv('ed-func-cargo').trim().toUpperCase();
+    if(!nm||!cg){showToast('Preencha todos os campos','error');return;}
+    data={DS_FUNCIONARIO:nm,CARGO_FUNCIONARIO:cg};
+  }else if(_editCtx.type==='TAXA'){
+    const perc=parseFloat(gv('ed-taxa-perc'));
+    if(isNaN(perc)||perc<0){showToast('Taxa inválida','error');return;}
+    data={DS_FORMA_PAGAMENTO:gv('ed-taxa-forma'),DS_TIPO_PAGAMENTO:gv('ed-taxa-tipo'),TAXA:perc,OBS:gv('ed-taxa-obs').toUpperCase()};
   }
   setSS('💾 Salvando...');
   try{
@@ -1180,7 +1429,17 @@ async function saveEdit(){
     if(r.ok){
       showToast('Alteração salva ✅','success');
       closeEditModal();
-      syncAll(true);
+      if(_editCtx&&(_editCtx.type==='CAD'||_editCtx.type==='FUNC'||_editCtx.type==='TAXA')){
+        // Recarrega o cadastro específico e re-renderiza
+        const sh=_editCtx.type==='FUNC'?'CAD_FUNCIONARIO':_editCtx.type==='TAXA'?'CAD_TAXAS_CARTAO':_editCtx.sheet;
+        delete CAD_DATA[sh];
+        await loadCad(sh);
+        const activeTab=document.querySelector('.cad-tab[style*="block"]');
+        if(activeTab)renderCadTab(activeTab.id);
+        populateFormDropdowns();
+      }else{
+        syncAll(true);
+      }
     }else showToast('Erro: '+(r.error||''),'error');
   }catch(e){showToast('Erro ao salvar','error');}
   setSS('✅');
