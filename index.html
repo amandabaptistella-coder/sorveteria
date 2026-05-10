@@ -165,7 +165,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 <div class="pg active" id="page-dashboard">
   <div class="ph">
     <div><div class="pt">Visão Geral</div><div class="ps" id="sub-dash">—</div></div>
-    <div class="sync-bar"><span class="ab">🔄 Auto</span><span class="chip" id="sync-status">Conectando...</span></div>
+    <div class="sync-bar"><span class="ab">🔄 Auto</span><span class="chip" id="sync-status">Conectando...</span><button onclick="forceRefresh()" title="Forçar atualização completa" style="background:none;border:1px solid var(--bd);color:var(--mu);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;" onmouseover="this.style.color='var(--tx)'" onmouseout="this.style.color='var(--mu)'">↺ Atualizar</button></div>
   </div>
   <div class="kg">
     <div class="kc gn"><div class="kl">Receita Bruta</div><div class="kv fm" id="kpi-rec">—</div><div class="ks" id="kpi-rec-s"></div></div>
@@ -492,37 +492,84 @@ function labelFiltro(){
   return'—';
 }
 
-// ── Sync sequencial ───────────────────────────────────────────
+// ── Cache local (localStorage) ────────────────────────────────
+const LS_KEY='sorv_cache_v3';
+const LS_TTL=10*60*1000; // 10 minutos — dados servidos do cache enquanto atualiza
+
+function _saveCache(rawRec,rawDesp,rawProd){
+  try{
+    const payload=JSON.stringify({ts:Date.now(),rec:rawRec,desp:rawDesp,prod:rawProd});
+    if(payload.length<4.5*1024*1024)localStorage.setItem(LS_KEY,payload); // max ~4.5 MB
+  }catch(e){/* quota excedida — ignora */}
+}
+function _loadCache(){
+  try{
+    const item=JSON.parse(localStorage.getItem(LS_KEY)||'null');
+    if(!item)return null;
+    if(Date.now()-item.ts>LS_TTL)return null; // expirado
+    return item;
+  }catch(e){return null;}
+}
+function _applyData(rawRec,rawDesp,rawProd){
+  ALL_REC=rawRec.map(toRec);
+  ALL_DESP=rawDesp.map(toDesp);
+  ALL_PROD=rawProd.map(toProd);
+}
+
+// ── Sync paralelo com cache ───────────────────────────────────
 async function syncAll(silent){
   clearTimeout(autoTimer);
-  if(!silent)setSS('🔄 Conectando...');
   const info=document.getElementById('filtro-info');
+
+  // ── 1. Renderiza do cache local imediatamente (visita não-inicial) ──
+  if(!silent){
+    const cached=_loadCache();
+    if(cached){
+      _applyData(cached.rec,cached.desp,cached.prod);
+      if(!CAD_DATA['CAD_TAXAS_CARTAO']&&cached.taxas)CAD_DATA['CAD_TAXAS_CARTAO']=cached.taxas;
+      buildFiltros();
+      renderAll();
+      setSS('⚡ Cache local · atualizando...');
+      info.textContent='⚡ '+ALL_REC.length+' rec · '+ALL_DESP.length+' desp · '+ALL_PROD.length+' prod (atualizando...)';
+      // Continua para buscar dados frescos em segundo plano
+    }else{
+      setSS('🔄 Carregando...');
+      info.textContent='Primeira conexão com a planilha...';
+    }
+  }
+
+  // ── 2. Carrega as 3 abas SIMULTANEAMENTE (Promise.all) ───────
   try{
-    setSS('📋 Receitas...');
-    info.textContent='Carregando receitas...';
-    const rR=await api({action:'read',sheet:'RECEITAS',competencia:''});
+    const [rR,rD,rP]=await Promise.all([
+      api({action:'read',sheet:'RECEITAS',competencia:''}),
+      api({action:'read',sheet:'DESPESAS',competencia:''}),
+      api({action:'read',sheet:'PRODUCAO',competencia:''}),
+    ]);
 
-    setSS('📋 Despesas...');
-    info.textContent='Carregando despesas...';
-    const rD=await api({action:'read',sheet:'DESPESAS',competencia:''});
-
-    setSS('📋 Produção...');
-    info.textContent='Carregando produção...';
-    const rP=await api({action:'read',sheet:'PRODUCAO',competencia:''});
-
-    ALL_REC=(rR.rows||[]).map(toRec);
-    ALL_DESP=(rD.rows||[]).map(toDesp);
-    ALL_PROD=(rP.rows||[]).map(toProd);
-    // Carrega tabela de taxas silenciosamente (necessária para DRE)
+    // Taxas em paralelo com os dados principais (já foi disparado acima, só aguarda)
     if(!CAD_DATA['CAD_TAXAS_CARTAO'])await loadCad('CAD_TAXAS_CARTAO');
+
+    const rawRec=rR.rows||[],rawDesp=rD.rows||[],rawProd=rP.rows||[];
+    _saveCache(rawRec,rawDesp,rawProd); // persiste para próxima visita
+    _applyData(rawRec,rawDesp,rawProd);
     buildFiltros();
-    setSS('✅ '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
     renderAll();
+
+    const hr=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    setSS('✅ '+hr);
     info.textContent=ALL_REC.length+' rec · '+ALL_DESP.length+' desp · '+ALL_PROD.length+' prod';
+
   }catch(e){
-    setSS('⚠️ Sem conexão');
-    info.textContent='Falha. Tentando novamente em 30s...';
-    autoTimer=setTimeout(function(){syncAll(false);},30000);
+    if(!ALL_REC.length){
+      // Sem cache e sem conexão
+      setSS('⚠️ Sem conexão');
+      info.textContent='Falha na conexão. Nova tentativa em 30s...';
+    }else{
+      // Tem cache — mostra aviso mas mantém os dados
+      setSS('⚠️ Offline · cache ativo');
+      info.textContent='Sem conexão — exibindo dados do cache local.';
+    }
+    autoTimer=setTimeout(function(){syncAll(true);},30000);
     return;
   }
   autoTimer=setTimeout(function(){syncAll(true);},120000);
@@ -1505,6 +1552,12 @@ function switchTab(btn,id){btn.closest('.pg').querySelectorAll('.tab').forEach(f
 function updDia(p){const v=document.getElementById(p+'-data').value;if(!v)return;document.getElementById(p+'-dia').value=DS[new Date(v+'T12:00:00').getDay()];}
 function updCC(){updDespFields();}
 function setSS(m){document.getElementById('sync-status').textContent=m;}
+function forceRefresh(){
+  try{localStorage.removeItem(LS_KEY);}catch(e){}
+  CAD_DATA={};
+  showToast('🔄 Atualizando dados...','success');
+  syncAll(false);
+}
 let _tt;function showToast(m,t){const el=document.getElementById('toast');el.textContent=m;el.className='toast '+t+' show';clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},3500);}
 
 // ── Init ──────────────────────────────────────────────────────
