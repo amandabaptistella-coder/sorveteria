@@ -201,8 +201,15 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   <div class="g2">
     <div class="cd"><div class="ch"><span class="ct">📊 Demonstrativo — Sorveteria</span></div><div class="cb" id="dre-sorv"></div></div>
     <div>
-      <div class="cd" style="margin-bottom:16px;"><div class="ch"><span class="ct">💸 Detalhe por Categoria</span></div><div class="cb" id="dre-sorv-det"></div></div>
+      <div class="cd" style="margin-bottom:16px;"><div class="ch"><span class="ct">💸 Detalhe por Categoria</span></div><div class="cb tsc" id="dre-sorv-det" style="max-height:420px;"></div></div>
       <div class="cd"><div class="ch"><span class="ct">🏠 Particular</span></div><div class="cb" id="dre-part"></div></div>
+    </div>
+  </div>
+  <!-- Detalhamento completo por linha -->
+  <div style="margin-top:16px;" id="dre-detail-section">
+    <div class="cd">
+      <div class="ch"><span class="ct">📂 Detalhamento Completo das Despesas Sorveteria</span><span class="chip" id="dre-detail-chip">—</span></div>
+      <div class="cb" id="dre-detail-body"></div>
     </div>
   </div>
 </div>
@@ -783,14 +790,92 @@ function renderDRE(REC,DESP){
     {l:'(=) LUCRO LÍQUIDO',v:lucroLiq,cls:'tot',pct:mgm},
   ].filter(Boolean).map(row).join('');
 
-  // Detalhe por categoria (card lateral)
+  // Detalhe por categoria — agrupado por linha da DRE
   const detEl=document.getElementById('dre-sorv-det');
   if(detEl){
-    const subcats={};
-    dSorv.forEach(function(d){const k=d._cat||d._tipo||'Outros';subcats[k]=(subcats[k]||0)+d._val;});
-    detEl.innerHTML=Object.entries(subcats).sort(function(a,b){return b[1]-a[1];}).map(function(x){
-      return row({l:x[0],v:-x[1],i:true,pct:p(x[1])});
-    }).join('')||'<p class="empty">Sem despesas no período</p>';
+    const groups=[
+      {label:'Custo Variável de Produção',cat:'PROD',color:'var(--yw)',total:vProd},
+      {label:'Custo Variável Operacional', cat:'OPER',color:'var(--bl)',total:vOper},
+      {label:'Despesas Administrativas',   cat:'ADM', color:'var(--rd)',total:vAdm},
+      vOutros>0?{label:'Outras Despesas',cat:'OUTROS',color:'var(--mu)',total:vOutros}:null
+    ].filter(Boolean);
+    let dh='';
+    groups.forEach(function(g){
+      const items={};
+      dSorv.filter(function(d){return _catDesp(d)===g.cat;})
+           .forEach(function(d){const k=d._cat||d._desp||d._tipo||'Outros';items[k]=(items[k]||0)+d._val;});
+      const sorted=Object.entries(items).sort(function(a,b){return b[1]-a[1];});
+      const maxV=sorted.length?sorted[0][1]:1;
+      dh+='<div style="margin-bottom:14px;">';
+      dh+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--bd);">';
+      dh+='<span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);">'+g.label+'</span>';
+      dh+='<span class="fm" style="font-size:12px;font-weight:700;color:'+g.color+';">'+brl(g.total)+'</span>';
+      dh+='</div>';
+      sorted.forEach(function(x){
+        const pct=maxV>0?x[1]/maxV*100:0;
+        dh+='<div style="margin-bottom:6px;">';
+        dh+='<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">';
+        dh+='<span style="color:var(--tx);">'+x[0]+'</span>';
+        dh+='<span class="fm" style="color:var(--mu);">'+brl(x[1])+'</span>';
+        dh+='</div>';
+        dh+='<div style="height:4px;background:var(--sf2);border-radius:2px;overflow:hidden;">';
+        dh+='<div style="height:100%;width:'+pct+'%;background:'+g.color+';opacity:.65;border-radius:2px;transition:width .4s;"></div>';
+        dh+='</div></div>';
+      });
+      dh+='</div>';
+    });
+    detEl.innerHTML=dh||'<p class="empty">Sem despesas no período</p>';
+  }
+
+  // ── Detalhamento completo (tabela full-width) ─────────────────
+  const detBody=document.getElementById('dre-detail-body');
+  const detChip=document.getElementById('dre-detail-chip');
+  if(detBody){
+    const grpsDet=[
+      {label:'(-) Custo Variável de Produção',cat:'PROD',color:'#e8a045',total:vProd},
+      {label:'(-) Custo Variável Operacional', cat:'OPER',color:'#5b8fbf',total:vOper},
+      {label:'(-) Despesas Administrativas',   cat:'ADM', color:'#d4574a',total:vAdm},
+      {label:'(-) Outras Despesas Sorveteria',cat:'OUTROS',color:'#7a756e',total:vOutros}
+    ].filter(function(g){return g.total>0;});
+    let dh2='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">';
+    grpsDet.forEach(function(g){
+      const rows={};
+      dSorv.filter(function(d){return _catDesp(d)===g.cat;})
+           .forEach(function(d){
+             const k=d._cat||d._desp||d._tipo||'Outros';
+             if(!rows[k])rows[k]={total:0,cc:new Set()};
+             rows[k].total+=d._val;
+             if(d._cc)rows[k].cc.add(d._cc);
+           });
+      const sortedR=Object.entries(rows).sort(function(a,b){return b[1].total-a[1].total;});
+      const maxV=sortedR.length?sortedR[0][1].total:1;
+      const pctTot=rob>0?g.total/rob*100:0;
+      dh2+='<div style="background:var(--sf2);border-radius:9px;padding:16px;border-left:3px solid '+g.color+';">';
+      dh2+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
+      dh2+='<span style="font-size:11px;font-weight:600;color:var(--tx);">'+g.label+'</span>';
+      dh2+='<div style="text-align:right;"><div class="fm" style="font-size:14px;font-weight:700;color:'+g.color+';">'+brl(g.total)+'</div>';
+      dh2+='<div style="font-size:10px;color:var(--mu);">'+pctTot.toFixed(1)+'% ROB</div></div>';
+      dh2+='</div>';
+      sortedR.forEach(function(x){
+        const it=x[1];
+        const pct=maxV>0?it.total/maxV*100:0;
+        const pctR=rob>0?it.total/rob*100:0;
+        dh2+='<div style="margin-bottom:8px;">';
+        dh2+='<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;">';
+        dh2+='<span style="color:var(--tx);flex:1;padding-right:8px;">'+x[0]+'</span>';
+        dh2+='<span class="fm" style="color:var(--mu);white-space:nowrap;">'+brl(it.total)+'</span>';
+        dh2+='</div>';
+        dh2+='<div style="display:flex;align-items:center;gap:6px;">';
+        dh2+='<div style="flex:1;height:3px;background:var(--bd);border-radius:2px;overflow:hidden;">';
+        dh2+='<div style="height:100%;width:'+pct+'%;background:'+g.color+';opacity:.7;border-radius:2px;"></div></div>';
+        dh2+='<span style="font-size:9px;color:var(--mu);white-space:nowrap;">'+pctR.toFixed(1)+'%</span>';
+        dh2+='</div></div>';
+      });
+      dh2+='</div>';
+    });
+    dh2+='</div>';
+    detBody.innerHTML=dh2;
+    if(detChip)detChip.textContent=brl(vTotDesp)+' total · '+p(vTotDesp).toFixed(1)+'% ROB';
   }
 
   // ── Particular ──────────────────────────────────────────────
