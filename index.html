@@ -464,7 +464,10 @@ function normComp(v){
 }
 function toRec(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_tipo:(r.DS_MOVIMENTACAO||r.TIPO||'').trim(),_forma:r.DS_FORMA_PAGAMENTO||r.FORMA_PAGAMENTO||'',_tipag:r.DS_TIPO_PAGAMENTO||r.TIPO_PAGAMENTO||'',_val:pVal(r.VALOR),_taxa:pVal(r.TAXA_SOBRE_VENDA||r.TAXA||0),_row:parseInt(r._ROW)||0,_raw:r};}
 function toDesp(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_local:(r.DS_LOCAL||r.LOCAL||'').trim(),_cc:r.DS_CENTRO_CUSTO||r.CENTRO_CUSTO||'',_tipo:(r.DS_TIPO_DESPESA||r.TIPO||'').trim(),_cat:r.DS_CATEGORIA_DESPESA||'',_desp:r.DS_DESPESA||'',_val:pVal(r.VALOR),_row:parseInt(r._ROW)||0,_raw:r};}
-function toProd(r){return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_sabor:r.DS_SABOR||r.SABOR||'',_lts:pVal(r.LITROS),_qtd:parseInt(r.QUANTIDADE)||1,_row:parseInt(r._ROW)||0,_raw:r};}
+function toProd(r){
+  const q=parseInt(r.QUANTIDADE);
+  return{_comp:normComp(r.COMPETENCIA||r.DATA||''),_data:pData(r.DATA),_dia:r.DIA_SEMANA||'',_sabor:r.DS_SABOR||r.SABOR||'',_lts:pVal(r.LITROS),_qtd:isNaN(q)?0:q,_row:parseInt(r._ROW)||0,_raw:r};
+}
 
 // ── Filtros ───────────────────────────────────────────────────
 function getAno(){return document.getElementById('filtro-ano').value;}
@@ -598,9 +601,14 @@ function renderKPIs(REC,DESP,PROD){
 }
 
 function renderBarChart(REC,DESP){
+  // Usa _data (AAAA-MM-DD) como fonte do mês/ano para ser consistente com o filtro
+  const keyOf=function(r){
+    if(r._data&&r._data.length>=7)return r._data.slice(0,7); // AAAA-MM
+    return r._comp?r._comp.slice(0,7):'';
+  };
   const map={};
-  REC.forEach(function(r){if(!r._comp||r._comp.length<7)return;const k=r._comp.slice(0,7);if(!map[k])map[k]={rc:0,ds:0};map[k].rc+=r._val;});
-  DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';}).forEach(function(d){if(!d._comp||d._comp.length<7)return;const k=d._comp.slice(0,7);if(!map[k])map[k]={rc:0,ds:0};map[k].ds+=d._val;});
+  REC.forEach(function(r){const k=keyOf(r);if(!k||k.length<7)return;if(!map[k])map[k]={rc:0,ds:0};map[k].rc+=r._val;});
+  DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';}).forEach(function(d){const k=keyOf(d);if(!k||k.length<7)return;if(!map[k])map[k]={rc:0,ds:0};map[k].ds+=d._val;});
   const meses=Object.keys(map).sort();
   const el=document.getElementById('bar-chart');
   if(!meses.length){el.innerHTML='<p class="empty">Sem dados no período</p>';return;}
@@ -662,8 +670,7 @@ function _catDesp(d){
   if(cat.indexOf('PRODU')>=0)return'PROD';
   if(cat.indexOf('OPERA')>=0)return'OPER';
   if(cat.indexOf('ADMINI')>=0)return'ADM';
-  // FIXA sem categoria clara → ADM
-  if(t==='FIXA')return'ADM';
+  // Sem categoria reconhecida → OUTROS (não assume ADM para FIXA)
   return'OUTROS';
 }
 
@@ -773,14 +780,16 @@ function renderProdDash(PROD){
   PROD_CUR=PROD;
   const lts=PROD.reduce(function(s,p){return s+p._lts;},0);
   const lotes=PROD.length;
+  const totQtd=PROD.reduce(function(s,p){return s+p._qtd;},0); // total tachos/quantidade
   const sabores=new Set(PROD.map(function(p){return p._sabor;})).size;
   document.getElementById('kpi-lts').textContent=lts.toLocaleString('pt-BR')+' L';
-  document.getElementById('kpi-lotes').textContent=lotes.toLocaleString('pt-BR');
+  document.getElementById('kpi-lotes').textContent=totQtd.toLocaleString('pt-BR'); // total quantidade
   document.getElementById('kpi-sabores').textContent=sabores;
   document.getElementById('kpi-med-lote').textContent=(lotes>0?(lts/lotes).toFixed(1):0)+' L';
-  document.getElementById('kpi-lts-s').innerHTML='<span class="kb pos">'+lotes+' lotes</span>';
+  document.getElementById('kpi-lts-s').innerHTML='<span class="kb pos">'+lotes+' registros</span>';
   document.getElementById('kpi-lotes-s').innerHTML='<span class="kb pos">'+sabores+' sabores</span>';
-  const anos=[...new Set(ALL_PROD.map(function(p){return p._comp.slice(0,4);}))].filter(Boolean).sort();
+  const _anoOf=function(p){return(p._data||'').slice(0,4)||(p._comp||'').slice(0,4);};
+  const anos=[...new Set(ALL_PROD.map(_anoOf))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
   anos.forEach(function(y,i){if(!YCMAP[y])YCMAP[y]=YC[i%YC.length];});
   if(PROD_YEARS.size===0&&anos.length)PROD_YEARS.add(anos[anos.length-1]);
   const sel=document.getElementById('prod-year-sel');
@@ -803,14 +812,26 @@ function _drawArea(){
   svg.setAttribute('height',H);
   let series=[],labels=[];
   if(PROD_MODE==='anual'){
-    const anos=[...new Set(ALL_PROD.map(function(p){return p._comp.slice(0,4);}))].filter(Boolean).sort();
+    // Extrai ano de _data (mais confiável) ou de _comp como fallback
+    const anoOf=function(p){return(p._data||'').slice(0,4)||(p._comp||'').slice(0,4);};
+    const anos=[...new Set(ALL_PROD.map(anoOf))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
     labels=anos;
-    const vals=anos.map(function(y){return ALL_PROD.filter(function(p){return p._comp.startsWith(y);}).reduce(function(s,p){return s+p._qtd;},0);});
+    const vals=anos.map(function(y){
+      return ALL_PROD.filter(function(p){return anoOf(p)===y;}).reduce(function(s,p){return s+p._qtd;},0);
+    });
     series=[{label:'Qtd',color:YC[0],pts:vals.map(function(v,i){return{l:anos[i],v:v};})}];
   }else if(PROD_MODE==='mensal'){
     labels=MN;
     const yearsArr=[...PROD_YEARS].sort();
-    series=yearsArr.map(function(y){return{label:y,color:YCMAP[y]||YC[0],pts:MN.map(function(_,i){const m=String(i+1).padStart(2,'0');const sum=ALL_PROD.filter(function(p){return p._comp===y+'-'+m;}).reduce(function(s,p){return s+p._qtd;},0);return{l:MN[i],v:sum};})};});
+    series=yearsArr.map(function(y){return{label:y,color:YCMAP[y]||YC[0],pts:MN.map(function(_,i){
+      const m=String(i+1).padStart(2,'0');
+      // Usa _data para o mês (consistente com filtrar)
+      const sum=ALL_PROD.filter(function(p){
+        const yrmo=(p._data||'').slice(0,7)||(p._comp||'').slice(0,7);
+        return yrmo===y+'-'+m;
+      }).reduce(function(s,p){return s+p._qtd;},0);
+      return{l:MN[i],v:sum};
+    })};});
   }else{
     const dmap={};
     PROD_CUR.forEach(function(p){if(p._data)dmap[p._data]=(dmap[p._data]||0)+p._qtd;});
@@ -871,18 +892,41 @@ function _drawArea(){
   }
   series.forEach(function(s){
     const pts=s.pts.map(function(p,i){return[xOf(i),yOf(p.v)];});
-    let ap='M'+P.l+','+(P.t+CH);
-    pts.forEach(function(pt){ap+=' L'+pt[0]+','+pt[1];});
-    ap+=' L'+(P.l+CW)+','+(P.t+CH)+' Z';
-    h+='<path d="'+ap+'" fill="'+s.color+'" fill-opacity="0.13"/>';
-    if(pts.length>0){
-      let lp='M'+pts[0][0]+','+pts[0][1];
-      for(let i=1;i<pts.length;i++){const mx=(pts[i-1][0]+pts[i][0])/2;lp+=' Q'+mx+','+pts[i-1][1]+' '+pts[i][0]+','+pts[i][1];}
-      h+='<path d="'+lp+'" fill="none" stroke="'+s.color+'" stroke-width="2" stroke-linejoin="round"/>';
+    if(pts.length===0)return;
+
+    // ── Constrói o caminho suavizado (quadratic bezier) ──────
+    // Usado tanto para a linha quanto para o preenchimento de área
+    function smoothD(pArr){
+      let d='M'+pArr[0][0]+','+pArr[0][1];
+      for(var i=1;i<pArr.length;i++){
+        const mx=(pArr[i-1][0]+pArr[i][0])/2;
+        d+=' Q'+mx+','+pArr[i-1][1]+' '+pArr[i][0]+','+pArr[i][1];
+      }
+      return d;
     }
+    const bottom=P.t+CH;
+    // Área: começa no canto inferior esquerdo, sobe até o 1º ponto,
+    // percorre a mesma curva da linha, desce para o canto inferior direito
+    const linePath=smoothD(pts);
+    const areaPath='M'+pts[0][0]+','+bottom
+      +' L'+pts[0][0]+','+pts[0][1]
+      +linePath.slice(('M'+pts[0][0]+','+pts[0][1]).length)
+      +' L'+pts[pts.length-1][0]+','+bottom+' Z';
+    h+='<path d="'+areaPath+'" fill="'+s.color+'" fill-opacity="0.13"/>';
+    h+='<path d="'+linePath+'" fill="none" stroke="'+s.color+'" stroke-width="2" stroke-linejoin="round"/>';
+
+    // ── Pontos e rótulos ─────────────────────────────────────
     if(n<=60){
+      const r=n<=12?4:3;
+      const showLbl=isD?(n<=31):true; // diário: mostra rótulo se até 31 pts; mensal/anual: sempre
       pts.forEach(function(pt,i){
-        h+='<circle cx="'+pt[0]+'" cy="'+pt[1]+'" r="'+(n<=12?4:3)+'" fill="'+s.color+'" stroke="var(--bg)" stroke-width="1.5" class="svg-pt" data-lbl="'+s.label+' - '+s.pts[i].l+'" data-val="'+s.pts[i].v+'"/>';
+        const v=s.pts[i].v;
+        h+='<circle cx="'+pt[0]+'" cy="'+pt[1]+'" r="'+r+'" fill="'+s.color+'" stroke="var(--bg)" stroke-width="1.5" class="svg-pt" data-lbl="'+s.label+' - '+s.pts[i].l+'" data-val="'+v+'"/>';
+        if(showLbl&&v>0){
+          // Rótulo acima do ponto (com fundo para legibilidade)
+          const ty=pt[1]-r-4;
+          h+='<text x="'+pt[0]+'" y="'+ty+'" text-anchor="middle" class="chart-lbl" style="font-size:9px;fill:'+s.color+';font-weight:600;">'+v+'</text>';
+        }
       });
     }
   });
