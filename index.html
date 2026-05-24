@@ -80,7 +80,7 @@ td{padding:9px 11px;font-size:13px;border-bottom:1px solid rgba(46,44,41,.4);col
 tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02);}
 .bge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;}
 .bg-gn{background:rgba(91,191,163,.15);color:var(--gn)}.bg-rd{background:rgba(212,87,74,.15);color:var(--rd)}.bg-yw{background:rgba(232,160,69,.15);color:var(--yw)}.bg-bl{background:rgba(91,143,191,.15);color:var(--bl)}
-.tsc{max-height:360px;overflow-y:auto;}
+.tsc{max-height:520px;overflow-y:auto;}
 .tsc::-webkit-scrollbar{width:3px;}.tsc::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px;}
 .tx-gn{color:var(--gn)}.tx-rd{color:var(--rd)}.tx-yw{color:var(--yw)}.tx-mu{color:var(--mu)}.tx-r{text-align:right}.fm{font-variant-numeric:tabular-nums;}
 .chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;background:var(--sf2);border:1px solid var(--bd);color:var(--mu);}
@@ -270,7 +270,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   </div>
   <div id="th-rec" style="display:none;">
     <div style="margin-bottom:10px;"><input id="srch-rec" class="fc" type="text" placeholder="🔍 Filtrar por competência, tipo, forma de pagamento..." oninput="renderTabelaRec(filtrar(ALL_REC))" style="max-width:480px;"></div>
-    <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Tipo</th><th>Forma</th><th>Tipo Pag.</th><th class="tx-r">Valor</th><th></th></tr></thead><tbody id="tbody-rec"></tbody></table></div></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc" style="max-height:620px;"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Tipo</th><th>Forma</th><th>Tipo Pag.</th><th class="tx-r">Valor</th><th></th></tr></thead><tbody id="tbody-rec"></tbody></table></div></div>
   </div>
 </div>
 
@@ -290,7 +290,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   </div>
   <div id="th-desp" style="display:none;">
     <div style="margin-bottom:10px;"><input id="srch-desp" class="fc" type="text" placeholder="🔍 Filtrar por local, categoria, despesa..." oninput="renderTabelaDesp(filtrar(ALL_DESP))" style="max-width:480px;"></div>
-    <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Local</th><th>Tipo</th><th>Categoria</th><th>Despesa</th><th class="tx-r">Valor</th><th></th></tr></thead><tbody id="tbody-desp"></tbody></table></div></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc" style="max-height:620px;"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Local</th><th>Tipo</th><th>Categoria</th><th>Despesa</th><th class="tx-r">Valor</th><th></th></tr></thead><tbody id="tbody-desp"></tbody></table></div></div>
   </div>
 </div>
 
@@ -309,7 +309,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   </div>
   <div id="th-prod" style="display:none;">
     <div style="margin-bottom:10px;"><input id="srch-prod-lanc" class="fc" type="text" placeholder="🔍 Filtrar por sabor, data..." oninput="renderTabelaProd(filtrar(ALL_PROD))" style="max-width:480px;"></div>
-    <div class="cd"><div class="ch"><span class="ct">Histórico de Produção</span><span class="chip" id="chip-prod-lanc">—</span></div><div class="tsc"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Sabor</th><th>Litros</th><th>Qtd</th><th></th></tr></thead><tbody id="tbody-prod-lanc"></tbody></table></div></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Produção</span><span class="chip" id="chip-prod-lanc">—</span></div><div class="tsc" style="max-height:620px;"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Sabor</th><th>Litros</th><th>Qtd</th><th></th></tr></thead><tbody id="tbody-prod-lanc"></tbody></table></div></div>
   </div>
 </div>
 
@@ -597,8 +597,12 @@ function buildFiltros(){
       if(p[1]&&/^\d{2}$/.test(p[1]))meses.add(p[1]);
     }
   });
-  const selAno=document.getElementById('filtro-ano'),curAno=selAno.value;
+  const selAno=document.getElementById('filtro-ano');
+  const anoAtual=new Date().getFullYear().toString();
+  // Se não há seleção ainda, default para o ano atual (se existir nos dados)
+  const curAno=selAno.value||(anos.has(anoAtual)?anoAtual:'');
   selAno.innerHTML='<option value="">Todos os anos</option>'+[...anos].sort().reverse().map(function(y){return'<option value="'+y+'"'+(y===curAno?' selected':'')+'>'+y+'</option>';}).join('');
+  if(curAno)selAno.value=curAno; // garante seleção após innerHTML
   const selMes=document.getElementById('filtro-mes'),curMes=selMes.value;
   selMes.innerHTML='<option value="">Todos os meses</option>'+[...meses].sort().map(function(m){return'<option value="'+m+'"'+(m===curMes?' selected':'')+'>'+MF[parseInt(m)-1]+'</option>';}).join('');
 }
@@ -621,7 +625,12 @@ function renderAll(){
 }
 function renderPage(p,REC,DESP,PROD){
   if(!REC){REC=filtrar(ALL_REC);DESP=filtrar(ALL_DESP);PROD=filtrar(ALL_PROD);}
-  if(p==='dashboard'){renderKPIs(REC,DESP,PROD);renderBarChart(REC,DESP);renderDonut(REC);renderRecentes(REC,DESP);renderDespCats(DESP);}
+  if(p==='dashboard'){
+    // Bar chart usa filtro só de ano (mostra todos os meses do ano selecionado)
+    const ano=getAno();
+    const filtAno=function(arr){return ano?arr.filter(function(r){return(r._data||r._comp||'').slice(0,4)===ano;}):arr;};
+    renderKPIs(REC,DESP,PROD);renderBarChart(filtAno(ALL_REC),filtAno(ALL_DESP));renderDonut(REC);renderRecentes(REC,DESP);renderDespCats(DESP);
+  }
   else if(p==='dre'){renderDRE(REC,DESP);}
   else if(p==='producao-dash'){renderProdDash(PROD);}
   else if(p==='receitas'){renderTabelaRec(REC);}
@@ -745,8 +754,13 @@ function renderDRE(REC,DESP){
   },0);
   const rlo=rob-taxas;
 
-  // Despesas Sorveteria (DS_LOCAL = "SORVETERIA")
-  const dSorv=DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';});
+  // Despesas Sorveteria: DS_CENTRO_CUSTO = "SORVETERIA" (novo form)
+  // ou DS_LOCAL = "SORVETERIA" sem centro de custo (dados históricos)
+  const dSorv=DESP.filter(function(d){
+    const cc=(d._cc||'').toUpperCase();
+    const loc=(d._local||'').toUpperCase();
+    return cc==='SORVETERIA'||(loc==='SORVETERIA'&&!cc);
+  });
 
   // vCUSTOPROD — despesas classificadas como PRODUÇÃO
   const vProd=soma(dSorv.filter(function(d){return _catDesp(d)==='PROD';}));
