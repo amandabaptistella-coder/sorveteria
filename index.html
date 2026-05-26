@@ -78,6 +78,16 @@ table{width:100%;border-collapse:collapse;}
 th{text-align:left;padding:9px 11px;font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bd);font-weight:500;}
 td{padding:9px 11px;font-size:13px;border-bottom:1px solid rgba(46,44,41,.4);color:var(--tx);}
 tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02);}
+/* Sortable / filterable table */
+.sth{cursor:pointer;user-select:none;white-space:nowrap;transition:color .15s;}
+.sth:hover{color:var(--tx);}
+.sth:hover .si{opacity:.7;}
+.si{font-size:8px;opacity:.3;margin-left:3px;transition:opacity .15s;}
+.sa{color:var(--ac)!important;opacity:1!important;}
+.frow th{padding:3px 6px 5px;border-bottom:1px solid var(--bd);}
+.cfi{width:100%;background:var(--sf);border:1px solid var(--bd);color:var(--tx);padding:3px 7px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:11px;outline:none;transition:border-color .15s;}
+.cfi:focus{border-color:var(--ac);}
+.cfi::placeholder{color:var(--mu);opacity:.6;}
 .bge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;}
 .bg-gn{background:rgba(91,191,163,.15);color:var(--gn)}.bg-rd{background:rgba(212,87,74,.15);color:var(--rd)}.bg-yw{background:rgba(232,160,69,.15);color:var(--yw)}.bg-bl{background:rgba(91,143,191,.15);color:var(--bl)}
 .tsc{max-height:520px;overflow-y:auto;}
@@ -250,8 +260,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   </div>
   <div class="cd">
     <div class="ch"><span class="ct">Histórico Detalhado</span><span class="chip" id="prod-total-chip">—</span></div>
-    <div style="padding:10px 18px 0;"><input id="srch-prod" class="fc" type="text" placeholder="🔍 Filtrar por sabor, data..." oninput="_renderProdHist(filtrar(ALL_PROD))" style="max-width:360px;"></div>
-    <div class="tsc"><table><thead><tr><th>Data</th><th>Dia</th><th>Sabor</th><th>Litros</th><th>Qtd</th></tr></thead><tbody id="tbody-prod-hist"></tbody></table></div>
+    <div class="tsc" id="tbl-prod-hist"></div>
   </div>
 </div>
 
@@ -269,8 +278,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarRec()">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('rec-val').value=''">Limpar</button></div>
   </div>
   <div id="th-rec" style="display:none;">
-    <div style="margin-bottom:10px;"><input id="srch-rec" class="fc" type="text" placeholder="🔍 Filtrar por competência, tipo, forma de pagamento..." oninput="renderTabelaRec(filtrar(ALL_REC))" style="max-width:480px;"></div>
-    <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc" style="max-height:620px;"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Tipo</th><th>Forma</th><th>Tipo Pag.</th><th class="tx-r">Valor</th><th></th></tr></thead><tbody id="tbody-rec"></tbody></table></div></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-rec"></div></div>
   </div>
 </div>
 
@@ -289,8 +297,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarDesp()">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('desp-val').value=''">Limpar</button></div>
   </div>
   <div id="th-desp" style="display:none;">
-    <div style="margin-bottom:10px;"><input id="srch-desp" class="fc" type="text" placeholder="🔍 Filtrar por local, categoria, despesa..." oninput="renderTabelaDesp(filtrar(ALL_DESP))" style="max-width:480px;"></div>
-    <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc" style="max-height:620px;"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Local</th><th>Tipo</th><th>Categoria</th><th>Despesa</th><th class="tx-r">Valor</th><th></th></tr></thead><tbody id="tbody-desp"></tbody></table></div></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-desp"></div></div>
   </div>
 </div>
 
@@ -308,8 +315,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarProd()">💾 Salvar</button></div>
   </div>
   <div id="th-prod" style="display:none;">
-    <div style="margin-bottom:10px;"><input id="srch-prod-lanc" class="fc" type="text" placeholder="🔍 Filtrar por sabor, data..." oninput="renderTabelaProd(filtrar(ALL_PROD))" style="max-width:480px;"></div>
-    <div class="cd"><div class="ch"><span class="ct">Histórico de Produção</span><span class="chip" id="chip-prod-lanc">—</span></div><div class="tsc" style="max-height:620px;"><table><thead><tr><th>Competência</th><th>Data</th><th>Dia</th><th>Sabor</th><th>Litros</th><th>Qtd</th><th></th></tr></thead><tbody id="tbody-prod-lanc"></tbody></table></div></div>
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Produção</span><span class="chip" id="chip-prod-lanc">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-prod-lanc"></div></div>
   </div>
 </div>
 
@@ -457,6 +463,90 @@ function pVal(v){
 const brl=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
 const fData=function(d){const i=pData(d);if(!i)return d||'';const p=i.split('-');return p[2]+'/'+p[1]+'/'+p[0];};
 const soma=function(arr){return arr.reduce(function(s,r){return s+r._val;},0);};
+
+// ── Smart Table Engine ─────────────────────────────────────────
+// Estado por tabela: {col:idx, dir:1|-1, f:{colIdx:string}}
+const _TS={};
+const _TR={}; // renderers registrados por id
+
+function mkTable(opts){
+  // opts:{id, cols:[{key,label,cls,tdCls,noFilter,sk(row)}], data, snap, defaultSort, chipId,chipFn}
+  const id=opts.id;
+  if(!_TS[id])_TS[id]={col:opts.defaultSort!=null?opts.defaultSort:0,dir:-1,f:{}};
+  const st=_TS[id];
+
+  // Filtragem por coluna
+  let rows=opts.data||[];
+  Object.keys(st.f).forEach(function(ci){
+    const fv=(st.f[ci]||'').toLowerCase().trim();
+    if(!fv)return;
+    const col=opts.cols[parseInt(ci)];
+    rows=rows.filter(function(r){return String(col.sk?col.sk(r):(col.plain?col.plain(r):'')).toLowerCase().indexOf(fv)>=0;});
+  });
+
+  // Ordenação
+  const sc=opts.cols[st.col];
+  if(sc&&sc.sk){
+    rows=[].concat(rows).sort(function(a,b){
+      const av=sc.sk(a),bv=sc.sk(b);
+      if(av===bv)return 0;
+      return(av<bv?-1:1)*st.dir;
+    });
+  }
+
+  // Salva snap para edição (com índice original no array filtrado+ordenado)
+  if(opts.snap)window[opts.snap]=rows;
+
+  // Thead (headers clicáveis)
+  const ths=opts.cols.map(function(c,i){
+    const active=st.col===i;
+    const arr=active?(st.dir>0?'▲':'▼'):'⇅';
+    const ac=active?'sa':'';
+    return'<th class="sth '+(c.cls||'')+'" onclick="_tSort(\''+id+'\','+i+')">'
+      +c.label+' <span class="si '+ac+'">'+arr+'</span></th>';
+  }).join('');
+
+  // Linha de filtros
+  const fths=opts.cols.map(function(c,i){
+    if(c.noFilter)return'<th style="padding:3px 6px;"></th>';
+    const fv=st.f[i]||'';
+    return'<th style="padding:3px 6px 5px;">'
+      +'<input class="cfi" value="'+_esc(fv)+'" placeholder="▼ filtrar"'
+      +' oninput="_tFilter(\''+id+'\','+i+',this.value)"></th>';
+  }).join('');
+
+  // Tbody
+  const tbhtml=rows.length
+    ?rows.map(function(r,i){
+      return'<tr>'+opts.cols.map(function(c){
+        return'<td class="'+(c.tdCls||'')+'">'+c.render(r,i)+'</td>';
+      }).join('')+'</tr>';
+    }).join('')
+    :'<tr><td colspan="'+opts.cols.length+'" class="empty">Nenhum resultado</td></tr>';
+
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.innerHTML='<table><thead><tr>'+ths+'</tr><tr class="frow">'+fths+'</tr></thead><tbody>'+tbhtml+'</tbody></table>';
+
+  // Chip
+  if(opts.chipId&&opts.chipFn){
+    const ch=document.getElementById(opts.chipId);
+    if(ch)ch.textContent=opts.chipFn(opts.data,rows);
+  }
+}
+function _esc(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function _tSort(id,col){
+  const st=_TS[id]||{col:0,dir:-1,f:{}};
+  if(st.col===col)st.dir=-st.dir;else{st.col=col;st.dir=-1;}
+  _TS[id]=st;
+  if(_TR[id])_TR[id]();
+}
+function _tFilter(id,col,val){
+  const st=_TS[id]||{col:0,dir:-1,f:{}};
+  st.f[col]=val;
+  _TS[id]=st;
+  if(_TR[id])_TR[id]();
+}
 
 function normComp(v){
   if(!v)return'';
@@ -1148,40 +1238,98 @@ function _renderProdRanking(PROD){
 function _renderProdHist(PROD){
   const totQtd=PROD.reduce(function(s,p){return s+p._qtd;},0);
   const totLts=PROD.reduce(function(s,p){return s+p._lts;},0);
-  document.getElementById('prod-total-chip').textContent='Total: '+totQtd+' un. · '+totLts.toFixed(0)+'L em '+PROD.length+' lotes';
-  // Filtro local da tabela
-  const q=(document.getElementById('srch-prod')||{}).value||'';
-  const filtProd=q?PROD.filter(function(p){const t=(p._sabor+p._data+p._dia).toLowerCase();return t.indexOf(q.toLowerCase())>=0;}):PROD;
-  document.getElementById('tbody-prod-hist').innerHTML=filtProd.length
-    ?filtProd.map(function(p){return'<tr><td>'+fData(p._data)+'</td><td class="tx-mu">'+p._dia+'</td><td>'+(p._sabor||'—')+'</td><td class="tx-yw fm">'+p._lts+'L</td><td class="tx-mu">'+p._qtd+'</td></tr>';}).join('')
-    :'<tr><td colspan="5" class="empty">Sem lançamentos</td></tr>';
+  _TR['tbl-prod-hist']=function(){_renderProdHist(window._ALL_PRODHIST_CUR||PROD);};
+  window._ALL_PRODHIST_CUR=PROD;
+  mkTable({
+    id:'tbl-prod-hist',
+    defaultSort:0, // Data
+    chipId:'prod-total-chip',
+    chipFn:function(all,vis){
+      const qt=vis.reduce(function(s,p){return s+p._qtd;},0);
+      const lt=vis.reduce(function(s,p){return s+p._lts;},0);
+      return'Total: '+qt+' un. · '+lt.toFixed(0)+'L em '+vis.length+' lotes';
+    },
+    data:PROD,
+    cols:[
+      {label:'Data',   sk:function(p){return p._data||'';},plain:function(p){return fData(p._data);},render:function(p){return fData(p._data);}},
+      {label:'Dia',    sk:function(p){return p._dia||'';},plain:function(p){return p._dia||'';},tdCls:'tx-mu',render:function(p){return p._dia||'—';}},
+      {label:'Sabor',  sk:function(p){return p._sabor||'';},plain:function(p){return p._sabor||'';},render:function(p){return p._sabor||'—';}},
+      {label:'Litros', sk:function(p){return p._lts;},plain:function(p){return String(p._lts);},tdCls:'tx-yw fm',render:function(p){return p._lts+'L';}},
+      {label:'Qtd',    sk:function(p){return p._qtd;},plain:function(p){return String(p._qtd);},tdCls:'tx-mu',render:function(p){return p._qtd;}}
+    ]
+  });
 }
 
 // ── Histórico ─────────────────────────────────────────────────
 function renderTabelaRec(REC){
-  const ch=document.getElementById('chip-rec');if(ch)ch.textContent='Total: '+brl(soma(REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';})))+' ('+REC.length+' lançamentos)';
-  const tb=document.getElementById('tbody-rec');if(!tb)return;
-  const q=(document.getElementById('srch-rec')||{}).value||'';
-  const filtRec=q?REC.filter(function(r){const t=(r._comp+r._data+r._tipo+r._forma+r._tipag).toLowerCase();return t.indexOf(q.toLowerCase())>=0;}):REC;
-  // Guarda snapshot para edição
-  window._REC_SNAP=filtRec;
-  tb.innerHTML=filtRec.length?filtRec.map(function(r,i){return'<tr><td class="tx-mu fm">'+r._comp+'</td><td>'+fData(r._data)+'</td><td class="tx-mu">'+r._dia+'</td><td><span class="bge bg-gn">'+(r._tipo||'—')+'</span></td><td>'+(r._forma||'—')+'</td><td><span class="bge bg-bl">'+(r._tipag||'—')+'</span></td><td class="tx-r tx-gn fm">'+brl(r._val)+'</td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditRec('+i+')">✏️</button></td></tr>';}).join(''):'<tr><td colspan="8" class="empty">Nenhum resultado</td></tr>';
+  _TR['tbl-rec']=function(){renderTabelaRec(window._ALL_REC_CUR||REC);};
+  window._ALL_REC_CUR=REC;
+  mkTable({
+    id:'tbl-rec',
+    defaultSort:1, // Data
+    snap:'_REC_SNAP',
+    chipId:'chip-rec',
+    chipFn:function(all,vis){return'Total entradas: '+brl(soma(vis.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';})))+' · '+vis.length+'/'+all.length+' registros';},
+    data:REC,
+    cols:[
+      {label:'Competência',sk:function(r){return r._comp;},plain:function(r){return r._comp;},render:function(r){return'<span class="tx-mu fm">'+r._comp+'</span>';}},
+      {label:'Data',      sk:function(r){return r._data||'';},plain:function(r){return fData(r._data);},render:function(r){return fData(r._data);}},
+      {label:'Dia',       sk:function(r){return r._dia||'';},plain:function(r){return r._dia||'';},tdCls:'tx-mu',render:function(r){return r._dia||'—';}},
+      {label:'Tipo',      sk:function(r){return r._tipo||'';},plain:function(r){return r._tipo||'';},render:function(r){return'<span class="bge bg-gn">'+(r._tipo||'—')+'</span>';}},
+      {label:'Forma',     sk:function(r){return r._forma||'';},plain:function(r){return r._forma||'';},render:function(r){return r._forma||'—';}},
+      {label:'Tipo Pag.', sk:function(r){return r._tipag||'';},plain:function(r){return r._tipag||'';},render:function(r){return'<span class="bge bg-bl">'+(r._tipag||'—')+'</span>';}},
+      {label:'Valor',     sk:function(r){return r._val;},plain:function(r){return String(r._val);},tdCls:'tx-r tx-gn fm',render:function(r){return brl(r._val);}},
+      {label:'',noFilter:true,tdCls:'',render:function(r,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditRec('+i+')">✏️</button>';}}
+    ]
+  });
 }
 function renderTabelaDesp(DESP){
-  const ch=document.getElementById('chip-desp');if(ch)ch.textContent='Total Sorveteria: '+brl(soma(DESP.filter(function(d){return(d._local||'').toUpperCase()==='SORVETERIA';})))+' ('+DESP.length+' lançamentos)';
-  const tb=document.getElementById('tbody-desp');if(!tb)return;
-  const q=(document.getElementById('srch-desp')||{}).value||'';
-  const filtDesp=q?DESP.filter(function(d){const t=(d._comp+d._data+d._local+d._tipo+d._cc).toLowerCase();return t.indexOf(q.toLowerCase())>=0;}):DESP;
-  window._DESP_SNAP=filtDesp;
-  tb.innerHTML=filtDesp.length?filtDesp.map(function(d,i){const loc=(d._local||'').toUpperCase();return'<tr><td class="tx-mu fm">'+d._comp+'</td><td>'+fData(d._data)+'</td><td class="tx-mu">'+d._dia+'</td><td><span class="bge '+(loc==='SORVETERIA'?'bg-yw':'bg-bl')+'">'+(d._local||'—')+'</span></td><td class="tx-mu">'+(d._tipo||'—')+'</td><td>'+(d._cat||'—')+'</td><td>'+(d._desp||'—')+'</td><td class="tx-r tx-rd fm">'+brl(d._val)+'</td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditDesp('+i+')">✏️</button></td></tr>';}).join(''):'<tr><td colspan="9" class="empty">Nenhum resultado</td></tr>';
+  _TR['tbl-desp']=function(){renderTabelaDesp(window._ALL_DESP_CUR||DESP);};
+  window._ALL_DESP_CUR=DESP;
+  mkTable({
+    id:'tbl-desp',
+    defaultSort:1, // Data
+    snap:'_DESP_SNAP',
+    chipId:'chip-desp',
+    chipFn:function(all,vis){
+      const isSorv=function(d){const c=(d._cc||'').toUpperCase(),l=(d._local||'').toUpperCase();return c==='SORVETERIA'||(l==='SORVETERIA'&&!c);};
+      return'Total Sorveteria: '+brl(soma(vis.filter(isSorv)))+' · '+vis.length+'/'+all.length+' registros';
+    },
+    data:DESP,
+    cols:[
+      {label:'Competência',sk:function(d){return d._comp;},plain:function(d){return d._comp;},render:function(d){return'<span class="tx-mu fm">'+d._comp+'</span>';}},
+      {label:'Data',      sk:function(d){return d._data||'';},plain:function(d){return fData(d._data);},render:function(d){return fData(d._data);}},
+      {label:'Dia',       sk:function(d){return d._dia||'';},plain:function(d){return d._dia||'';},tdCls:'tx-mu',render:function(d){return d._dia||'—';}},
+      {label:'Local',     sk:function(d){return d._local||'';},plain:function(d){return d._local||'';},render:function(d){const loc=(d._local||'').toUpperCase();return'<span class="bge '+(loc==='SORVETERIA'?'bg-yw':'bg-bl')+'">'+(d._local||'—')+'</span>';}},
+      {label:'C. Custo',  sk:function(d){return d._cc||'';},plain:function(d){return d._cc||'';},render:function(d){return d._cc||'—';}},
+      {label:'Tipo',      sk:function(d){return d._tipo||'';},plain:function(d){return d._tipo||'';},tdCls:'tx-mu',render:function(d){return d._tipo||'—';}},
+      {label:'Categoria', sk:function(d){return d._cat||'';},plain:function(d){return d._cat||'';},render:function(d){return d._cat||'—';}},
+      {label:'Despesa',   sk:function(d){return d._desp||'';},plain:function(d){return d._desp||'';},render:function(d){return d._desp||'—';}},
+      {label:'Valor',     sk:function(d){return d._val;},plain:function(d){return String(d._val);},tdCls:'tx-r tx-rd fm',render:function(d){return brl(d._val);}},
+      {label:'',noFilter:true,tdCls:'',render:function(d,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditDesp('+i+')">✏️</button>';}}
+    ]
+  });
 }
 function renderTabelaProd(PROD){
-  const ch=document.getElementById('chip-prod-lanc');if(ch)ch.textContent='Total: '+PROD.length+' lotes';
-  const tb=document.getElementById('tbody-prod-lanc');if(!tb)return;
-  const q=(document.getElementById('srch-prod-lanc')||{}).value||'';
-  const filtP=q?PROD.filter(function(p){return(p._sabor+p._data+p._dia).toLowerCase().indexOf(q.toLowerCase())>=0;}):PROD;
-  window._PROD_SNAP=filtP;
-  tb.innerHTML=filtP.length?filtP.map(function(p,i){return'<tr><td class="tx-mu fm">'+p._comp+'</td><td>'+fData(p._data)+'</td><td class="tx-mu">'+p._dia+'</td><td>'+(p._sabor||'—')+'</td><td class="tx-yw fm">'+p._lts+'L</td><td class="tx-mu">'+p._qtd+'</td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditProd('+i+')">✏️</button></td></tr>';}).join(''):'<tr><td colspan="7" class="empty">Nenhum resultado</td></tr>';
+  _TR['tbl-prod-lanc']=function(){renderTabelaProd(window._ALL_PROD_CUR||PROD);};
+  window._ALL_PROD_CUR=PROD;
+  mkTable({
+    id:'tbl-prod-lanc',
+    defaultSort:1, // Data
+    snap:'_PROD_SNAP',
+    chipId:'chip-prod-lanc',
+    chipFn:function(all,vis){return vis.length+'/'+all.length+' lotes';},
+    data:PROD,
+    cols:[
+      {label:'Competência',sk:function(p){return p._comp;},plain:function(p){return p._comp;},render:function(p){return'<span class="tx-mu fm">'+p._comp+'</span>';}},
+      {label:'Data',      sk:function(p){return p._data||'';},plain:function(p){return fData(p._data);},render:function(p){return fData(p._data);}},
+      {label:'Dia',       sk:function(p){return p._dia||'';},plain:function(p){return p._dia||'';},tdCls:'tx-mu',render:function(p){return p._dia||'—';}},
+      {label:'Sabor',     sk:function(p){return p._sabor||'';},plain:function(p){return p._sabor||'';},render:function(p){return p._sabor||'—';}},
+      {label:'Litros',    sk:function(p){return p._lts;},plain:function(p){return String(p._lts);},tdCls:'tx-yw fm',render:function(p){return p._lts+'L';}},
+      {label:'Qtd',       sk:function(p){return p._qtd;},plain:function(p){return String(p._qtd);},tdCls:'tx-mu',render:function(p){return p._qtd;}},
+      {label:'',noFilter:true,tdCls:'',render:function(p,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditProd('+i+')">✏️</button>';}}
+    ]
+  });
 }
 
 // ── Salvar ────────────────────────────────────────────────────
