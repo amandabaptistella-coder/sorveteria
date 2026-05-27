@@ -127,6 +127,32 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 .cmp-val{font-weight:600;min-width:56px;text-align:right;color:var(--yw);}
 .cmp-delta{min-width:56px;text-align:right;}
 .rank-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(46,44,41,.3);font-size:12px;}
+/* ── Precificação Cards ── */
+.prec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;padding:4px 0;}
+.prec-card{background:var(--sf);border:1px solid var(--bd);border-radius:13px;overflow:hidden;display:flex;flex-direction:column;}
+.prec-card-top{padding:18px 20px 16px;position:relative;}
+.prec-card-accent{position:absolute;top:0;left:0;right:0;height:3px;}
+.prec-card-label{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.14em;margin-bottom:4px;}
+.prec-card-name{font-family:'DM Serif Display',serif;font-size:20px;line-height:1.1;margin-bottom:4px;}
+.prec-card-meta{font-size:11px;color:rgba(255,255,255,.5);}
+.prec-card-price{font-family:'DM Serif Display',serif;font-size:26px;line-height:1;margin-top:10px;}
+.prec-card-price-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px;}
+.prec-card-body{padding:14px 20px;flex:1;border-top:1px solid var(--bd);}
+.prec-card-body-title{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+.prec-ingr-row{display:flex;align-items:center;gap:0;padding:5px 0;border-bottom:1px solid rgba(46,44,41,.3);font-size:12px;}
+.prec-ingr-row:last-child{border-bottom:none;}
+.prec-ingr-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px;}
+.prec-ingr-qty{color:var(--mu);font-size:11px;white-space:nowrap;min-width:70px;text-align:right;padding-right:10px;}
+.prec-ingr-cost{color:var(--yw);font-weight:600;font-size:12px;min-width:70px;text-align:right;font-variant-numeric:tabular-nums;}
+.prec-card-footer{padding:14px 20px;border-top:1px solid var(--bd);background:var(--sf2);}
+.prec-foot-row{display:flex;justify-content:space-between;font-size:12px;color:var(--mu);padding:2px 0;}
+.prec-foot-row.tot{font-size:13px;font-weight:700;color:var(--tx);border-top:1px solid var(--bd);margin-top:6px;padding-top:8px;}
+.prec-foot-row.preco{font-size:14px;font-weight:700;color:var(--gn);border-top:2px solid var(--bd);margin-top:4px;padding-top:8px;}
+.prec-card-actions{display:flex;gap:6px;margin-top:12px;}
+.prec-hist-search{display:flex;gap:10px;align-items:center;margin-bottom:18px;}
+.prec-hist-search input{flex:1;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);padding:8px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+.prec-hist-search input:focus{border-color:var(--ac);}
+.prec-hist-empty{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:40px;text-align:center;color:var(--mu);}
 .rank-row:last-child{border-bottom:none;}
 .rank-num{font-size:11px;color:var(--mu);min-width:18px;text-align:right;}
 .rank-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -576,7 +602,12 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   </div>
 
   <div id="th-prec" style="display:none;">
-    <div class="cd"><div class="ch"><span class="ct">Precificações Salvas</span><span class="chip" id="chip-prec">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-prec"></div></div>
+    <div class="prec-hist-search">
+      <input id="prec-hist-filter" placeholder="🔍 Buscar sabor..." oninput="_filterPrecCards()" />
+      <span class="chip" id="chip-prec">—</span>
+      <button class="btn btn-g" style="white-space:nowrap;" onclick="renderPrecHist(true)">↻ Recarregar</button>
+    </div>
+    <div id="prec-cards-grid" class="prec-grid"><div class="prec-hist-empty">Carregando...</div></div>
   </div>
 </div>
 
@@ -1991,7 +2022,10 @@ function goTo(p,btn){
     renderPage(p);
   }
 }
-function switchTab(btn,id){btn.closest('.pg').querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');btn.closest('.pg').querySelectorAll('[id^="tf-"],[id^="th-"]').forEach(function(t){t.style.display='none';});document.getElementById(id).style.display='block';}
+function switchTab(btn,id){btn.closest('.pg').querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');btn.closest('.pg').querySelectorAll('[id^="tf-"],[id^="th-"]').forEach(function(t){t.style.display='none';});document.getElementById(id).style.display='block';
+  // Carrega histórico de precificação ao abrir a tab
+  if(id==='th-prec')renderPrecHist(false);
+}
 function updDia(p){const v=document.getElementById(p+'-data').value;if(!v)return;document.getElementById(p+'-dia').value=DS[new Date(v+'T12:00:00').getDay()];}
 function updCC(){updDespFields();}
 function setSS(m){document.getElementById('sync-status').textContent=m;}
@@ -2188,15 +2222,21 @@ function _renderCustoTable(){
   });
 }
 function _custoUnit(c){
-  // Convenção: CONVERSAO = quantas unidades-base existem na unidade
-  // Ex: KG=1000 (1 KG = 1000 gramas)
-  // custo_por_base = VALOR / (PESO × CONVERSAO)
-  // = 15,50 / (5 × 1000) = R$ 0,0031 por grama
+  // Custo por unidade cadastrada: VALOR / PESO
+  // Ex: Açúcar 5KG R$15,50 → 15,50/5 = R$3,10 por KG
   const peso=pVal(c.PESO_UNIDADE);
   const val=pVal(c.VALOR);
   if(!peso||!val)return 0;
-  const conv=_getConv(c.UNIDADE_MEDIDA); // ex: 1000 para KG
-  return conv>0?val/(peso*conv):0; // R$ por unidade-base
+  return val/peso; // R$ por unidade-medida registrada (ex: R$/KG)
+}
+function _custoUnitBase(c){
+  // Custo por unidade-BASE (gram/mL/un) para uso interno na precificação
+  // Ex: Açúcar 5KG R$15,50 → 15,50/(5×1000) = R$0,0031 por grama
+  const peso=pVal(c.PESO_UNIDADE);
+  const val=pVal(c.VALOR);
+  if(!peso||!val)return 0;
+  const conv=_getConv(c.UNIDADE_MEDIDA);
+  return conv>0?val/(peso*conv):0;
 }
 function _getConv(um){
   const ums=CAD_DATA['CAD_UNIDADE_MEDIDA']||[];
@@ -2285,26 +2325,11 @@ async function renderPrec(){
   // Unidades
   const ums=(CAD_DATA['CAD_UNIDADE_MEDIDA']||[]).filter(function(x){return(x.ATIVO||'').toUpperCase()!=='FALSE';});
   const usel=document.getElementById('prec-um');
-  if(usel)usel.innerHTML='<option value="">—</option>'+ums.map(function(x){return'<option value="'+_esc(x.ID_UNIDADE_MEDIDA||x.DS_UNIDADE_MEDIDA||'')+'">'+_esc(x.DS_UNIDADE_MEDIDA||x.ID_UNIDADE_MEDIDA||'')+'</option>';}).join('');
-  // Histórico
-  try{const r2=await api({action:'read',sheet:'PRECIFICACAO'});
-    _TR['tbl-prec']=function(){};
-    mkTable({id:'tbl-prec',defaultSort:2,chipId:'chip-prec',chipFn:function(a,v){return v.length+' precificações';},
-      data:r2.rows||[],
-      cols:[
-        {label:'Sabor',sk:function(p){return p.DS_SABOR||'';},plain:function(p){return p.DS_SABOR||'';},render:function(p){return p.DS_SABOR||'—';}},
-        {label:'Data', sk:function(p){return p.DT_CALCULO||'';},plain:function(p){return p.DT_CALCULO||'';},render:function(p){return fData(p.DT_CALCULO||'');}},
-        {label:'Volume',sk:function(p){return pVal(p.VOLUME_LITROS);},plain:function(p){return p.VOLUME_LITROS||'';},tdCls:'tx-r fm',render:function(p){return (p.VOLUME_LITROS||'')+'L';}},
-        {label:'Custo Total',sk:function(p){return pVal(p.CUSTO_TOTAL);},plain:function(p){return String(pVal(p.CUSTO_TOTAL));},tdCls:'tx-r tx-rd fm',render:function(p){return brl(pVal(p.CUSTO_TOTAL));}},
-        {label:'Custo/L',    sk:function(p){return pVal(p.CUSTO_POR_LITRO);},plain:function(p){return String(pVal(p.CUSTO_POR_LITRO));},tdCls:'tx-r tx-yw fm',render:function(p){return brl(pVal(p.CUSTO_POR_LITRO));}},
-        {label:'Margem %',   sk:function(p){return pVal(p.MARGEM_LUCRO);},plain:function(p){return p.MARGEM_LUCRO||'';},tdCls:'tx-r fm',render:function(p){return (p.MARGEM_LUCRO||'0')+'%';}},
-        {label:'Preço Sug.', sk:function(p){return pVal(p.PRECO_SUGERIDO);},plain:function(p){return String(pVal(p.PRECO_SUGERIDO));},tdCls:'tx-r tx-gn fm',render:function(p){return brl(pVal(p.PRECO_SUGERIDO));}},
-        {label:'Obs.',sk:function(p){return p.OBSERVACAO||'';},plain:function(p){return p.OBSERVACAO||'';},render:function(p){return p.OBSERVACAO||'—';}}
-      ]
-    });
-  }catch(e){}
+  if(usel)usel.innerHTML='<option value="">—</option>'+ums.map(function(x){const nm=x.DS_UNIDADE_MEDIDA||x.ID_UNIDADE_MEDIDA||'';return'<option value="'+_esc(nm)+'">'+_esc(nm)+'</option>';}).join('');
   _renderPrecItens();
   calcPrec();
+  // Carrega histórico em background
+  renderPrecHist(false);
 }
 function updPrecUm(){
   // Convenção: CONVERSAO = quantas unidades-base há na unidade
@@ -2330,28 +2355,25 @@ function updPrecUm(){
   }
 
   const reg=custoReg[0];
-  const regPeso=pVal(reg.PESO_UNIDADE);   // ex: 5 (kg)
-  const regVal=pVal(reg.VALOR);           // ex: 15,50
-  const convCadastro=_getConv(reg.UNIDADE_MEDIDA); // ex: 1000 para KG
-  const convUsado=_getConv(umId);         // ex: 1 para GRAMAS
+  // custoPorUnitBase = R$ por unidade-base (grama, mL, un)
+  // Ex: Açúcar 5KG R$15,50 → 15,50/(5×1000) = R$0,0031/g
+  const custoPorUnitBase=_custoUnitBase(reg);
 
-  if(!regPeso||!convCadastro){
+  if(!custoPorUnitBase){
     if(cu)cu.value='Erro no cadastro';if(ci)ci.value='';
     window._PREC_CUSTO_UNIT=0;window._PREC_CUSTO_ITEM=0;return;
   }
 
-  // Custo por unidade-base (ex: por grama)
-  // = VALOR / (PESO × CONVERSAO_cadastro)
-  // = 15,50 / (5 × 1000) = R$ 0,0031/g
-  const custoPorUnitBase=regVal/(regPeso*convCadastro);
+  // Conversão da unidade escolhida na receita (ex: GRAMAS=1, KG=1000)
+  const convUsado=_getConv(umId);
 
-  // Custo por 1 unidade da medida usada na receita
-  // Ex: custo por 1 GRAMA = custoPorUnitBase × convUsado(1) = 0,0031
-  // Ex: custo por 1 KG    = custoPorUnitBase × 1000 = 3,10
+  // Custo por 1 unidade usada na receita
+  // Ex: 1 GRAMA = custoPorUnitBase × 1 = 0,0031
+  // Ex: 1 KG    = custoPorUnitBase × 1000 = 3,10
   const custoUnit=custoPorUnitBase*convUsado;
 
   // Custo total do item = qtd × custo por unidade
-  // = 650 × 0,0031 = R$ 2,015
+  // Ex: 650g × 0,0031 = R$ 2,015
   const custoItem=qtd*custoUnit;
 
   // Guarda valores calculados para uso em addPrecItem (evita parsear brl de volta)
@@ -2432,6 +2454,155 @@ function calcPrec(){
   upd('prec-r-litro',brl(custLitro)+'/L');
   upd('prec-r-margem',fDec(margem,0)+'%');
   upd('prec-r-preco',brl(precoSug));
+}
+// ── Histórico de precificações: cards por sabor ──────────────────
+var _PREC_ALL=[];   // cabeçalhos PRECIFICACAO
+var _PREC_ITENS_ALL=[];  // todos os itens PRECIFICACAO_ITENS
+var _PREC_COLORS=['#e8a045','#5bbfa3','#5b8fbf','#a07fd4','#d4574a','#d4a74a'];
+async function renderPrecHist(force){
+  const grid=document.getElementById('prec-cards-grid');
+  const chip=document.getElementById('chip-prec');
+  if(force||!_PREC_ALL.length){
+    if(grid)grid.innerHTML='<div class="prec-hist-empty">⏳ Carregando...</div>';
+    try{
+      const [r1,r2]=await Promise.all([
+        api({action:'read',sheet:'PRECIFICACAO'}),
+        api({action:'read',sheet:'PRECIFICACAO_ITENS'})
+      ]);
+      _PREC_ALL=r1.rows||[];
+      _PREC_ITENS_ALL=r2.rows||[];
+    }catch(e){if(grid)grid.innerHTML='<div class="prec-hist-empty tx-rd">Erro ao carregar dados.</div>';return;}
+  }
+  _renderPrecCards();
+}
+function _renderPrecCards(){
+  const grid=document.getElementById('prec-cards-grid');
+  const chip=document.getElementById('chip-prec');
+  const q=(document.getElementById('prec-hist-filter')||{}).value||'';
+  const filt=q.trim().toUpperCase();
+  // Agrupa itens por ID_RECEITA
+  const itensPorRec={};
+  _PREC_ITENS_ALL.forEach(function(it){
+    const id=it.ID_RECEITA||'';
+    if(!itensPorRec[id])itensPorRec[id]=[];
+    itensPorRec[id].push(it);
+  });
+  // Filtra receitas
+  const recs=_PREC_ALL.filter(function(r){
+    return !filt||(r.DS_SABOR||'').toUpperCase().indexOf(filt)>=0;
+  }).sort(function(a,b){return(b.DT_CALCULO||'')>(a.DT_CALCULO||'')?1:-1;});
+  if(chip)chip.textContent=recs.length+' precificações';
+  if(!recs.length){
+    if(grid)grid.innerHTML='<div class="prec-hist-empty">'+(filt?'Nenhum sabor encontrado para "'+q+'".':'Nenhuma precificação cadastrada. Use a aba Nova Precificação.')+'</div>';
+    return;
+  }
+  const html=recs.map(function(rec,idx){
+    const cor=_PREC_COLORS[idx%_PREC_COLORS.length];
+    const itens=itensPorRec[rec.ID_RECEITA||'']||[];
+    const vol=pVal(rec.VOLUME_LITROS)||10;
+    const custTotal=pVal(rec.CUSTO_TOTAL);
+    const custLitro=pVal(rec.CUSTO_POR_LITRO);
+    const precoSug=pVal(rec.PRECO_SUGERIDO);
+    const margem=pVal(rec.MARGEM_LUCRO);
+    const custIngr=pVal(rec.CUSTO_INGREDIENTES);
+    const custEmb=pVal(rec.CUSTO_EMBALAGEM);
+    const ingrRows=itens.map(function(it){
+      const qtd=pVal(it.QUANTIDADE);
+      const um=it.UNIDADE_MEDIDA||'';
+      const umNome=(function(){
+        const ums=CAD_DATA['CAD_UNIDADE_MEDIDA']||[];
+        const s=String(um).trim().toUpperCase();
+        for(var k=0;k<ums.length;k++){
+          const u=ums[k];
+          if(String(u.ID_UNIDADE_MEDIDA||'').trim().toUpperCase()===s||String(u.DS_UNIDADE_MEDIDA||'').trim().toUpperCase()===s)
+            return u.DS_UNIDADE_MEDIDA||um;
+        }
+        return um;
+      })();
+      const custoItem=pVal(it.CUSTO_ITEM);
+      return'<div class="prec-ingr-row"><span class="prec-ingr-name">'+_esc(it.DS_INGREDIENTE||'—')+'</span>'+
+        '<span class="prec-ingr-qty">'+qtd+' '+_esc(umNome)+'</span>'+
+        '<span class="prec-ingr-cost">'+brl(custoItem)+'</span></div>';
+    }).join('');
+    const rowNum=parseInt(rec._ROW)||0;
+    return'<div class="prec-card">'+
+      '<div class="prec-card-top" style="background:linear-gradient(135deg,'+cor+'22 0%,'+cor+'08 100%);">'+
+        '<div class="prec-card-accent" style="background:'+cor+';"></div>'+
+        '<div class="prec-card-label">'+vol+'L · '+fData(rec.DT_CALCULO||'')+'</div>'+
+        '<div class="prec-card-name" style="color:'+cor+';">'+_esc(rec.DS_SABOR||'—')+'</div>'+
+        (rec.OBSERVACAO?'<div class="prec-card-meta">'+_esc(rec.OBSERVACAO)+'</div>':'')+
+        '<div class="prec-card-price" style="color:var(--gn);">'+brl(precoSug)+'</div>'+
+        '<div class="prec-card-price-sub">Preço sugerido · '+brl(custLitro)+'/L custo · '+fDec(margem,0)+'% margem</div>'+
+      '</div>'+
+      (itens.length?
+        '<div class="prec-card-body">'+
+          '<div class="prec-card-body-title">🧂 '+itens.length+' ingrediente'+(itens.length>1?'s':'')+'</div>'+
+          ingrRows+
+        '</div>'
+      :'<div class="prec-card-body"><span class="empty">Sem ingredientes registrados</span></div>')+
+      '<div class="prec-card-footer">'+
+        '<div class="prec-foot-row"><span>Custo Ingredientes</span><span>'+brl(custIngr)+'</span></div>'+
+        '<div class="prec-foot-row"><span>Custo Embalagem/Outros</span><span>'+brl(custEmb)+'</span></div>'+
+        '<div class="prec-foot-row tot"><span>Custo Total</span><span class="tx-rd">'+brl(custTotal)+'</span></div>'+
+        '<div class="prec-card-actions">'+
+          '<button class="btn btn-g" style="flex:1;font-size:12px;" onclick="loadPrecEdit(\''+_esc(rec.ID_RECEITA||'')+'\')">✏️ Carregar para Edição</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  if(grid)grid.innerHTML=html;
+}
+function _filterPrecCards(){_renderPrecCards();}
+function loadPrecEdit(idRec){
+  const rec=_PREC_ALL.find(function(r){return r.ID_RECEITA===idRec;});
+  if(!rec)return;
+  const itens=(_PREC_ITENS_ALL||[]).filter(function(it){return it.ID_RECEITA===idRec;});
+  // Popula cabeçalho
+  const setV=function(id,v){const el=document.getElementById(id);if(el)el.value=v||'';};
+  setV('prec-vol',rec.VOLUME_LITROS||10);
+  setV('prec-data',rec.DT_CALCULO||'');
+  setV('prec-emb',rec.CUSTO_EMBALAGEM||0);
+  setV('prec-margem',rec.MARGEM_LUCRO||60);
+  setV('prec-obs',rec.OBSERVACAO||'');
+  // Sabor
+  const ssel=document.getElementById('prec-sabor');
+  if(ssel){for(var i=0;i<ssel.options.length;i++){if(ssel.options[i].value===rec.DS_SABOR){ssel.selectedIndex=i;break;}}}
+  // Ingredientes: reconstrói PREC_ITENS a partir dos dados salvos
+  // Recalcula custo_unit e custo_item com os dados atuais de CUSTOS
+  PREC_ITENS=itens.map(function(it){
+    const ingrId=it.ID_INGREDIENTE||it.DS_INGREDIENTE||'';
+    const um=it.UNIDADE_MEDIDA||'';
+    const qtd=pVal(it.QUANTIDADE);
+    const umNome=(function(){
+      const ums=CAD_DATA['CAD_UNIDADE_MEDIDA']||[];
+      const s=String(um).trim().toUpperCase();
+      for(var k=0;k<ums.length;k++){
+        const u=ums[k];
+        if(String(u.ID_UNIDADE_MEDIDA||'').trim().toUpperCase()===s||String(u.DS_UNIDADE_MEDIDA||'').trim().toUpperCase()===s)
+          return u.DS_UNIDADE_MEDIDA||um;
+      }
+      return um;
+    })();
+    // Tenta recalcular com custo atual
+    const custoReg=ALL_CUSTO.filter(function(c){
+      return String(c.ID_INGREDIENTE||c.DS_INGREDIENTE||'')===ingrId;
+    }).sort(function(a,b){return(b.DT_ATUALIZACAO||'')>(a.DT_ATUALIZACAO||'')?1:-1;});
+    var custo_unit=pVal(it.CUSTO_UNITARIO);
+    var custo_item=pVal(it.CUSTO_ITEM);
+    if(custoReg.length){
+      const convBase=_custoUnitBase(custoReg[0]);
+      const convUm=_getConv(um);
+      custo_unit=convBase*convUm;
+      custo_item=qtd*custo_unit;
+    }
+    return{id:ingrId,nome:it.DS_INGREDIENTE||'',um:um,umNome:umNome,qtd:qtd,custo_unit:custo_unit,custo_item:custo_item};
+  });
+  _renderPrecItens();
+  calcPrec();
+  // Vai para a aba de edição
+  const btnNova=document.querySelector('#page-precificacao .tab');
+  if(btnNova)btnNova.click();
+  showToast('Receita "'+rec.DS_SABOR+'" carregada para edição ✅','success');
 }
 async function salvarPrec(){
   const sabor=(document.getElementById('prec-sabor').value||'').trim();
