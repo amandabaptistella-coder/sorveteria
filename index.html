@@ -153,6 +153,11 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <button class="ni" onclick="goTo('receitas',this)"><span class="ic">💰</span> Receitas</button>
     <button class="ni" onclick="goTo('despesas',this)"><span class="ic">💸</span> Despesas</button>
     <button class="ni" onclick="goTo('producao-lanc',this)"><span class="ic">➕</span> Prod. Lançamento</button>
+    <div class="nl">Financeiro</div>
+    <button class="ni" onclick="goTo('pagamentos',this)"><span class="ic">🧾</span> Pagamentos</button>
+    <div class="nl">Operacional</div>
+    <button class="ni" onclick="goTo('custos',this)"><span class="ic">🧂</span> Custos</button>
+    <button class="ni" onclick="goTo('precificacao',this)"><span class="ic">💲</span> Precificação</button>
     <div class="nl">Configurações</div>
     <button class="ni" onclick="goTo('cadastros',this)"><span class="ic">📝</span> Cadastros</button>
   </nav>
@@ -329,6 +334,9 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <button class="tab" onclick="switchCadTab(this,'cad-cc')">🏢 Centro de Custo</button>
     <button class="tab" onclick="switchCadTab(this,'cad-func')">👤 Funcionários</button>
     <button class="tab" onclick="switchCadTab(this,'cad-taxas')">📊 Taxas Cartão</button>
+    <button class="tab" onclick="switchCadTab(this,'cad-fornecedor')">🚚 Fornecedores</button>
+    <button class="tab" onclick="switchCadTab(this,'cad-ingr')">🧂 Ingredientes</button>
+    <button class="tab" onclick="switchCadTab(this,'cad-um')">⚖️ Unid. Medida</button>
   </div>
   <!-- Sabores -->
   <div id="cad-sabores" class="cad-tab">
@@ -354,6 +362,44 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   <div id="cad-func" class="cad-tab" style="display:none;">
     <div class="g2"><div class="cd"><div class="ch"><span class="ct">Novo Funcionário</span></div><div class="cb"><div class="fgr" style="margin-bottom:10px;"><label class="fgl">Nome</label><input type="text" class="fc" id="cad-func-nome" placeholder="Ex: MARIA SILVA" style="text-transform:uppercase"></div><div class="fgr" style="margin-bottom:14px;"><label class="fgl">Cargo</label><input type="text" class="fc" id="cad-func-cargo" placeholder="Ex: ATENDENTE" style="text-transform:uppercase"></div><div class="fa" style="margin-top:0;padding-top:14px;"><button class="btn btn-p" onclick="salvarFuncionario()">➕ Adicionar</button></div></div></div>
     <div class="cd"><div class="ch"><span class="ct">Funcionários</span><span class="chip" id="chip-cad-func">—</span></div><div class="tsc" id="list-cad-func"><p class="empty">Carregando...</p></div></div></div>
+  </div>
+  <!-- Fornecedores -->
+  <div id="cad-fornecedor" class="cad-tab" style="display:none;">
+    <div class="g2">
+      <div class="cd"><div class="ch"><span class="ct">Novo Fornecedor</span></div><div class="cb">
+        <div class="fgr" style="margin-bottom:14px;"><label class="fgl">Nome do Fornecedor</label><input type="text" class="fc" id="cad-forn-nome" placeholder="Ex: LATICÍNIOS BOA VISTA" style="text-transform:uppercase"></div>
+        <div class="fa" style="margin-top:0;padding-top:14px;"><button class="btn btn-p" onclick="salvarCadForn()">➕ Adicionar</button></div>
+      </div></div>
+      <div class="cd"><div class="ch"><span class="ct">Fornecedores Cadastrados</span><span class="chip" id="chip-cad-forn">—</span></div><div class="tsc" id="list-cad-forn"><p class="empty">Carregando...</p></div></div>
+    </div>
+  </div>
+  <!-- Ingredientes -->
+  <div id="cad-ingr" class="cad-tab" style="display:none;">
+    <div class="g2">
+      <div class="cd"><div class="ch"><span class="ct">Novo Ingrediente</span></div><div class="cb">
+        <div class="fgr" style="margin-bottom:14px;"><label class="fgl">Nome do Ingrediente</label><input type="text" class="fc" id="cad-ingr-nome" placeholder="Ex: LEITE CONDENSADO" style="text-transform:uppercase"></div>
+        <div class="fa" style="margin-top:0;padding-top:14px;"><button class="btn btn-p" onclick="salvarCadIngr()">➕ Adicionar</button></div>
+      </div></div>
+      <div class="cd"><div class="ch"><span class="ct">Ingredientes Cadastrados</span><span class="chip" id="chip-cad-ingr">—</span></div><div class="tsc" id="list-cad-ingr"><p class="empty">Carregando...</p></div></div>
+    </div>
+  </div>
+  <!-- Unidades de Medida -->
+  <div id="cad-um" class="cad-tab" style="display:none;">
+    <div class="g2">
+      <div class="cd"><div class="ch"><span class="ct">Nova Unidade de Medida</span></div><div class="cb">
+        <div style="background:rgba(91,143,191,.08);border:1px solid rgba(91,143,191,.2);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--mu);line-height:1.6;">
+          💡 <strong style="color:var(--tx)">Conversão</strong>: valor em relação à unidade-base de cada tipo.<br>
+          Ex: kg=1, g=0.001 · L=1, mL=0.001 · un=1
+        </div>
+        <div class="fg">
+          <div class="fgr"><label class="fgl">Sigla (ex: g, kg, mL)</label><input type="text" class="fc" id="cad-um-sigla" placeholder="Ex: g"></div>
+          <div class="fgr"><label class="fgl">Descrição</label><input type="text" class="fc" id="cad-um-desc" placeholder="Ex: Gramas" style="text-transform:uppercase"></div>
+        </div>
+        <div class="fgr" style="margin-bottom:14px;"><label class="fgl">Fator de Conversão (para unidade-base)</label><input type="number" class="fc" id="cad-um-conv" placeholder="Ex: 0.001" step="0.0001" min="0.0001"></div>
+        <div class="fa" style="margin-top:0;padding-top:14px;"><button class="btn btn-p" onclick="salvarCadUM()">➕ Adicionar</button></div>
+      </div></div>
+      <div class="cd"><div class="ch"><span class="ct">Unidades Cadastradas</span><span class="chip" id="chip-cad-um">—</span></div><div class="tsc" id="list-cad-um"><p class="empty">Carregando...</p></div></div>
+    </div>
   </div>
   <!-- Taxas Cartão -->
   <div id="cad-taxas" class="cad-tab" style="display:none;">
@@ -388,6 +434,148 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
         <div class="tsc" id="list-cad-taxas"><p class="empty">Carregando...</p></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ===== PAGAMENTOS ===== -->
+<div class="pg" id="page-pagamentos">
+  <div class="ph"><div><div class="pt">Pagamentos</div><div class="ps">Contas a pagar e controle de boletos</div></div></div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this,'tf-pag')">Novo Boleto</button>
+    <button class="tab" onclick="switchTab(this,'th-pag')">Histórico Completo</button>
+  </div>
+  <div id="tf-pag" class="fs2">
+    <div class="fg">
+      <div class="fgr"><label class="fgl">Fornecedor</label><select class="fc" id="pag-forn"><option value="">Selecione...</option></select></div>
+      <div class="fgr"><label class="fgl">Vencimento</label><input type="date" class="fc" id="pag-venc"></div>
+    </div>
+    <div class="fg fg3">
+      <div class="fgr"><label class="fgl">Parcela</label><input type="text" class="fc" id="pag-parcela" placeholder="Ex: 1/3 ou Única"></div>
+      <div class="fgr"><label class="fgl">Valor (R$)</label><input type="number" class="fc" id="pag-valor" placeholder="0,00" step="0.01"></div>
+      <div class="fgr"><label class="fgl">Situação Pagamento</label>
+        <select class="fc" id="pag-sit"><option value="NÃO">NÃO</option><option value="SIM">SIM</option></select>
+      </div>
+    </div>
+    <div class="fg">
+      <div class="fgr"><label class="fgl">Data de Pagamento</label><input type="date" class="fc" id="pag-dtpag"></div>
+      <div class="fgr"><label class="fgl">Observação</label><input type="text" class="fc" id="pag-obs" placeholder="Opcional" style="text-transform:uppercase"></div>
+    </div>
+    <div class="fa"><button class="btn btn-p" onclick="salvarPag()">💾 Salvar Boleto</button><button class="btn btn-g" onclick="clearPag()">Limpar</button></div>
+  </div>
+  <div id="th-pag" style="display:none;">
+    <div class="g3" style="margin-bottom:16px;">
+      <div class="kc rd" style="border-radius:9px;padding:14px;background:var(--sf);border:1px solid var(--bd);"><div class="kl">Em Aberto</div><div class="kv fm tx-rd" id="kpi-pag-aberto">—</div><div class="ks" id="kpi-pag-aberto-s"></div></div>
+      <div class="kc gn" style="border-radius:9px;padding:14px;background:var(--sf);border:1px solid var(--bd);"><div class="kl">Pagos</div><div class="kv fm tx-gn" id="kpi-pag-pago">—</div><div class="ks" id="kpi-pag-pago-s"></div></div>
+      <div class="kc yw" style="border-radius:9px;padding:14px;background:var(--sf);border:1px solid var(--bd);"><div class="kl">Total Geral</div><div class="kv fm" id="kpi-pag-total">—</div><div class="ks" id="kpi-pag-total-s"></div></div>
+    </div>
+    <div class="cd"><div class="ch"><span class="ct">Boletos Lançados</span><span class="chip" id="chip-pag">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-pag"></div></div>
+  </div>
+</div>
+
+<!-- ===== CUSTOS ===== -->
+<div class="pg" id="page-custos">
+  <div class="ph"><div><div class="pt">Custos de Ingredientes</div><div class="ps">Registro e atualização de preços</div></div></div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this,'tf-custo')">Novo Registro</button>
+    <button class="tab" onclick="switchTab(this,'th-custo')">Histórico de Custos</button>
+  </div>
+  <div id="tf-custo" class="fs2">
+    <div class="fg">
+      <div class="fgr"><label class="fgl">Ingrediente</label><select class="fc" id="custo-ingr"><option value="">Selecione...</option></select></div>
+      <div class="fgr"><label class="fgl">Unidade de Medida</label><select class="fc" id="custo-um"><option value="">Selecione...</option></select></div>
+    </div>
+    <div class="fg fg3">
+      <div class="fgr"><label class="fgl">Peso / Quantidade por Unidade</label><input type="number" class="fc" id="custo-peso" placeholder="Ex: 1000 (para 1kg)" step="0.001"></div>
+      <div class="fgr"><label class="fgl">Valor (R$)</label><input type="number" class="fc" id="custo-valor" placeholder="0,00" step="0.01"></div>
+      <div class="fgr"><label class="fgl">Data de Atualização</label><input type="date" class="fc" id="custo-data"></div>
+    </div>
+    <div style="background:rgba(91,143,191,.08);border:1px solid rgba(91,143,191,.2);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--mu);line-height:1.6;">
+      💡 <strong style="color:var(--tx)">Como preencher:</strong> se comprar 1kg de leite condensado por R$ 8,50, informe<br>
+      Unidade: <strong>g (gramas)</strong> · Peso: <strong>1000</strong> · Valor: <strong>8,50</strong>. O custo por grama será calculado automaticamente.
+    </div>
+    <div class="fa"><button class="btn btn-p" onclick="salvarCusto()">💾 Salvar</button><button class="btn btn-g" onclick="clearCusto()">Limpar</button></div>
+  </div>
+  <div id="th-custo" style="display:none;">
+    <div class="cd"><div class="ch"><span class="ct">Histórico de Custos</span><span class="chip" id="chip-custo">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-custo"></div></div>
+  </div>
+</div>
+
+<!-- ===== PRECIFICAÇÃO ===== -->
+<div class="pg" id="page-precificacao">
+  <div class="ph"><div><div class="pt">Precificação de Sabores</div><div class="ps">Monte a ficha técnica e calcule o custo do balde</div></div></div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this,'tf-prec')">Nova Precificação</button>
+    <button class="tab" onclick="switchTab(this,'th-prec')">Histórico</button>
+  </div>
+
+  <div id="tf-prec">
+    <!-- Cabeçalho da receita -->
+    <div class="cd" style="margin-bottom:16px;">
+      <div class="ch"><span class="ct">🧁 Dados da Receita</span></div>
+      <div class="cb">
+        <div class="fg fg3">
+          <div class="fgr"><label class="fgl">Sabor</label><select class="fc" id="prec-sabor"><option value="">Selecione...</option></select></div>
+          <div class="fgr"><label class="fgl">Volume do Balde (litros)</label><input type="number" class="fc" id="prec-vol" value="10" step="1" min="1"></div>
+          <div class="fgr"><label class="fgl">Data do Cálculo</label><input type="date" class="fc" id="prec-data"></div>
+        </div>
+        <div class="fg">
+          <div class="fgr"><label class="fgl">Custo de Embalagem/Outros (R$)</label><input type="number" class="fc" id="prec-emb" value="0" step="0.01" oninput="calcPrec()"></div>
+          <div class="fgr"><label class="fgl">Margem de Lucro Desejada (%)</label>
+            <div style="position:relative;"><input type="number" class="fc" id="prec-margem" value="60" step="1" min="0" max="500" style="padding-right:28px;" oninput="calcPrec()">
+            <span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:13px;pointer-events:none;">%</span></div>
+          </div>
+          <div class="fgr"><label class="fgl">Observação</label><input type="text" class="fc" id="prec-obs" placeholder="Opcional"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2" style="align-items:start;">
+      <!-- Adicionador de ingredientes -->
+      <div class="cd" style="margin-bottom:16px;">
+        <div class="ch"><span class="ct">🧂 Adicionar Ingrediente</span></div>
+        <div class="cb">
+          <div class="fg">
+            <div class="fgr"><label class="fgl">Ingrediente</label><select class="fc" id="prec-ingr"><option value="">Selecione...</option></select></div>
+            <div class="fgr"><label class="fgl">Unidade de Medida</label><select class="fc" id="prec-um" onchange="updPrecUm()"><option value="">—</option></select></div>
+          </div>
+          <div class="fg fg3">
+            <div class="fgr"><label class="fgl">Quantidade</label><input type="number" class="fc" id="prec-qtd" placeholder="Ex: 500" step="0.001" min="0" oninput="updPrecUm()"></div>
+            <div class="fgr"><label class="fgl">Custo Unitário (R$/unid)</label><input type="text" class="fc" id="prec-custo-unit" readonly style="color:var(--mu);" placeholder="—"></div>
+            <div class="fgr"><label class="fgl">Custo do Item (R$)</label><input type="text" class="fc" id="prec-custo-item" readonly style="color:var(--ac);font-weight:600;" placeholder="—"></div>
+          </div>
+          <div class="fa" style="margin-top:0;padding-top:14px;"><button class="btn btn-p" onclick="addPrecItem()">➕ Adicionar à Receita</button></div>
+        </div>
+      </div>
+
+      <!-- Resumo do custo -->
+      <div class="cd" style="margin-bottom:16px;">
+        <div class="ch"><span class="ct">💰 Resumo de Custo</span></div>
+        <div class="cb" id="prec-resumo">
+          <div class="dr"><span style="color:var(--mu);">Custo Ingredientes</span><span class="fm" id="prec-r-ingr">R$ 0,00</span></div>
+          <div class="dr"><span style="color:var(--mu);">Custo Embalagem/Outros</span><span class="fm" id="prec-r-emb">R$ 0,00</span></div>
+          <div class="dr tot"><span>Custo Total do Balde</span><span class="fm tx-rd" id="prec-r-total">R$ 0,00</span></div>
+          <div class="dr"><span style="color:var(--mu);">Custo por Litro</span><span class="fm" id="prec-r-litro">R$ 0,00</span></div>
+          <div style="height:1px;background:var(--bd);margin:10px 0;"></div>
+          <div class="dr"><span style="color:var(--mu);">Margem Aplicada</span><span class="fm tx-yw" id="prec-r-margem">60%</span></div>
+          <div class="dr tot" style="border-top:2px solid var(--ac);"><span style="color:var(--ac);font-weight:700;">Preço Sugerido (balde)</span><span class="fm tx-gn" id="prec-r-preco" style="font-size:18px;">R$ 0,00</span></div>
+        </div>
+        <div style="padding:0 18px 14px;">
+          <button class="btn btn-p" style="width:100%;" onclick="salvarPrec()">💾 Salvar Precificação</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de ingredientes adicionados -->
+    <div class="cd">
+      <div class="ch"><span class="ct">📋 Ingredientes da Receita</span><span class="chip" id="chip-prec-itens">0 itens</span></div>
+      <div id="tbl-prec-itens">
+        <p class="empty" style="padding:24px;">Nenhum ingrediente adicionado. Use o formulário acima.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="th-prec" style="display:none;">
+    <div class="cd"><div class="ch"><span class="ct">Precificações Salvas</span><span class="chip" id="chip-prec">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-prec"></div></div>
   </div>
 </div>
 
@@ -726,6 +914,9 @@ function renderPage(p,REC,DESP,PROD){
   else if(p==='receitas'){renderTabelaRec(REC);}
   else if(p==='despesas'){renderTabelaDesp(DESP);}
   else if(p==='producao-lanc'){renderTabelaProd(PROD);}
+  else if(p==='pagamentos'){renderPagamentos();}
+  else if(p==='custos'){renderCustos();}
+  else if(p==='precificacao'){renderPrec();}
 }
 
 function renderKPIs(REC,DESP,PROD){
@@ -1403,6 +1594,9 @@ function renderCadTab(tabId){
   else if(tabId==='cad-cc')renderCadList('CAD_CENTRO_CUSTO','DS_CENTRO_CUSTO','list-cad-cc','chip-cad-cc');
   else if(tabId==='cad-func')renderCadFuncionarios();
   else if(tabId==='cad-taxas')renderCadTaxas();
+  else if(tabId==='cad-fornecedor')renderCadFornecedor();
+  else if(tabId==='cad-ingr')renderCadIngr();
+  else if(tabId==='cad-um')renderCadUM();
 }
 function renderCadList(sheet,dsField,listId,chipId){
   const rows=CAD_DATA[sheet]||[];
@@ -1810,11 +2004,505 @@ let _tt;function showToast(m,t){const el=document.getElementById('toast');el.tex
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',function(){
   const hoje=new Date().toISOString().slice(0,10);
-  ['rec-data','desp-data','prod-data'].forEach(function(id){const el=document.getElementById(id);if(el){el.value=hoje;updDia(id.split('-')[0]);}});
+  ['rec-data','desp-data','prod-data','pag-venc','pag-dtpag','custo-data','prec-data'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=hoje;});
+  ['rec-data','desp-data','prod-data'].forEach(function(id){const el=document.getElementById(id);if(el)updDia(id.split('-')[0]);});
   ['rec-comp','desp-comp','prod-comp'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=hoje.slice(0,7);});
-  // Carrega dropdowns dinâmicos e depois os dados principais
   populateFormDropdowns().then(function(){syncAll();});
 });
+
+// ══════════════════════════════════════════════════════════════
+//  PAGAMENTOS
+// ══════════════════════════════════════════════════════════════
+var ALL_PAG=[];
+async function renderPagamentos(){
+  if(!CAD_DATA['CAD_FORNECEDOR'])await loadCad('CAD_FORNECEDOR');
+  // Popula select de fornecedor
+  const fsel=document.getElementById('pag-forn');
+  if(fsel){
+    const fns=(CAD_DATA['CAD_FORNECEDOR']||[]).filter(function(f){return(f.ATIVO||'').toUpperCase()!=='FALSE';});
+    fsel.innerHTML='<option value="">Selecione...</option>'+fns.map(function(f){return'<option value="'+_esc(f.ID_FORNECEDOR||f.DS_FORNECEDOR||'')+'">'+_esc(f.DS_FORNECEDOR||f.NOME||'')+'</option>';}).join('');
+  }
+  // Carrega pagamentos
+  try{
+    const r=await api({action:'read',sheet:'PAGAMENTOS'});
+    ALL_PAG=r.rows||[];
+  }catch(e){ALL_PAG=[];}
+  _renderPagTable();
+}
+function _renderPagTable(){
+  // KPIs
+  const aberto=ALL_PAG.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()!=='SIM';});
+  const pago  =ALL_PAG.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()==='SIM';});
+  const sumA=aberto.reduce(function(s,p){return s+pVal(p.VALOR);},0);
+  const sumP=pago.reduce(function(s,p){return s+pVal(p.VALOR);},0);
+  const elA=document.getElementById('kpi-pag-aberto');if(elA)elA.textContent=brl(sumA);
+  const elAs=document.getElementById('kpi-pag-aberto-s');if(elAs)elAs.innerHTML='<span class="kb neg">'+aberto.length+' boletos</span>';
+  const elP=document.getElementById('kpi-pag-pago');if(elP)elP.textContent=brl(sumP);
+  const elPs=document.getElementById('kpi-pag-pago-s');if(elPs)elPs.innerHTML='<span class="kb pos">'+pago.length+' boletos</span>';
+  const elT=document.getElementById('kpi-pag-total');if(elT)elT.textContent=brl(sumA+sumP);
+  const elTs=document.getElementById('kpi-pag-total-s');if(elTs)elTs.innerHTML='<span class="kb">'+ALL_PAG.length+' total</span>';
+  // Tabela
+  _TR['tbl-pag']=function(){_renderPagTable();};
+  mkTable({
+    id:'tbl-pag',
+    defaultSort:2, // DT_VENCIMENTO
+    snap:'_PAG_SNAP',
+    chipId:'chip-pag',
+    chipFn:function(all,vis){return vis.length+'/'+all.length+' boletos';},
+    data:ALL_PAG,
+    cols:[
+      {label:'Fornecedor', sk:function(p){return p.DS_FORNECEDOR||'';},plain:function(p){return p.DS_FORNECEDOR||'';},render:function(p){return p.DS_FORNECEDOR||'—';}},
+      {label:'Vencimento',sk:function(p){return p.DT_VENCIMENTO||'';},plain:function(p){return p.DT_VENCIMENTO||'';},render:function(p){return fData(p.DT_VENCIMENTO||'');}},
+      {label:'Parcela',   sk:function(p){return p.PARCELA||'';},plain:function(p){return p.PARCELA||'';},render:function(p){return p.PARCELA||'—';}},
+      {label:'Valor',     sk:function(p){return pVal(p.VALOR);},plain:function(p){return String(pVal(p.VALOR));},tdCls:'tx-r fm',render:function(p){return brl(pVal(p.VALOR));}},
+      {label:'Pago?',     sk:function(p){return p.SITUACAO_PAGAMENTO||'';},plain:function(p){return p.SITUACAO_PAGAMENTO||'';},noFilter:true,render:function(p,i){
+        const pago=(p.SITUACAO_PAGAMENTO||'').toUpperCase()==='SIM';
+        return'<button onclick="togglePag('+i+')" style="padding:3px 12px;border-radius:12px;font-size:11px;font-weight:700;border:none;cursor:pointer;background:'+(pago?'rgba(91,191,163,.2)':'rgba(212,87,74,.2)')+';color:'+(pago?'var(--gn)':'var(--rd)')+';" >'+(pago?'✅ SIM':'❌ NÃO')+'</button>';
+      }},
+      {label:'Dt. Pag.',  sk:function(p){return p.DT_PAGAMENTO||'';},plain:function(p){return p.DT_PAGAMENTO||'';},render:function(p){return p.DT_PAGAMENTO?fData(p.DT_PAGAMENTO):'—';}},
+      {label:'Obs.',      sk:function(p){return p.OBSERVACAO||'';},plain:function(p){return p.OBSERVACAO||'';},render:function(p){return p.OBSERVACAO||'—';}},
+      {label:'',noFilter:true,tdCls:'',render:function(p,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditPag('+i+')">✏️</button>';}}
+    ]
+  });
+}
+async function salvarPag(){
+  const fornEl=document.getElementById('pag-forn');
+  const fornId=fornEl?fornEl.value:'';
+  const fornNm=fornEl?(fornEl.options[fornEl.selectedIndex]||{}).text||'':'';
+  const venc=document.getElementById('pag-venc').value;
+  const parcela=(document.getElementById('pag-parcela').value||'').trim();
+  const valor=parseFloat(document.getElementById('pag-valor').value);
+  const sit=document.getElementById('pag-sit').value;
+  const dtpag=document.getElementById('pag-dtpag').value;
+  const obs=(document.getElementById('pag-obs').value||'').trim().toUpperCase();
+  if(!fornId){showToast('Selecione o fornecedor','error');return;}
+  if(!venc){showToast('Informe o vencimento','error');return;}
+  if(!valor||valor<=0){showToast('Informe o valor','error');return;}
+  setSS('💾 Salvando...');
+  const data={ID_FORNECEDOR:fornId,DS_FORNECEDOR:fornNm,DT_VENCIMENTO:venc,PARCELA:parcela,VALOR:valor,SITUACAO_PAGAMENTO:sit,DT_PAGAMENTO:dtpag,OBSERVACAO:obs};
+  try{
+    const r=await api({action:'append',sheet:'PAGAMENTOS',data:encodeURIComponent(JSON.stringify(data))});
+    if(r.ok){showToast('Boleto salvo ✅','success');clearPag();renderPagamentos();}
+    else showToast('Erro: '+(r.error||''),'error');
+  }catch(e){showToast('Erro ao salvar','error');}
+  setSS('✅');
+}
+function clearPag(){
+  const hoje=new Date().toISOString().slice(0,10);
+  document.getElementById('pag-parcela').value='';
+  document.getElementById('pag-valor').value='';
+  document.getElementById('pag-obs').value='';
+  document.getElementById('pag-sit').value='NÃO';
+  document.getElementById('pag-dtpag').value=hoje;
+  document.getElementById('pag-venc').value=hoje;
+}
+async function togglePag(i){
+  const snap=window._PAG_SNAP||ALL_PAG;
+  const p=snap[i];if(!p)return;
+  const rowNum=parseInt(p._ROW);if(!rowNum||rowNum<2){showToast('Linha inválida','error');return;}
+  const pago=(p.SITUACAO_PAGAMENTO||'').toUpperCase()==='SIM';
+  const newSit=pago?'NÃO':'SIM';
+  const hoje=new Date().toISOString().slice(0,10);
+  setSS('💾...');
+  try{
+    const res=await api({action:'update',sheet:'PAGAMENTOS',rowNum:rowNum,data:encodeURIComponent(JSON.stringify({SITUACAO_PAGAMENTO:newSit,DT_PAGAMENTO:newSit==='SIM'?hoje:''}))});
+    if(res.ok){showToast((newSit==='SIM'?'Marcado como pago ✅':'Marcado como não pago'),'success');renderPagamentos();}
+    else showToast('Erro: '+(res.error||''),'error');
+  }catch(e){showToast('Erro','error');}
+  setSS('✅');
+}
+function openEditPag(i){
+  const snap=window._PAG_SNAP||ALL_PAG;
+  const p=snap[i];if(!p)return;
+  _editCtx={type:'PAG',row:parseInt(p._ROW),idx:i};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Boleto';
+  const fns=(CAD_DATA['CAD_FORNECEDOR']||[]).filter(function(f){return(f.ATIVO||'').toUpperCase()!=='FALSE';}).map(function(f){return f.DS_FORNECEDOR||f.NOME||'';});
+  if(fns.indexOf(p.DS_FORNECEDOR)<0&&p.DS_FORNECEDOR)fns.unshift(p.DS_FORNECEDOR);
+  document.getElementById('edit-modal-body').innerHTML=
+    '<div class="fg">'+
+    _field('Fornecedor','<select class="fc" id="ed-pag-forn">'+_opt(fns,p.DS_FORNECEDOR)+'</select>')+
+    _field('Vencimento','<input type="date" class="fc" id="ed-pag-venc" value="'+_esc(p.DT_VENCIMENTO||'')+'">') +
+    '</div><div class="fg fg3">'+
+    _field('Parcela','<input type="text" class="fc" id="ed-pag-parcela" value="'+_esc(p.PARCELA||'')+'">') +
+    _field('Valor','<input type="number" class="fc" id="ed-pag-valor" value="'+pVal(p.VALOR)+'" step="0.01">') +
+    _field('Situação','<select class="fc" id="ed-pag-sit">'+_opt(['NÃO','SIM'],p.SITUACAO_PAGAMENTO||'NÃO')+'</select>') +
+    '</div><div class="fg">'+
+    _field('Data Pagamento','<input type="date" class="fc" id="ed-pag-dtpag" value="'+_esc(p.DT_PAGAMENTO||'')+'">') +
+    _field('Observação','<input type="text" class="fc" id="ed-pag-obs" value="'+_esc(p.OBSERVACAO||'')+'" style="text-transform:uppercase">') +
+    '</div>';
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CUSTOS DE INGREDIENTES
+// ══════════════════════════════════════════════════════════════
+var ALL_CUSTO=[];
+async function renderCustos(){
+  await Promise.all([loadCad('CAD_INGREDIENTES'),loadCad('CAD_UNIDADE_MEDIDA')]);
+  // Popula selects
+  const isel=document.getElementById('custo-ingr');
+  if(isel){
+    const itens=(CAD_DATA['CAD_INGREDIENTES']||[]).filter(function(x){return(x.ATIVO||'').toUpperCase()!=='FALSE';});
+    isel.innerHTML='<option value="">Selecione...</option>'+itens.map(function(x){return'<option value="'+_esc(x.ID_INGREDIENTE||x.DS_INGREDIENTE||'')+'">'+_esc(x.DS_INGREDIENTE||x.NOME||'')+'</option>';}).join('');
+  }
+  const usel=document.getElementById('custo-um');
+  if(usel){
+    const ums=(CAD_DATA['CAD_UNIDADE_MEDIDA']||[]).filter(function(x){return(x.ATIVO||'').toUpperCase()!=='FALSE';});
+    usel.innerHTML='<option value="">Selecione...</option>'+ums.map(function(x){return'<option value="'+_esc(x.ID_UNIDADE_MEDIDA||x.DS_UNIDADE_MEDIDA||'')+'">'+_esc((x.DS_UNIDADE_MEDIDA||x.ID_UNIDADE_MEDIDA||'')+(x.CONVERSAO?' (x'+x.CONVERSAO+')':''))+'</option>';}).join('');
+  }
+  try{
+    const r=await api({action:'read',sheet:'CUSTOS'});
+    ALL_CUSTO=r.rows||[];
+  }catch(e){ALL_CUSTO=[];}
+  _renderCustoTable();
+}
+function _renderCustoTable(){
+  _TR['tbl-custo']=function(){_renderCustoTable();};
+  mkTable({
+    id:'tbl-custo',
+    defaultSort:5, // DT_ATUALIZACAO
+    snap:'_CUSTO_SNAP',
+    chipId:'chip-custo',
+    chipFn:function(all,vis){return vis.length+' registros';},
+    data:ALL_CUSTO,
+    cols:[
+      {label:'Ingrediente', sk:function(c){return c.DS_INGREDIENTE||'';},plain:function(c){return c.DS_INGREDIENTE||'';},render:function(c){return c.DS_INGREDIENTE||'—';}},
+      {label:'Unid. Medida',sk:function(c){return c.UNIDADE_MEDIDA||'';},plain:function(c){return c.UNIDADE_MEDIDA||'';},render:function(c){return c.UNIDADE_MEDIDA||'—';}},
+      {label:'Peso/Qtd.',   sk:function(c){return pVal(c.PESO_UNIDADE);},plain:function(c){return c.PESO_UNIDADE||'';},tdCls:'tx-r fm',render:function(c){return c.PESO_UNIDADE||'—';}},
+      {label:'Valor',       sk:function(c){return pVal(c.VALOR);},plain:function(c){return String(pVal(c.VALOR));},tdCls:'tx-r tx-gn fm',render:function(c){return brl(pVal(c.VALOR));}},
+      {label:'Custo/Unid.', sk:function(c){return _custoUnit(c);},plain:function(c){return String(_custoUnit(c));},tdCls:'tx-r tx-yw fm',noFilter:true,render:function(c){var u=_custoUnit(c);return u>0?'R$ '+u.toFixed(4):'—';}},
+      {label:'Atualização', sk:function(c){return c.DT_ATUALIZACAO||'';},plain:function(c){return c.DT_ATUALIZACAO||'';},render:function(c){return c.DT_ATUALIZACAO?fData(c.DT_ATUALIZACAO):'—';}},
+      {label:'',noFilter:true,tdCls:'',render:function(c,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditCusto('+i+')">✏️</button>';}}
+    ]
+  });
+}
+function _custoUnit(c){
+  // Retorna custo por unidade-base (ex: custo por grama se unidade é gramas)
+  const peso=pVal(c.PESO_UNIDADE);
+  const val=pVal(c.VALOR);
+  if(!peso||!val)return 0;
+  // Converte: custo por cada 1 unidade de medida
+  const conv=_getConv(c.UNIDADE_MEDIDA);
+  return val/(peso*conv); // custo por unidade-base
+}
+function _getConv(um){
+  const ums=CAD_DATA['CAD_UNIDADE_MEDIDA']||[];
+  for(var i=0;i<ums.length;i++){
+    const u=ums[i];
+    if((u.ID_UNIDADE_MEDIDA||u.DS_UNIDADE_MEDIDA||'').toUpperCase()===(um||'').toUpperCase()){
+      return parseFloat(u.CONVERSAO||1)||1;
+    }
+  }
+  return 1;
+}
+async function salvarCusto(){
+  const ingrEl=document.getElementById('custo-ingr');
+  const ingrId=ingrEl?ingrEl.value:'';
+  const ingrNm=ingrEl?(ingrEl.options[ingrEl.selectedIndex]||{}).text||'':'';
+  const um=document.getElementById('custo-um').value;
+  const peso=parseFloat(document.getElementById('custo-peso').value);
+  const valor=parseFloat(document.getElementById('custo-valor').value);
+  const data=document.getElementById('custo-data').value;
+  if(!ingrId){showToast('Selecione o ingrediente','error');return;}
+  if(!um){showToast('Selecione a unidade de medida','error');return;}
+  if(!peso||peso<=0){showToast('Informe o peso/quantidade','error');return;}
+  if(!valor||valor<=0){showToast('Informe o valor','error');return;}
+  setSS('💾 Salvando...');
+  const payload={ID_INGREDIENTE:ingrId,DS_INGREDIENTE:ingrNm,UNIDADE_MEDIDA:um,PESO_UNIDADE:peso,VALOR:valor,DT_ATUALIZACAO:data};
+  try{
+    const r=await api({action:'append',sheet:'CUSTOS',data:encodeURIComponent(JSON.stringify(payload))});
+    if(r.ok){showToast('Custo salvo ✅','success');clearCusto();renderCustos();}
+    else showToast('Erro: '+(r.error||''),'error');
+  }catch(e){showToast('Erro ao salvar','error');}
+  setSS('✅');
+}
+function clearCusto(){
+  document.getElementById('custo-peso').value='';
+  document.getElementById('custo-valor').value='';
+}
+function openEditCusto(i){
+  const snap=window._CUSTO_SNAP||ALL_CUSTO;
+  const c=snap[i];if(!c)return;
+  _editCtx={type:'CUSTO',row:parseInt(c._ROW),idx:i};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Custo';
+  const ums=(CAD_DATA['CAD_UNIDADE_MEDIDA']||[]).map(function(u){return u.ID_UNIDADE_MEDIDA||u.DS_UNIDADE_MEDIDA||'';}).filter(Boolean);
+  if(ums.indexOf(c.UNIDADE_MEDIDA)<0&&c.UNIDADE_MEDIDA)ums.unshift(c.UNIDADE_MEDIDA);
+  document.getElementById('edit-modal-body').innerHTML=
+    '<div class="fg">'+
+    _field('Unid. Medida','<select class="fc" id="ed-custo-um">'+_opt(ums,c.UNIDADE_MEDIDA)+'</select>')+
+    _field('Peso/Qtd. por Unidade','<input type="number" class="fc" id="ed-custo-peso" value="'+pVal(c.PESO_UNIDADE)+'" step="0.001">') +
+    '</div><div class="fg">'+
+    _field('Valor (R$)','<input type="number" class="fc" id="ed-custo-valor" value="'+pVal(c.VALOR)+'" step="0.01">') +
+    _field('Data Atualização','<input type="date" class="fc" id="ed-custo-data" value="'+_esc(c.DT_ATUALIZACAO||'')+'">') +
+    '</div>';
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PRECIFICAÇÃO
+// ══════════════════════════════════════════════════════════════
+var PREC_ITENS=[]; // [{id,nome,um,qtd,custo_unit,custo_item}]
+
+async function renderPrec(){
+  await Promise.all([loadCad('CAD_INGREDIENTES'),loadCad('CAD_UNIDADE_MEDIDA'),loadCad('CAD_SABORES')]);
+  if(!ALL_CUSTO.length){try{const r=await api({action:'read',sheet:'CUSTOS'});ALL_CUSTO=r.rows||[];}catch(e){}}
+  // Sabor
+  const sbs=(CAD_DATA['CAD_SABORES']||[]).filter(function(s){return(s.ATIVO||'').toUpperCase()!=='FALSE';});
+  const ssel=document.getElementById('prec-sabor');
+  if(ssel)ssel.innerHTML='<option value="">Selecione...</option>'+sbs.map(function(s){return'<option value="'+_esc(s.DS_SABORES||s.NOME||'')+'">'+_esc(s.DS_SABORES||s.NOME||'')+'</option>';}).join('');
+  // Ingredientes
+  const itens=(CAD_DATA['CAD_INGREDIENTES']||[]).filter(function(x){return(x.ATIVO||'').toUpperCase()!=='FALSE';});
+  const isel=document.getElementById('prec-ingr');
+  if(isel)isel.innerHTML='<option value="">Selecione...</option>'+itens.map(function(x){return'<option value="'+_esc(x.ID_INGREDIENTE||x.DS_INGREDIENTE||'')+'">'+_esc(x.DS_INGREDIENTE||x.NOME||'')+'</option>';}).join('');
+  // Unidades
+  const ums=(CAD_DATA['CAD_UNIDADE_MEDIDA']||[]).filter(function(x){return(x.ATIVO||'').toUpperCase()!=='FALSE';});
+  const usel=document.getElementById('prec-um');
+  if(usel)usel.innerHTML='<option value="">—</option>'+ums.map(function(x){return'<option value="'+_esc(x.ID_UNIDADE_MEDIDA||x.DS_UNIDADE_MEDIDA||'')+'">'+_esc(x.DS_UNIDADE_MEDIDA||x.ID_UNIDADE_MEDIDA||'')+'</option>';}).join('');
+  // Histórico
+  try{const r2=await api({action:'read',sheet:'PRECIFICACAO'});
+    _TR['tbl-prec']=function(){};
+    mkTable({id:'tbl-prec',defaultSort:2,chipId:'chip-prec',chipFn:function(a,v){return v.length+' precificações';},
+      data:r2.rows||[],
+      cols:[
+        {label:'Sabor',sk:function(p){return p.DS_SABOR||'';},plain:function(p){return p.DS_SABOR||'';},render:function(p){return p.DS_SABOR||'—';}},
+        {label:'Data', sk:function(p){return p.DT_CALCULO||'';},plain:function(p){return p.DT_CALCULO||'';},render:function(p){return fData(p.DT_CALCULO||'');}},
+        {label:'Volume',sk:function(p){return pVal(p.VOLUME_LITROS);},plain:function(p){return p.VOLUME_LITROS||'';},tdCls:'tx-r fm',render:function(p){return (p.VOLUME_LITROS||'')+'L';}},
+        {label:'Custo Total',sk:function(p){return pVal(p.CUSTO_TOTAL);},plain:function(p){return String(pVal(p.CUSTO_TOTAL));},tdCls:'tx-r tx-rd fm',render:function(p){return brl(pVal(p.CUSTO_TOTAL));}},
+        {label:'Custo/L',    sk:function(p){return pVal(p.CUSTO_POR_LITRO);},plain:function(p){return String(pVal(p.CUSTO_POR_LITRO));},tdCls:'tx-r tx-yw fm',render:function(p){return brl(pVal(p.CUSTO_POR_LITRO));}},
+        {label:'Margem %',   sk:function(p){return pVal(p.MARGEM_LUCRO);},plain:function(p){return p.MARGEM_LUCRO||'';},tdCls:'tx-r fm',render:function(p){return (p.MARGEM_LUCRO||'0')+'%';}},
+        {label:'Preço Sug.', sk:function(p){return pVal(p.PRECO_SUGERIDO);},plain:function(p){return String(pVal(p.PRECO_SUGERIDO));},tdCls:'tx-r tx-gn fm',render:function(p){return brl(pVal(p.PRECO_SUGERIDO));}},
+        {label:'Obs.',sk:function(p){return p.OBSERVACAO||'';},plain:function(p){return p.OBSERVACAO||'';},render:function(p){return p.OBSERVACAO||'—';}}
+      ]
+    });
+  }catch(e){}
+  _renderPrecItens();
+  calcPrec();
+}
+function updPrecUm(){
+  // Calcula custo unitário ao mudar unidade ou quantidade
+  const ingrEl=document.getElementById('prec-ingr');
+  const umEl=document.getElementById('prec-um');
+  const qtdEl=document.getElementById('prec-qtd');
+  if(!ingrEl||!umEl||!qtdEl)return;
+  const ingrId=(ingrEl.value||'').toUpperCase();
+  const um=(umEl.value||'').toUpperCase();
+  const qtd=parseFloat(qtdEl.value)||0;
+  // Busca último custo deste ingrediente
+  const custoReg=ALL_CUSTO.filter(function(c){
+    return(c.ID_INGREDIENTE||c.DS_INGREDIENTE||'').toUpperCase()===ingrId;
+  }).sort(function(a,b){return(b.DT_ATUALIZACAO||'')>(a.DT_ATUALIZACAO||'')?1:-1;});
+  const cu=document.getElementById('prec-custo-unit');
+  const ci=document.getElementById('prec-custo-item');
+  if(!custoReg.length){if(cu)cu.value='Sem custo cadastrado';if(ci)ci.value='';return;}
+  const reg=custoReg[0];
+  const regUM=(reg.UNIDADE_MEDIDA||'').toUpperCase();
+  const regPeso=pVal(reg.PESO_UNIDADE);
+  const regVal=pVal(reg.VALOR);
+  // Custo por unidade-base do cadastro
+  const custoPorBase=regPeso>0?regVal/regPeso:0; // ex: R$/g se cadastro é em g
+  // Converte quantidade informada para a mesma unidade-base
+  const convBase=_getConv(reg.UNIDADE_MEDIDA);
+  const convUsado=_getConv(um);
+  // qtd na unidade informada → converte para unidades do cadastro
+  // custo = qtd * (convUsado/convBase) * custoPorBase... simplificando:
+  // custo = qtd * custoPorBase * (convUsado/convBase) NÃO - vamos usar custo/unid
+  // Custo por 1 unidade da unidade usada na receita
+  const custoUnit=custoPorBase*(convUsado/convBase>0?convUsado/convBase:1);
+  const custoItem=qtd>0?qtd*custoUnit:0;
+  if(cu)cu.value='R$ '+custoUnit.toFixed(4)+' / '+um;
+  if(ci)ci.value=brl(custoItem);
+}
+function addPrecItem(){
+  const ingrEl=document.getElementById('prec-ingr');
+  const umEl=document.getElementById('prec-um');
+  const qtdEl=document.getElementById('prec-qtd');
+  const ciEl=document.getElementById('prec-custo-item');
+  const cuEl=document.getElementById('prec-custo-unit');
+  if(!ingrEl||!ingrEl.value){showToast('Selecione o ingrediente','error');return;}
+  if(!umEl||!umEl.value){showToast('Selecione a unidade','error');return;}
+  const qtd=parseFloat(qtdEl.value)||0;
+  if(qtd<=0){showToast('Informe a quantidade','error');return;}
+  const ingrId=ingrEl.value;
+  const ingrNm=(ingrEl.options[ingrEl.selectedIndex]||{}).text||'';
+  const um=umEl.value;
+  const cuText=(cuEl?cuEl.value:'')||'';
+  const custoUnit=parseFloat(cuText.replace(/[^0-9.,]/g,'').replace(',','.'))||0;
+  const custoItem=parseFloat((ciEl?ciEl.value:0).toString().replace(/[^0-9.,]/g,'').replace(',','.'))||qtd*custoUnit;
+  // Verifica duplicata
+  const existe=PREC_ITENS.findIndex(function(x){return x.id===ingrId&&x.um===um;});
+  if(existe>=0){PREC_ITENS[existe].qtd+=qtd;PREC_ITENS[existe].custo_item+=custoItem;}
+  else{PREC_ITENS.push({id:ingrId,nome:ingrNm,um:um,qtd:qtd,custo_unit:custoUnit,custo_item:custoItem});}
+  // Limpa campos do adicionador
+  if(qtdEl)qtdEl.value='';
+  if(cuEl)cuEl.value='';
+  if(ciEl)ciEl.value='';
+  _renderPrecItens();
+  calcPrec();
+}
+function removePrecItem(i){
+  PREC_ITENS.splice(i,1);
+  _renderPrecItens();
+  calcPrec();
+}
+function _renderPrecItens(){
+  const el=document.getElementById('tbl-prec-itens');if(!el)return;
+  const chip=document.getElementById('chip-prec-itens');if(chip)chip.textContent=PREC_ITENS.length+' itens';
+  if(!PREC_ITENS.length){el.innerHTML='<p class="empty" style="padding:24px;">Nenhum ingrediente adicionado.</p>';return;}
+  el.innerHTML='<table><thead><tr><th>Ingrediente</th><th>Unid.</th><th class="tx-r">Qtd.</th><th class="tx-r">Custo Unit.</th><th class="tx-r">Custo Item</th><th></th></tr></thead><tbody>'+
+    PREC_ITENS.map(function(it,i){
+      return'<tr><td>'+_esc(it.nome)+'</td><td class="tx-mu">'+_esc(it.um)+'</td><td class="tx-r fm">'+it.qtd+'</td><td class="tx-r tx-mu fm">R$ '+it.custo_unit.toFixed(4)+'</td><td class="tx-r tx-yw fm">'+brl(it.custo_item)+'</td><td><button class="btn btn-g" style="padding:2px 7px;font-size:11px;" onclick="removePrecItem('+i+')">✕</button></td></tr>';
+    }).join('')+'</tbody></table>';
+}
+function calcPrec(){
+  const custIngr=PREC_ITENS.reduce(function(s,it){return s+it.custo_item;},0);
+  const custEmb=parseFloat((document.getElementById('prec-emb')||{}).value||0)||0;
+  const vol=parseFloat((document.getElementById('prec-vol')||{}).value||10)||10;
+  const margem=parseFloat((document.getElementById('prec-margem')||{}).value||60)||60;
+  const custTotal=custIngr+custEmb;
+  const custLitro=vol>0?custTotal/vol:0;
+  const precoSug=margem>=100?custTotal*(1+margem/100):custTotal/(1-margem/100);
+  const upd=function(id,v){const el=document.getElementById(id);if(el)el.textContent=v;};
+  upd('prec-r-ingr',brl(custIngr));
+  upd('prec-r-emb',brl(custEmb));
+  upd('prec-r-total',brl(custTotal));
+  upd('prec-r-litro',brl(custLitro)+'/L');
+  upd('prec-r-margem',margem.toFixed(0)+'%');
+  upd('prec-r-preco',brl(precoSug));
+}
+async function salvarPrec(){
+  const sabor=(document.getElementById('prec-sabor').value||'').trim();
+  const vol=parseFloat(document.getElementById('prec-vol').value)||10;
+  const data=document.getElementById('prec-data').value;
+  const emb=parseFloat(document.getElementById('prec-emb').value)||0;
+  const margem=parseFloat(document.getElementById('prec-margem').value)||60;
+  const obs=(document.getElementById('prec-obs').value||'').trim();
+  if(!sabor){showToast('Selecione o sabor','error');return;}
+  if(!data){showToast('Informe a data','error');return;}
+  if(!PREC_ITENS.length){showToast('Adicione ao menos um ingrediente','error');return;}
+  const custIngr=PREC_ITENS.reduce(function(s,it){return s+it.custo_item;},0);
+  const custTotal=custIngr+emb;
+  const custLitro=vol>0?custTotal/vol:0;
+  const precoSug=margem>=100?custTotal*(1+margem/100):custTotal/(1-margem/100);
+  const idRec=sabor.replace(/\s+/g,'_').toUpperCase()+'_'+data.replace(/-/g,'');
+  setSS('💾 Salvando...');
+  try{
+    // Salva cabeçalho
+    const cab={ID_RECEITA:idRec,DS_SABOR:sabor,DT_CALCULO:data,VOLUME_LITROS:vol,CUSTO_INGREDIENTES:custIngr.toFixed(4),CUSTO_EMBALAGEM:emb.toFixed(4),CUSTO_TOTAL:custTotal.toFixed(4),CUSTO_POR_LITRO:custLitro.toFixed(4),MARGEM_LUCRO:margem,PRECO_SUGERIDO:precoSug.toFixed(2),OBSERVACAO:obs};
+    await api({action:'append',sheet:'PRECIFICACAO',data:encodeURIComponent(JSON.stringify(cab))});
+    // Salva itens
+    for(var i=0;i<PREC_ITENS.length;i++){
+      const it=PREC_ITENS[i];
+      const item={ID_RECEITA:idRec,ID_INGREDIENTE:it.id,DS_INGREDIENTE:it.nome,QUANTIDADE:it.qtd,UNIDADE_MEDIDA:it.um,CUSTO_UNITARIO:it.custo_unit.toFixed(6),CUSTO_ITEM:it.custo_item.toFixed(4)};
+      await api({action:'append',sheet:'PRECIFICACAO_ITENS',data:encodeURIComponent(JSON.stringify(item))});
+    }
+    showToast('Precificação salva ✅','success');
+    PREC_ITENS=[];
+    _renderPrecItens();
+    calcPrec();
+    renderPrec();
+  }catch(e){showToast('Erro ao salvar','error');}
+  setSS('✅');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CADASTROS — FORNECEDOR / INGREDIENTE / UNID. MEDIDA
+// ══════════════════════════════════════════════════════════════
+async function renderCadFornecedor(){
+  if(!CAD_DATA['CAD_FORNECEDOR'])await loadCad('CAD_FORNECEDOR');
+  const rows=CAD_DATA['CAD_FORNECEDOR']||[];
+  const chip=document.getElementById('chip-cad-forn');if(chip)chip.textContent=rows.length+' fornecedores';
+  const el=document.getElementById('list-cad-forn');if(!el)return;
+  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Fornecedor</th><th>Status</th><th style="width:170px"></th></tr></thead><tbody>'+
+    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-mu fm">'+(r.ID_FORNECEDOR||i+1)+'</td><td><strong>'+(r.DS_FORNECEDOR||r.NOME||'')+'</strong></td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_FORNECEDOR\','+row+','+i+',\'renderCadFornecedor\')">'+(ativo?'Inativar':'Ativar')+'</button></td></tr>';}).join('')+'</tbody></table>'
+    :'<p class="empty">Nenhum fornecedor cadastrado</p>';
+}
+async function salvarCadForn(){
+  const nome=document.getElementById('cad-forn-nome').value.trim().toUpperCase();
+  if(!nome){showToast('Informe o nome','error');return;}
+  const rows=CAD_DATA['CAD_FORNECEDOR']||[];
+  const nextId=rows.length+1;
+  setSS('💾...');
+  try{
+    const r=await api({action:'append',sheet:'CAD_FORNECEDOR',data:encodeURIComponent(JSON.stringify({ID_FORNECEDOR:nextId,DS_FORNECEDOR:nome,ATIVO:'TRUE'}))});
+    if(r.ok){showToast(nome+' adicionado ✅','success');document.getElementById('cad-forn-nome').value='';delete CAD_DATA['CAD_FORNECEDOR'];await loadCad('CAD_FORNECEDOR');renderCadFornecedor();}
+    else showToast('Erro','error');
+  }catch(e){showToast('Erro','error');}
+  setSS('✅');
+}
+async function renderCadIngr(){
+  if(!CAD_DATA['CAD_INGREDIENTES'])await loadCad('CAD_INGREDIENTES');
+  const rows=CAD_DATA['CAD_INGREDIENTES']||[];
+  const chip=document.getElementById('chip-cad-ingr');if(chip)chip.textContent=rows.length+' ingredientes';
+  const el=document.getElementById('list-cad-ingr');if(!el)return;
+  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Ingrediente</th><th>Status</th><th style="width:170px"></th></tr></thead><tbody>'+
+    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-mu fm">'+(r.ID_INGREDIENTE||i+1)+'</td><td><strong>'+(r.DS_INGREDIENTE||r.NOME||'')+'</strong></td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_INGREDIENTES\','+row+','+i+',\'renderCadIngr\')">'+(ativo?'Inativar':'Ativar')+'</button></td></tr>';}).join('')+'</tbody></table>'
+    :'<p class="empty">Nenhum ingrediente cadastrado</p>';
+}
+async function salvarCadIngr(){
+  const nome=document.getElementById('cad-ingr-nome').value.trim().toUpperCase();
+  if(!nome){showToast('Informe o nome','error');return;}
+  const rows=CAD_DATA['CAD_INGREDIENTES']||[];
+  const nextId=rows.length+1;
+  setSS('💾...');
+  try{
+    const r=await api({action:'append',sheet:'CAD_INGREDIENTES',data:encodeURIComponent(JSON.stringify({ID_INGREDIENTE:nextId,DS_INGREDIENTE:nome,ATIVO:'TRUE'}))});
+    if(r.ok){showToast(nome+' adicionado ✅','success');document.getElementById('cad-ingr-nome').value='';delete CAD_DATA['CAD_INGREDIENTES'];await loadCad('CAD_INGREDIENTES');renderCadIngr();}
+    else showToast('Erro','error');
+  }catch(e){showToast('Erro','error');}
+  setSS('✅');
+}
+async function renderCadUM(){
+  if(!CAD_DATA['CAD_UNIDADE_MEDIDA'])await loadCad('CAD_UNIDADE_MEDIDA');
+  const rows=CAD_DATA['CAD_UNIDADE_MEDIDA']||[];
+  const chip=document.getElementById('chip-cad-um');if(chip)chip.textContent=rows.length+' unidades';
+  const el=document.getElementById('list-cad-um');if(!el)return;
+  el.innerHTML=rows.length?'<table><thead><tr><th>Sigla</th><th>Descrição</th><th class="tx-r">Fator Conv.</th><th>Status</th><th style="width:140px"></th></tr></thead><tbody>'+
+    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-yw fm">'+(r.ID_UNIDADE_MEDIDA||'')+'</td><td>'+(r.DS_UNIDADE_MEDIDA||'')+'</td><td class="tx-r tx-mu fm">'+(r.CONVERSAO||'')+'</td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_UNIDADE_MEDIDA\','+row+','+i+',\'renderCadUM\')">'+(ativo?'Inativar':'Ativar')+'</button></td></tr>';}).join('')+'</tbody></table>'
+    :'<p class="empty">Nenhuma unidade cadastrada</p>';
+}
+async function salvarCadUM(){
+  const sigla=document.getElementById('cad-um-sigla').value.trim();
+  const desc=document.getElementById('cad-um-desc').value.trim().toUpperCase();
+  const conv=parseFloat(document.getElementById('cad-um-conv').value);
+  if(!sigla||!desc){showToast('Preencha sigla e descrição','error');return;}
+  if(!conv||conv<=0){showToast('Fator de conversão inválido','error');return;}
+  setSS('💾...');
+  try{
+    const r=await api({action:'append',sheet:'CAD_UNIDADE_MEDIDA',data:encodeURIComponent(JSON.stringify({ID_UNIDADE_MEDIDA:sigla,DS_UNIDADE_MEDIDA:desc,CONVERSAO:conv,ATIVO:'TRUE'}))});
+    if(r.ok){showToast(sigla+' adicionado ✅','success');document.getElementById('cad-um-sigla').value='';document.getElementById('cad-um-desc').value='';document.getElementById('cad-um-conv').value='';delete CAD_DATA['CAD_UNIDADE_MEDIDA'];await loadCad('CAD_UNIDADE_MEDIDA');renderCadUM();}
+    else showToast('Erro','error');
+  }catch(e){showToast('Erro','error');}
+  setSS('✅');
+}
+async function toggleCadGeneric(sheet,rowNum,idx,renderFn){
+  if(!rowNum||rowNum<2){showToast('Linha inválida','error');return;}
+  const rows=CAD_DATA[sheet]||[];
+  const r=rows[idx];if(!r)return;
+  const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';
+  setSS('💾...');
+  try{
+    const res=await api({action:'update',sheet:sheet,rowNum:rowNum,data:encodeURIComponent(JSON.stringify({ATIVO:ativo?'FALSE':'TRUE'}))});
+    if(res.ok){showToast((ativo?'Inativado':'Ativado')+' ✅','success');delete CAD_DATA[sheet];await loadCad(sheet);if(window[renderFn])window[renderFn]();}
+    else showToast('Erro','error');
+  }catch(e){showToast('Erro','error');}
+  setSS('✅');
+}
+
+// ── Extend saveEdit for new types ─────────────────────────────
+const _origSaveEdit=window.saveEdit;
+window.saveEdit=async function(){
+  const ctx=_editCtx||{};
+  if(ctx.type==='PAG'){
+    const row=ctx.row;if(!row||row<2){showToast('Linha inválida','error');return;}
+    const forn=document.getElementById('ed-pag-forn');
+    const data={DS_FORNECEDOR:forn?forn.value:'',DT_VENCIMENTO:(document.getElementById('ed-pag-venc')||{}).value||'',PARCELA:(document.getElementById('ed-pag-parcela')||{}).value||'',VALOR:parseFloat((document.getElementById('ed-pag-valor')||{}).value)||0,SITUACAO_PAGAMENTO:(document.getElementById('ed-pag-sit')||{}).value||'NÃO',DT_PAGAMENTO:(document.getElementById('ed-pag-dtpag')||{}).value||'',OBSERVACAO:((document.getElementById('ed-pag-obs')||{}).value||'').toUpperCase()};
+    setSS('💾...');try{const r=await api({action:'update',sheet:'PAGAMENTOS',rowNum:row,data:encodeURIComponent(JSON.stringify(data))});if(r.ok){showToast('Atualizado ✅','success');closeEditModal();renderPagamentos();}else showToast('Erro','error');}catch(e){showToast('Erro','error');}setSS('✅');
+  }else if(ctx.type==='CUSTO'){
+    const row=ctx.row;if(!row||row<2){showToast('Linha inválida','error');return;}
+    const data={UNIDADE_MEDIDA:(document.getElementById('ed-custo-um')||{}).value||'',PESO_UNIDADE:parseFloat((document.getElementById('ed-custo-peso')||{}).value)||0,VALOR:parseFloat((document.getElementById('ed-custo-valor')||{}).value)||0,DT_ATUALIZACAO:(document.getElementById('ed-custo-data')||{}).value||''};
+    setSS('💾...');try{const r=await api({action:'update',sheet:'CUSTOS',rowNum:row,data:encodeURIComponent(JSON.stringify(data))});if(r.ok){showToast('Atualizado ✅','success');closeEditModal();renderCustos();}else showToast('Erro','error');}catch(e){showToast('Erro','error');}setSS('✅');
+  }else if(_origSaveEdit){_origSaveEdit();}
+};
 </script>
 </body>
 </html>
