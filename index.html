@@ -490,8 +490,9 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
       <div class="fgr"><label class="fgl">Data de Atualização</label><input type="date" class="fc" id="custo-data"></div>
     </div>
     <div style="background:rgba(91,143,191,.08);border:1px solid rgba(91,143,191,.2);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:12px;color:var(--mu);line-height:1.6;">
-      💡 <strong style="color:var(--tx)">Como preencher:</strong> se comprar 1kg de leite condensado por R$ 8,50, informe<br>
-      Unidade: <strong>g (gramas)</strong> · Peso: <strong>1000</strong> · Valor: <strong>8,50</strong>. O custo por grama será calculado automaticamente.
+      💡 <strong style="color:var(--tx)">Como preencher:</strong> se comprar 5kg de açúcar por R$ 15,50, informe<br>
+      Unidade: <strong>KG</strong> · Peso: <strong>5</strong> · Valor: <strong>15,50</strong>. O custo por unidade-base será calculado automaticamente.<br>
+      <span style="opacity:.8;">Regra: cadastre na unidade em que você compra. A conversão é feita automaticamente na precificação.</span>
     </div>
     <div class="fa"><button class="btn btn-p" onclick="salvarCusto()">💾 Salvar</button><button class="btn btn-g" onclick="clearCusto()">Limpar</button></div>
   </div>
@@ -2177,13 +2178,15 @@ function _renderCustoTable(){
   });
 }
 function _custoUnit(c){
-  // Retorna custo por unidade-base (ex: custo por grama se unidade é gramas)
+  // Convenção: CONVERSAO = quantas unidades-base existem na unidade
+  // Ex: KG=1000 (1 KG = 1000 gramas)
+  // custo_por_base = VALOR / (PESO × CONVERSAO)
+  // = 15,50 / (5 × 1000) = R$ 0,0031 por grama
   const peso=pVal(c.PESO_UNIDADE);
   const val=pVal(c.VALOR);
   if(!peso||!val)return 0;
-  // Converte: custo por cada 1 unidade de medida
-  const conv=_getConv(c.UNIDADE_MEDIDA);
-  return val/(peso*conv); // custo por unidade-base
+  const conv=_getConv(c.UNIDADE_MEDIDA); // ex: 1000 para KG
+  return conv>0?val/(peso*conv):0; // R$ por unidade-base
 }
 function _getConv(um){
   const ums=CAD_DATA['CAD_UNIDADE_MEDIDA']||[];
@@ -2279,63 +2282,99 @@ async function renderPrec(){
   calcPrec();
 }
 function updPrecUm(){
-  // Calcula custo unitário ao mudar unidade ou quantidade
+  // Convenção: CONVERSAO = quantas unidades-base há na unidade
+  // Ex: KG=1000 → 1 KG contém 1000 gramas
   const ingrEl=document.getElementById('prec-ingr');
   const umEl=document.getElementById('prec-um');
   const qtdEl=document.getElementById('prec-qtd');
   if(!ingrEl||!umEl||!qtdEl)return;
-  const ingrId=(ingrEl.value||'').toUpperCase();
-  const um=(umEl.value||'').toUpperCase();
+  const ingrId=String(ingrEl.value||'');
+  const umId=String(umEl.value||'');
   const qtd=parseFloat(qtdEl.value)||0;
-  // Busca último custo deste ingrediente
-  const custoReg=ALL_CUSTO.filter(function(c){
-    return(c.ID_INGREDIENTE||c.DS_INGREDIENTE||'').toUpperCase()===ingrId;
-  }).sort(function(a,b){return(b.DT_ATUALIZACAO||'')>(a.DT_ATUALIZACAO||'')?1:-1;});
   const cu=document.getElementById('prec-custo-unit');
   const ci=document.getElementById('prec-custo-item');
-  if(!custoReg.length){if(cu)cu.value='Sem custo cadastrado';if(ci)ci.value='';return;}
+
+  // Busca custo mais recente do ingrediente selecionado
+  const custoReg=ALL_CUSTO.filter(function(c){
+    return String(c.ID_INGREDIENTE||c.DS_INGREDIENTE||'')===ingrId;
+  }).sort(function(a,b){return(b.DT_ATUALIZACAO||'')>(a.DT_ATUALIZACAO||'')?1:-1;});
+
+  if(!custoReg.length){
+    if(cu)cu.value='Sem custo cadastrado';if(ci)ci.value='';
+    window._PREC_CUSTO_UNIT=0;window._PREC_CUSTO_ITEM=0;return;
+  }
+
   const reg=custoReg[0];
-  const regUM=(reg.UNIDADE_MEDIDA||'').toUpperCase();
-  const regPeso=pVal(reg.PESO_UNIDADE);
-  const regVal=pVal(reg.VALOR);
-  // Custo por unidade-base do cadastro
-  const custoPorBase=regPeso>0?regVal/regPeso:0; // ex: R$/g se cadastro é em g
-  // Converte quantidade informada para a mesma unidade-base
-  const convBase=_getConv(reg.UNIDADE_MEDIDA);
-  const convUsado=_getConv(um);
-  // qtd na unidade informada → converte para unidades do cadastro
-  // custo = qtd * (convUsado/convBase) * custoPorBase... simplificando:
-  // custo = qtd * custoPorBase * (convUsado/convBase) NÃO - vamos usar custo/unid
-  // Custo por 1 unidade da unidade usada na receita
-  const custoUnit=custoPorBase*(convUsado/convBase>0?convUsado/convBase:1);
-  const custoItem=qtd>0?qtd*custoUnit:0;
-  if(cu)cu.value='R$ '+custoUnit.toFixed(4)+' / '+um;
+  const regPeso=pVal(reg.PESO_UNIDADE);   // ex: 5 (kg)
+  const regVal=pVal(reg.VALOR);           // ex: 15,50
+  const convCadastro=_getConv(reg.UNIDADE_MEDIDA); // ex: 1000 para KG
+  const convUsado=_getConv(umId);         // ex: 1 para GRAMAS
+
+  if(!regPeso||!convCadastro){
+    if(cu)cu.value='Erro no cadastro';if(ci)ci.value='';
+    window._PREC_CUSTO_UNIT=0;window._PREC_CUSTO_ITEM=0;return;
+  }
+
+  // Custo por unidade-base (ex: por grama)
+  // = VALOR / (PESO × CONVERSAO_cadastro)
+  // = 15,50 / (5 × 1000) = R$ 0,0031/g
+  const custoPorUnitBase=regVal/(regPeso*convCadastro);
+
+  // Custo por 1 unidade da medida usada na receita
+  // Ex: custo por 1 GRAMA = custoPorUnitBase × convUsado(1) = 0,0031
+  // Ex: custo por 1 KG    = custoPorUnitBase × 1000 = 3,10
+  const custoUnit=custoPorUnitBase*convUsado;
+
+  // Custo total do item = qtd × custo por unidade
+  // = 650 × 0,0031 = R$ 2,015
+  const custoItem=qtd*custoUnit;
+
+  // Guarda valores calculados para uso em addPrecItem (evita parsear brl de volta)
+  window._PREC_CUSTO_UNIT=custoUnit;
+  window._PREC_CUSTO_ITEM=custoItem;
+
+  const umNome=umEl.options[umEl.selectedIndex]?(umEl.options[umEl.selectedIndex].text||umId):umId;
+  if(cu)cu.value='R$ '+custoUnit.toFixed(6)+' / '+umNome;
   if(ci)ci.value=brl(custoItem);
 }
 function addPrecItem(){
   const ingrEl=document.getElementById('prec-ingr');
   const umEl=document.getElementById('prec-um');
   const qtdEl=document.getElementById('prec-qtd');
-  const ciEl=document.getElementById('prec-custo-item');
   const cuEl=document.getElementById('prec-custo-unit');
+  const ciEl=document.getElementById('prec-custo-item');
   if(!ingrEl||!ingrEl.value){showToast('Selecione o ingrediente','error');return;}
   if(!umEl||!umEl.value){showToast('Selecione a unidade','error');return;}
   const qtd=parseFloat(qtdEl.value)||0;
   if(qtd<=0){showToast('Informe a quantidade','error');return;}
+
+  // Usa valores já calculados por updPrecUm() — evita parsear brl() de volta
+  // (brl usa . como separador de milhar em pt-BR, parseFloat pararia antes do decimal)
+  const custoUnit=window._PREC_CUSTO_UNIT||0;
+  const custoItem=window._PREC_CUSTO_ITEM||0;
+
+  if(custoUnit<=0){showToast('Custo unitário não calculado. Verifique se há custo cadastrado para este ingrediente.','error');return;}
+
   const ingrId=ingrEl.value;
   const ingrNm=(ingrEl.options[ingrEl.selectedIndex]||{}).text||'';
   const um=umEl.value;
-  const cuText=(cuEl?cuEl.value:'')||'';
-  const custoUnit=parseFloat(cuText.replace(/[^0-9.,]/g,'').replace(',','.'))||0;
-  const custoItem=parseFloat((ciEl?ciEl.value:0).toString().replace(/[^0-9.,]/g,'').replace(',','.'))||qtd*custoUnit;
-  // Verifica duplicata
+  const umNome=umEl.options[umEl.selectedIndex]?(umEl.options[umEl.selectedIndex].text||um):um;
+
+  // Se já existe o mesmo ingrediente+unidade, acumula
   const existe=PREC_ITENS.findIndex(function(x){return x.id===ingrId&&x.um===um;});
-  if(existe>=0){PREC_ITENS[existe].qtd+=qtd;PREC_ITENS[existe].custo_item+=custoItem;}
-  else{PREC_ITENS.push({id:ingrId,nome:ingrNm,um:um,qtd:qtd,custo_unit:custoUnit,custo_item:custoItem});}
-  // Limpa campos do adicionador
+  if(existe>=0){
+    PREC_ITENS[existe].qtd+=qtd;
+    PREC_ITENS[existe].custo_item+=custoItem;
+  }else{
+    PREC_ITENS.push({id:ingrId,nome:ingrNm,um:um,umNome:umNome,qtd:qtd,custo_unit:custoUnit,custo_item:custoItem});
+  }
+
+  // Limpa campos e reseta valores calculados
   if(qtdEl)qtdEl.value='';
   if(cuEl)cuEl.value='';
   if(ciEl)ciEl.value='';
+  window._PREC_CUSTO_UNIT=0;
+  window._PREC_CUSTO_ITEM=0;
   _renderPrecItens();
   calcPrec();
 }
@@ -2350,7 +2389,7 @@ function _renderPrecItens(){
   if(!PREC_ITENS.length){el.innerHTML='<p class="empty" style="padding:24px;">Nenhum ingrediente adicionado.</p>';return;}
   el.innerHTML='<table><thead><tr><th>Ingrediente</th><th>Unid.</th><th class="tx-r">Qtd.</th><th class="tx-r">Custo Unit.</th><th class="tx-r">Custo Item</th><th></th></tr></thead><tbody>'+
     PREC_ITENS.map(function(it,i){
-      return'<tr><td>'+_esc(it.nome)+'</td><td class="tx-mu">'+_esc(it.um)+'</td><td class="tx-r fm">'+it.qtd+'</td><td class="tx-r tx-mu fm">R$ '+it.custo_unit.toFixed(4)+'</td><td class="tx-r tx-yw fm">'+brl(it.custo_item)+'</td><td><button class="btn btn-g" style="padding:2px 7px;font-size:11px;" onclick="removePrecItem('+i+')">✕</button></td></tr>';
+      return'<tr><td>'+_esc(it.nome)+'</td><td class="tx-mu">'+_esc(it.umNome||it.um)+'</td><td class="tx-r fm">'+it.qtd+'</td><td class="tx-r tx-mu fm" style="font-size:11px;">R$ '+it.custo_unit.toFixed(6)+'/unid</td><td class="tx-r tx-yw fm">'+brl(it.custo_item)+'</td><td><button class="btn btn-g" style="padding:2px 7px;font-size:11px;" onclick="removePrecItem('+i+')">✕</button></td></tr>';
     }).join('')+'</tbody></table>';
 }
 function calcPrec(){
