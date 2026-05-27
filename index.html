@@ -650,6 +650,7 @@ function pVal(v){
   return isNaN(n)?0:n;
 }
 const brl=function(v){return'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
+const fDec=function(v,d){return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:d!=null?d:2,maximumFractionDigits:d!=null?d:2});};
 const fData=function(d){const i=pData(d);if(!i)return d||'';const p=i.split('-');return p[2]+'/'+p[1]+'/'+p[0];};
 const soma=function(arr){return arr.reduce(function(s,r){return s+r._val;},0);};
 
@@ -915,7 +916,7 @@ function renderPage(p,REC,DESP,PROD){
   else if(p==='receitas'){renderTabelaRec(REC);}
   else if(p==='despesas'){renderTabelaDesp(DESP);}
   else if(p==='producao-lanc'){renderTabelaProd(PROD);}
-  else if(p==='pagamentos'){renderPagamentos();}
+  else if(p==='pagamentos'){if(ALL_PAG.length||window._pagLoaded)_renderPagTable();else renderPagamentos();}
   else if(p==='custos'){renderCustos();}
   else if(p==='precificacao'){renderPrec();}
 }
@@ -938,10 +939,10 @@ function renderKPIs(REC,DESP,PROD){
   document.getElementById('kpi-desp').textContent=brl(dspT);
   document.getElementById('kpi-res').textContent=brl(res);
   document.getElementById('kpi-prod').textContent=lts.toLocaleString('pt-BR')+' L';
-  const b=function(v,inv){return v!==null?'<span class="kb '+(inv?(v<=0?'pos':'neg'):(v>=0?'pos':'neg'))+'">'+(v>=0?'▲':'▼')+' '+Math.abs(v).toFixed(1)+'%</span> vs mês anterior':'';};
+  const b=function(v,inv){return v!==null?'<span class="kb '+(inv?(v<=0?'pos':'neg'):(v>=0?'pos':'neg'))+'">'+(v>=0?'▲':'▼')+' '+fDec(Math.abs(v),1)+'%</span> vs mês anterior':'';};
   document.getElementById('kpi-rec-s').innerHTML=b(vR,false)||'&nbsp;';
   document.getElementById('kpi-desp-s').innerHTML=b(vD,true)||'&nbsp;';
-  document.getElementById('kpi-res-s').innerHTML='<span class="kb '+(mg>=0?'pos':'neg')+'">Margem '+mg.toFixed(1)+'%</span>';
+  document.getElementById('kpi-res-s').innerHTML='<span class="kb '+(mg>=0?'pos':'neg')+'">Margem '+fDec(mg,1)+'%</span>';
   document.getElementById('kpi-prod-s').innerHTML='<span class="kb pos">'+PROD.length+' lotes</span>';
 }
 
@@ -965,7 +966,7 @@ function renderBarChart(REC,DESP){
     const lbl=MN[parseInt(p[1])-1]+'/'+p[0].slice(2);
     const hRc=Math.max(2,map[c].rc/mx*100);
     const hDs=Math.max(map[c].ds>0?2:0,map[c].ds/mx*100);
-    return'<div class="bg"><div class="bw"><div class="br rc" style="height:'+hRc+'%" title="Receita: R$ '+map[c].rc.toFixed(2)+'"></div><div class="br ds" style="height:'+hDs+'%" title="Despesa: R$ '+map[c].ds.toFixed(2)+'"></div></div><div class="bl2">'+lbl+'</div></div>';
+    return'<div class="bg"><div class="bw"><div class="br rc" style="height:'+hRc+'%" title="Receita: '+brl(map[c].rc)+'"></div><div class="br ds" style="height:'+hDs+'%" title="Despesa: '+brl(map[c].ds)+'"></div></div><div class="bl2">'+lbl+'</div></div>';
   }).join('');
 }
 
@@ -1063,7 +1064,7 @@ function renderDRE(REC,DESP){
     if(!r)return'';
     const vc=r.v!=null?(r.v<0?'tx-rd':r.v>0?'tx-gn':''):'' ;
     const vf=r.v!=null?'<span class="fm '+vc+'">'+(r.v<0?'('+brl(-r.v)+')':brl(r.v))+'</span>':'';
-    const pct=r.pct!=null?'<span style="font-size:11px;color:var(--mu);margin-left:8px;">'+r.pct.toFixed(2)+'%</span>':'';
+    const pct=r.pct!=null?'<span style="font-size:11px;color:var(--mu);margin-left:8px;">'+fDec(r.pct,2)+'%</span>':'';
     return'<div class="dr '+(r.cls||'')+' '+(r.i?'ind':'')+'"><span>'+r.l+(r.v!=null?pct:'')+'</span>'+vf+'</div>';
   };
   const p=function(v){return rob>0?v/rob*100:0;};
@@ -1150,7 +1151,7 @@ function renderDRE(REC,DESP){
       dh2+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
       dh2+='<span style="font-size:11px;font-weight:600;color:var(--tx);">'+g.label+'</span>';
       dh2+='<div style="text-align:right;"><div class="fm" style="font-size:14px;font-weight:700;color:'+g.color+';">'+brl(g.total)+'</div>';
-      dh2+='<div style="font-size:10px;color:var(--mu);">'+pctTot.toFixed(1)+'% ROB</div></div>';
+      dh2+='<div style="font-size:10px;color:var(--mu);">'+fDec(pctTot,1)+'% ROB</div></div>';
       dh2+='</div>';
       sortedR.forEach(function(x){
         const it=x[1];
@@ -1164,14 +1165,14 @@ function renderDRE(REC,DESP){
         dh2+='<div style="display:flex;align-items:center;gap:6px;">';
         dh2+='<div style="flex:1;height:3px;background:var(--bd);border-radius:2px;overflow:hidden;">';
         dh2+='<div style="height:100%;width:'+pct+'%;background:'+g.color+';opacity:.7;border-radius:2px;"></div></div>';
-        dh2+='<span style="font-size:9px;color:var(--mu);white-space:nowrap;">'+pctR.toFixed(1)+'%</span>';
+        dh2+='<span style="font-size:9px;color:var(--mu);white-space:nowrap;">'+fDec(pctR,1)+'%</span>';
         dh2+='</div></div>';
       });
       dh2+='</div>';
     });
     dh2+='</div>';
     detBody.innerHTML=dh2;
-    if(detChip)detChip.textContent=brl(vTotDesp)+' total · '+p(vTotDesp).toFixed(1)+'% ROB';
+    if(detChip)detChip.textContent=brl(vTotDesp)+' total · '+fDec(p(vTotDesp),1)+'% ROB';
   }
 
   // ── Particular ──────────────────────────────────────────────
@@ -1213,7 +1214,7 @@ function renderProdDash(PROD){
   document.getElementById('kpi-lts').textContent=lts.toLocaleString('pt-BR')+' L';
   document.getElementById('kpi-lotes').textContent=totQtd.toLocaleString('pt-BR'); // total quantidade
   document.getElementById('kpi-sabores').textContent=sabores;
-  document.getElementById('kpi-med-lote').textContent=(lotes>0?(lts/lotes).toFixed(1):0)+' L';
+  document.getElementById('kpi-med-lote').textContent=(lotes>0?fDec(lts/lotes,1):0)+' L';
   document.getElementById('kpi-lts-s').innerHTML='<span class="kb pos">'+lotes+' registros</span>';
   document.getElementById('kpi-lotes-s').innerHTML='<span class="kb pos">'+sabores+' sabores</span>';
   const _anoOf=function(p){return(p._data||'').slice(0,4)||(p._comp||'').slice(0,4);};
@@ -1413,7 +1414,7 @@ function _renderProdComp(){
   el.innerHTML=sabores.length?sabores.map(function(s){
     const c=mc[s]||0,p=mp[s]||0;
     const dlt=p>0?(c-p)/p*100:null;
-    const dHtml=dlt!==null?'<span class="kb '+(dlt>=0?'pos':'neg')+'">'+(dlt>=0?'▲':'▼')+' '+Math.abs(dlt).toFixed(0)+'%</span>':(c>0?'<span class="chip" style="font-size:10px">Novo</span>':'—');
+    const dHtml=dlt!==null?'<span class="kb '+(dlt>=0?'pos':'neg')+'">'+(dlt>=0?'▲':'▼')+' '+fDec(Math.abs(dlt),0)+'%</span>':(c>0?'<span class="chip" style="font-size:10px">Novo</span>':'—');
     return'<div class="cmp-row"><span class="cmp-name">'+s+'</span><span class="cmp-val">'+c+' un.</span><span class="cmp-delta">'+dHtml+'</span></div>';
   }).join(''):'<p class="empty">Sem dados de sabores</p>';
 }
@@ -1439,7 +1440,7 @@ function _renderProdHist(PROD){
     chipFn:function(all,vis){
       const qt=vis.reduce(function(s,p){return s+p._qtd;},0);
       const lt=vis.reduce(function(s,p){return s+p._lts;},0);
-      return'Total: '+qt+' un. · '+lt.toFixed(0)+'L em '+vis.length+' lotes';
+      return'Total: '+qt+' un. · '+fDec(lt,0)+'L em '+vis.length+' lotes';
     },
     data:PROD,
     cols:[
@@ -1733,7 +1734,7 @@ function renderCadTaxas(){
       return'<tr>'+
         '<td>'+(r.DS_FORMA_PAGAMENTO||'—')+'</td>'+
         '<td><span class="bge bg-bl">'+(r.DS_TIPO_PAGAMENTO||'—')+'</span></td>'+
-        '<td class="tx-r tx-yw fm"><strong>'+taxa.toFixed(2)+'%</strong></td>'+
+        '<td class="tx-r tx-yw fm"><strong>'+fDec(taxa,2)+'%</strong></td>'+
         '<td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativa':'Inativa')+'</span></td>'+
         '<td style="display:flex;gap:5px;padding:6px 11px;">'+
         '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="openEditTaxa('+rowNum+',\''+forma+'\',\''+tipo+'\','+taxa+')">✏️</button>'+
@@ -1754,7 +1755,7 @@ async function salvarTaxa(){
   try{
     const r=await api({action:'append',sheet:'CAD_TAXAS_CARTAO',data:encodeURIComponent(JSON.stringify(data))});
     if(r.ok){
-      showToast(forma+' '+tipo+' ('+perc.toFixed(2)+'%) adicionado ✅','success');
+      showToast(forma+' '+tipo+' ('+fDec(perc,2)+'%) adicionado ✅','success');
       document.getElementById('taxa-perc').value='';
       document.getElementById('taxa-obs').value='';
       delete CAD_DATA['CAD_TAXAS_CARTAO'];
@@ -2028,12 +2029,21 @@ async function renderPagamentos(){
     const r=await api({action:'read',sheet:'PAGAMENTOS'});
     ALL_PAG=r.rows||[];
   }catch(e){ALL_PAG=[];}
+  window._pagLoaded=true;
   _renderPagTable();
 }
 function _renderPagTable(){
-  // KPIs
-  const aberto=ALL_PAG.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()!=='SIM';});
-  const pago  =ALL_PAG.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()==='SIM';});
+  // Aplica filtro de ano/mês sobre DT_VENCIMENTO
+  const ano=getAno(),mes=getMes();
+  const PAG_FILT=ALL_PAG.filter(function(p){
+    const dt=String(p.DT_VENCIMENTO||'').trim(); // YYYY-MM-DD
+    if(ano&&dt.slice(0,4)!==ano)return false;
+    if(mes&&dt.slice(5,7)!==mes)return false;
+    return true;
+  });
+  // KPIs (sobre dados filtrados)
+  const aberto=PAG_FILT.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()!=='SIM';});
+  const pago  =PAG_FILT.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()==='SIM';});
   const sumA=aberto.reduce(function(s,p){return s+pVal(p.VALOR);},0);
   const sumP=pago.reduce(function(s,p){return s+pVal(p.VALOR);},0);
   const elA=document.getElementById('kpi-pag-aberto');if(elA)elA.textContent=brl(sumA);
@@ -2041,7 +2051,7 @@ function _renderPagTable(){
   const elP=document.getElementById('kpi-pag-pago');if(elP)elP.textContent=brl(sumP);
   const elPs=document.getElementById('kpi-pag-pago-s');if(elPs)elPs.innerHTML='<span class="kb pos">'+pago.length+' boletos</span>';
   const elT=document.getElementById('kpi-pag-total');if(elT)elT.textContent=brl(sumA+sumP);
-  const elTs=document.getElementById('kpi-pag-total-s');if(elTs)elTs.innerHTML='<span class="kb">'+ALL_PAG.length+' total</span>';
+  const elTs=document.getElementById('kpi-pag-total-s');if(elTs)elTs.innerHTML='<span class="kb">'+PAG_FILT.length+' total</span>';
   // Tabela
   _TR['tbl-pag']=function(){_renderPagTable();};
   mkTable({
@@ -2050,7 +2060,7 @@ function _renderPagTable(){
     snap:'_PAG_SNAP',
     chipId:'chip-pag',
     chipFn:function(all,vis){return vis.length+'/'+all.length+' boletos';},
-    data:ALL_PAG,
+    data:PAG_FILT,
     cols:[
       {label:'Fornecedor', sk:function(p){return p.DS_FORNECEDOR||'';},plain:function(p){return p.DS_FORNECEDOR||'';},render:function(p){return p.DS_FORNECEDOR||'—';}},
       {label:'Vencimento',sk:function(p){return p.DT_VENCIMENTO||'';},plain:function(p){return p.DT_VENCIMENTO||'';},render:function(p){return fData(p.DT_VENCIMENTO||'');}},
@@ -2149,7 +2159,7 @@ async function renderCustos(){
   const usel=document.getElementById('custo-um');
   if(usel){
     const ums=(CAD_DATA['CAD_UNIDADE_MEDIDA']||[]).filter(function(x){return(x.ATIVO||'').toUpperCase()!=='FALSE';});
-    usel.innerHTML='<option value="">Selecione...</option>'+ums.map(function(x){return'<option value="'+_esc(x.ID_UNIDADE_MEDIDA||x.DS_UNIDADE_MEDIDA||'')+'">'+_esc((x.DS_UNIDADE_MEDIDA||x.ID_UNIDADE_MEDIDA||'')+(x.CONVERSAO?' (x'+x.CONVERSAO+')':''))+'</option>';}).join('');
+    usel.innerHTML='<option value="">Selecione...</option>'+ums.map(function(x){const nm=x.DS_UNIDADE_MEDIDA||x.ID_UNIDADE_MEDIDA||'';return'<option value="'+_esc(nm)+'">'+_esc(nm+(x.CONVERSAO?' (x'+x.CONVERSAO+')':''))+'</option>';}).join('');
   }
   try{
     const r=await api({action:'read',sheet:'CUSTOS'});
@@ -2171,7 +2181,7 @@ function _renderCustoTable(){
       {label:'Unid. Medida',sk:function(c){return c.UNIDADE_MEDIDA||'';},plain:function(c){return c.UNIDADE_MEDIDA||'';},render:function(c){return c.UNIDADE_MEDIDA||'—';}},
       {label:'Peso/Qtd.',   sk:function(c){return pVal(c.PESO_UNIDADE);},plain:function(c){return c.PESO_UNIDADE||'';},tdCls:'tx-r fm',render:function(c){return c.PESO_UNIDADE||'—';}},
       {label:'Valor',       sk:function(c){return pVal(c.VALOR);},plain:function(c){return String(pVal(c.VALOR));},tdCls:'tx-r tx-gn fm',render:function(c){return brl(pVal(c.VALOR));}},
-      {label:'Custo/Unid.', sk:function(c){return _custoUnit(c);},plain:function(c){return String(_custoUnit(c));},tdCls:'tx-r tx-yw fm',noFilter:true,render:function(c){var u=_custoUnit(c);return u>0?'R$ '+u.toFixed(4):'—';}},
+      {label:'Custo/Unid.', sk:function(c){return _custoUnit(c);},plain:function(c){return String(_custoUnit(c));},tdCls:'tx-r tx-yw fm',noFilter:true,render:function(c){var u=_custoUnit(c);return u>0?'R$ '+fDec(u,4):'—';}},
       {label:'Atualização', sk:function(c){return c.DT_ATUALIZACAO||'';},plain:function(c){return c.DT_ATUALIZACAO||'';},render:function(c){return c.DT_ATUALIZACAO?fData(c.DT_ATUALIZACAO):'—';}},
       {label:'',noFilter:true,tdCls:'',render:function(c,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditCusto('+i+')">✏️</button>';}}
     ]
@@ -2190,11 +2200,12 @@ function _custoUnit(c){
 }
 function _getConv(um){
   const ums=CAD_DATA['CAD_UNIDADE_MEDIDA']||[];
+  const s=String(um||'').trim().toUpperCase();
+  if(!s)return 1;
   for(var i=0;i<ums.length;i++){
     const u=ums[i];
-    if((u.ID_UNIDADE_MEDIDA||u.DS_UNIDADE_MEDIDA||'').toUpperCase()===(um||'').toUpperCase()){
-      return parseFloat(u.CONVERSAO||1)||1;
-    }
+    if(String(u.ID_UNIDADE_MEDIDA||'').trim().toUpperCase()===s)return parseFloat(u.CONVERSAO||1)||1;
+    if(String(u.DS_UNIDADE_MEDIDA||'').trim().toUpperCase()===s)return parseFloat(u.CONVERSAO||1)||1;
   }
   return 1;
 }
@@ -2228,11 +2239,25 @@ function openEditCusto(i){
   const c=snap[i];if(!c)return;
   _editCtx={type:'CUSTO',row:parseInt(c._ROW),idx:i};
   document.getElementById('edit-modal-title').textContent='✏️ Editar Custo';
-  const ums=(CAD_DATA['CAD_UNIDADE_MEDIDA']||[]).map(function(u){return u.ID_UNIDADE_MEDIDA||u.DS_UNIDADE_MEDIDA||'';}).filter(Boolean);
-  if(ums.indexOf(c.UNIDADE_MEDIDA)<0&&c.UNIDADE_MEDIDA)ums.unshift(c.UNIDADE_MEDIDA);
+  // Monta opções mostrando DS_UNIDADE_MEDIDA, valor = DS_UNIDADE_MEDIDA (para _getConv funcionar por nome)
+  const umsRaw=CAD_DATA['CAD_UNIDADE_MEDIDA']||[];
+  // Valor atual pode ser ID numérico ou nome — resolve para o nome
+  const umAtual=(function(){
+    const s=String(c.UNIDADE_MEDIDA||'').trim().toUpperCase();
+    for(var k=0;k<umsRaw.length;k++){
+      const u=umsRaw[k];
+      if(String(u.ID_UNIDADE_MEDIDA||'').trim().toUpperCase()===s||String(u.DS_UNIDADE_MEDIDA||'').trim().toUpperCase()===s)
+        return u.DS_UNIDADE_MEDIDA||u.ID_UNIDADE_MEDIDA||'';
+    }
+    return c.UNIDADE_MEDIDA||'';
+  })();
+  const umsOpts=umsRaw.map(function(u){
+    const nm=u.DS_UNIDADE_MEDIDA||u.ID_UNIDADE_MEDIDA||'';
+    return'<option value="'+_esc(nm)+'"'+(nm===umAtual?' selected':'')+'>'+_esc(nm)+'</option>';
+  }).join('');
   document.getElementById('edit-modal-body').innerHTML=
     '<div class="fg">'+
-    _field('Unid. Medida','<select class="fc" id="ed-custo-um">'+_opt(ums,c.UNIDADE_MEDIDA)+'</select>')+
+    _field('Unid. Medida','<select class="fc" id="ed-custo-um">'+umsOpts+'</select>')+
     _field('Peso/Qtd. por Unidade','<input type="number" class="fc" id="ed-custo-peso" value="'+pVal(c.PESO_UNIDADE)+'" step="0.001">') +
     '</div><div class="fg">'+
     _field('Valor (R$)','<input type="number" class="fc" id="ed-custo-valor" value="'+pVal(c.VALOR)+'" step="0.01">') +
@@ -2334,7 +2359,7 @@ function updPrecUm(){
   window._PREC_CUSTO_ITEM=custoItem;
 
   const umNome=umEl.options[umEl.selectedIndex]?(umEl.options[umEl.selectedIndex].text||umId):umId;
-  if(cu)cu.value='R$ '+custoUnit.toFixed(6)+' / '+umNome;
+  if(cu)cu.value='R$ '+fDec(custoUnit,6)+' / '+umNome;
   if(ci)ci.value=brl(custoItem);
 }
 function addPrecItem(){
@@ -2389,7 +2414,7 @@ function _renderPrecItens(){
   if(!PREC_ITENS.length){el.innerHTML='<p class="empty" style="padding:24px;">Nenhum ingrediente adicionado.</p>';return;}
   el.innerHTML='<table><thead><tr><th>Ingrediente</th><th>Unid.</th><th class="tx-r">Qtd.</th><th class="tx-r">Custo Unit.</th><th class="tx-r">Custo Item</th><th></th></tr></thead><tbody>'+
     PREC_ITENS.map(function(it,i){
-      return'<tr><td>'+_esc(it.nome)+'</td><td class="tx-mu">'+_esc(it.umNome||it.um)+'</td><td class="tx-r fm">'+it.qtd+'</td><td class="tx-r tx-mu fm" style="font-size:11px;">R$ '+it.custo_unit.toFixed(6)+'/unid</td><td class="tx-r tx-yw fm">'+brl(it.custo_item)+'</td><td><button class="btn btn-g" style="padding:2px 7px;font-size:11px;" onclick="removePrecItem('+i+')">✕</button></td></tr>';
+      return'<tr><td>'+_esc(it.nome)+'</td><td class="tx-mu">'+_esc(it.umNome||it.um)+'</td><td class="tx-r fm">'+it.qtd+'</td><td class="tx-r tx-mu fm" style="font-size:11px;">R$ '+fDec(it.custo_unit,6)+'/unid</td><td class="tx-r tx-yw fm">'+brl(it.custo_item)+'</td><td><button class="btn btn-g" style="padding:2px 7px;font-size:11px;" onclick="removePrecItem('+i+')">✕</button></td></tr>';
     }).join('')+'</tbody></table>';
 }
 function calcPrec(){
@@ -2405,7 +2430,7 @@ function calcPrec(){
   upd('prec-r-emb',brl(custEmb));
   upd('prec-r-total',brl(custTotal));
   upd('prec-r-litro',brl(custLitro)+'/L');
-  upd('prec-r-margem',margem.toFixed(0)+'%');
+  upd('prec-r-margem',fDec(margem,0)+'%');
   upd('prec-r-preco',brl(precoSug));
 }
 async function salvarPrec(){
