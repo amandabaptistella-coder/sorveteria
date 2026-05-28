@@ -2540,6 +2540,7 @@ function _renderPrecCards(){
         '<div class="prec-foot-row tot"><span>Custo Total</span><span class="tx-rd">'+brl(custTotal)+'</span></div>'+
         '<div class="prec-card-actions">'+
           '<button class="btn btn-g" style="flex:1;font-size:12px;" onclick="loadPrecEdit(\''+_esc(rec.ID_RECEITA||'')+'\')">✏️ Carregar para Edição</button>'+
+          '<button class="btn" style="background:#c0392b;color:#fff;font-size:12px;" onclick="delPrec(\''+_esc(rec.ID_RECEITA||'')+'\')" title="Excluir receita">🗑️</button>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -2547,6 +2548,22 @@ function _renderPrecCards(){
   if(grid)grid.innerHTML=html;
 }
 function _filterPrecCards(){_renderPrecCards();}
+async function delPrec(idRec){
+  const rec=_PREC_ALL.find(function(r){return r.ID_RECEITA===idRec;});
+  const nome=rec?(rec.DS_SABOR||idRec):idRec;
+  if(!confirm('Excluir a receita "'+nome+'" e todos os seus ingredientes?\n\nEsta ação não pode ser desfeita.'))return;
+  setSS('🗑️ Excluindo...');
+  try{
+    const rIt=await api({action:'delete',sheet:'PRECIFICACAO_ITENS',column:'ID_RECEITA',value:idRec});
+    if(!rIt.ok){showToast('Erro ao excluir ingredientes: '+(rIt.error||''),'error');setSS('');return;}
+    const rCab=await api({action:'delete',sheet:'PRECIFICACAO',column:'ID_RECEITA',value:idRec});
+    if(!rCab.ok){showToast('Erro ao excluir receita: '+(rCab.error||''),'error');setSS('');return;}
+    showToast('Receita excluída ✅','success');
+    _PREC_ALL=[];_PREC_ITENS_ALL=[];
+    renderPrecHist(true);
+    setSS('');
+  }catch(e){showToast('Erro: '+e.message,'error');setSS('');}
+}
 function loadPrecEdit(idRec){
   const rec=_PREC_ALL.find(function(r){return r.ID_RECEITA===idRec;});
   if(!rec)return;
