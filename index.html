@@ -153,6 +153,16 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 .prec-hist-search input{flex:1;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);padding:8px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
 .prec-hist-search input:focus{border-color:var(--ac);}
 .prec-hist-empty{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:40px;text-align:center;color:var(--mu);}
+.prog-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999;}
+.prog-overlay.show{display:flex;}
+.prog-box{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:28px 32px;min-width:340px;max-width:420px;box-shadow:0 18px 60px rgba(0,0,0,.5);}
+.prog-title{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px;}
+.prog-msg{font-size:13px;color:var(--mu);margin-bottom:18px;}
+.prog-bar{height:8px;background:var(--sf2);border-radius:4px;overflow:hidden;margin-bottom:10px;}
+.prog-fill{height:100%;background:linear-gradient(90deg,#27ae60,#2ecc71);border-radius:4px;width:0%;transition:width .35s ease;}
+.prog-fill.indet{width:40%;animation:progIndet 1.2s ease-in-out infinite;background:linear-gradient(90deg,#3498db,#2ecc71);}
+@keyframes progIndet{0%{margin-left:-40%;}100%{margin-left:100%;}}
+.prog-count{font-size:11px;color:var(--mu);text-align:right;font-family:monospace;}
 .rank-row:last-child{border-bottom:none;}
 .rank-num{font-size:11px;color:var(--mu);min-width:18px;text-align:right;}
 .rank-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -613,6 +623,12 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 
 </main>
 <div class="toast" id="toast"></div>
+<div class="prog-overlay" id="prog-overlay"><div class="prog-box">
+  <div class="prog-title" id="prog-title">💾 Salvando...</div>
+  <div class="prog-msg" id="prog-msg">Aguarde, não feche a página.</div>
+  <div class="prog-bar"><div class="prog-fill indet" id="prog-fill"></div></div>
+  <div class="prog-count" id="prog-count"></div>
+</div></div>
 
 <!-- ===== MODAL DE EDIÇÃO ===== -->
 <div id="edit-modal" onclick="if(event.target===this)closeEditModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center;">
@@ -2637,6 +2653,22 @@ function loadPrecEdit(idRec){
   if(btnNova)btnNova.click();
   showToast('Receita "'+rec.DS_SABOR+'" carregada para edição ✅','success');
 }
+function showProg(title,msg,cur,tot){
+  const ov=document.getElementById('prog-overlay');if(!ov)return;
+  ov.classList.add('show');
+  const t=document.getElementById('prog-title');if(t&&title)t.textContent=title;
+  const m=document.getElementById('prog-msg');if(m&&msg!=null)m.textContent=msg;
+  const f=document.getElementById('prog-fill');
+  const c=document.getElementById('prog-count');
+  if(tot&&tot>0&&cur!=null){
+    if(f){f.classList.remove('indet');f.style.width=Math.round(cur/tot*100)+'%';}
+    if(c)c.textContent=cur+' de '+tot;
+  }else{
+    if(f){f.classList.add('indet');f.style.width='40%';}
+    if(c)c.textContent='';
+  }
+}
+function hideProg(){const ov=document.getElementById('prog-overlay');if(ov)ov.classList.remove('show');}
 async function salvarPrec(){
   const sabor=(document.getElementById('prec-sabor').value||'').trim();
   const vol=parseFloat(document.getElementById('prec-vol').value)||10;
@@ -2654,24 +2686,30 @@ async function salvarPrec(){
   // ID único por save (inclui timestamp) — evita conflito com saves anteriores do mesmo sabor/data
   const idRec=sabor.replace(/\s+/g,'_').toUpperCase()+'_'+data.replace(/-/g,'')+'_'+Date.now();
   setSS('💾 Salvando...');
+  const totSteps=1+PREC_ITENS.length;
+  showProg('💾 Salvando precificação','Gravando dados da receita...',0,totSteps);
   try{
     // Salva cabeçalho — verifica resultado antes de prosseguir
+    showProg('💾 Salvando precificação','Gravando cabeçalho da receita "'+sabor+'"...',0,totSteps);
     const cab={ID_RECEITA:idRec,DS_SABOR:sabor,DT_CALCULO:data,VOLUME_LITROS:vol,CUSTO_INGREDIENTES:custIngr,CUSTO_EMBALAGEM:emb,CUSTO_TOTAL:custTotal,CUSTO_POR_LITRO:custLitro,MARGEM_LUCRO:margem,PRECO_SUGERIDO:precoSug,OBSERVACAO:obs};
     const rCab=await api({action:'append',sheet:'PRECIFICACAO',data:encodeURIComponent(JSON.stringify(cab))});
-    if(!rCab.ok){showToast('Erro ao salvar cabeçalho: '+(rCab.error||''),'error');setSS('');return;}
+    if(!rCab.ok){hideProg();showToast('Erro ao salvar cabeçalho: '+(rCab.error||''),'error');setSS('');return;}
     // Salva itens
     for(var i=0;i<PREC_ITENS.length;i++){
       const it=PREC_ITENS[i];
+      showProg('💾 Salvando precificação','Gravando ingrediente: '+(it.nome||'')+'...',i+1,totSteps);
       const item={ID_RECEITA:idRec,ID_INGREDIENTE:it.id,DS_INGREDIENTE:it.nome,QUANTIDADE:it.qtd,UNIDADE_MEDIDA:it.um,CUSTO_UNITARIO:it.custo_unit,CUSTO_ITEM:it.custo_item};
       const rIt=await api({action:'append',sheet:'PRECIFICACAO_ITENS',data:encodeURIComponent(JSON.stringify(item))});
-      if(!rIt.ok){showToast('Erro ao salvar item '+(i+1)+': '+(rIt.error||''),'error');setSS('');return;}
+      if(!rIt.ok){hideProg();showToast('Erro ao salvar item '+(i+1)+': '+(rIt.error||''),'error');setSS('');return;}
     }
+    showProg('✅ Concluído','Receita salva com sucesso!',totSteps,totSteps);
+    setTimeout(hideProg,700);
     showToast('Precificação salva ✅','success');
     PREC_ITENS=[];_PREC_ALL=[];_PREC_ITENS_ALL=[]; // força reload no próximo acesso
     _renderPrecItens();
     calcPrec();
     renderPrec();
-  }catch(e){showToast('Erro ao salvar: '+String(e),'error');}
+  }catch(e){hideProg();showToast('Erro ao salvar: '+String(e),'error');}
   setSS('✅');
 }
 
