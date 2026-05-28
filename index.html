@@ -2554,10 +2554,12 @@ async function delPrec(idRec){
   if(!confirm('Excluir a receita "'+nome+'" e todos os seus ingredientes?\n\nEsta ação não pode ser desfeita.'))return;
   setSS('🗑️ Excluindo...');
   try{
-    const rIt=await api({action:'delete',sheet:'PRECIFICACAO_ITENS',column:'ID_RECEITA',value:idRec});
-    if(!rIt.ok||typeof rIt.deleted==='undefined'){showToast('⚠️ Action "delete" não reconhecida. Refaça o deploy do Apps Script.','error');setSS('');return;}
-    const rCab=await api({action:'delete',sheet:'PRECIFICACAO',column:'ID_RECEITA',value:idRec});
-    if(!rCab.ok||typeof rCab.deleted==='undefined'){showToast('⚠️ Action "delete" não reconhecida. Refaça o deploy do Apps Script.','error');setSS('');return;}
+    const rIt=await api({action:'update',mode:'delete',sheet:'PRECIFICACAO_ITENS',column:'ID_RECEITA',value:idRec,rowNum:'2'});
+    console.log('DEL ITENS resposta:',rIt);
+    if(!rIt.ok||typeof rIt.deleted==='undefined'){showToast('⚠️ Deploy desatualizado. Veja console (F12).','error');setSS('');return;}
+    const rCab=await api({action:'update',mode:'delete',sheet:'PRECIFICACAO',column:'ID_RECEITA',value:idRec,rowNum:'2'});
+    console.log('DEL CAB resposta:',rCab);
+    if(!rCab.ok||typeof rCab.deleted==='undefined'){showToast('⚠️ Deploy desatualizado. Veja console (F12).','error');setSS('');return;}
     console.log('DEL ITENS:',rIt);console.log('DEL CAB:',rCab);
     const totalDel=(rIt.deleted||0)+(rCab.deleted||0);
     if(totalDel===0){
