@@ -2621,21 +2621,23 @@ async function salvarPrec(){
   const idRec=sabor.replace(/\s+/g,'_').toUpperCase()+'_'+data.replace(/-/g,'');
   setSS('💾 Salvando...');
   try{
-    // Salva cabeçalho
+    // Salva cabeçalho — verifica resultado antes de prosseguir
     const cab={ID_RECEITA:idRec,DS_SABOR:sabor,DT_CALCULO:data,VOLUME_LITROS:vol,CUSTO_INGREDIENTES:custIngr.toFixed(4),CUSTO_EMBALAGEM:emb.toFixed(4),CUSTO_TOTAL:custTotal.toFixed(4),CUSTO_POR_LITRO:custLitro.toFixed(4),MARGEM_LUCRO:margem,PRECO_SUGERIDO:precoSug.toFixed(2),OBSERVACAO:obs};
-    await api({action:'append',sheet:'PRECIFICACAO',data:encodeURIComponent(JSON.stringify(cab))});
+    const rCab=await api({action:'append',sheet:'PRECIFICACAO',data:encodeURIComponent(JSON.stringify(cab))});
+    if(!rCab.ok){showToast('Erro ao salvar cabeçalho: '+(rCab.error||''),'error');setSS('');return;}
     // Salva itens
     for(var i=0;i<PREC_ITENS.length;i++){
       const it=PREC_ITENS[i];
       const item={ID_RECEITA:idRec,ID_INGREDIENTE:it.id,DS_INGREDIENTE:it.nome,QUANTIDADE:it.qtd,UNIDADE_MEDIDA:it.um,CUSTO_UNITARIO:it.custo_unit.toFixed(6),CUSTO_ITEM:it.custo_item.toFixed(4)};
-      await api({action:'append',sheet:'PRECIFICACAO_ITENS',data:encodeURIComponent(JSON.stringify(item))});
+      const rIt=await api({action:'append',sheet:'PRECIFICACAO_ITENS',data:encodeURIComponent(JSON.stringify(item))});
+      if(!rIt.ok){showToast('Erro ao salvar item '+(i+1)+': '+(rIt.error||''),'error');setSS('');return;}
     }
     showToast('Precificação salva ✅','success');
-    PREC_ITENS=[];
+    PREC_ITENS=[];_PREC_ALL=[];_PREC_ITENS_ALL=[]; // força reload no próximo acesso
     _renderPrecItens();
     calcPrec();
     renderPrec();
-  }catch(e){showToast('Erro ao salvar','error');}
+  }catch(e){showToast('Erro ao salvar: '+String(e),'error');}
   setSS('✅');
 }
 
