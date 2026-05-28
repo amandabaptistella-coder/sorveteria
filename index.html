@@ -562,7 +562,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
         <div class="ch"><span class="ct">🧂 Adicionar Ingrediente</span></div>
         <div class="cb">
           <div class="fg">
-            <div class="fgr"><label class="fgl">Ingrediente</label><select class="fc" id="prec-ingr"><option value="">Selecione...</option></select></div>
+            <div class="fgr"><label class="fgl">Ingrediente</label><select class="fc" id="prec-ingr" onchange="updPrecUm()"><option value="">Selecione...</option></select></div>
             <div class="fgr"><label class="fgl">Unidade de Medida</label><select class="fc" id="prec-um" onchange="updPrecUm()"><option value="">—</option></select></div>
           </div>
           <div class="fg fg3">
@@ -2375,9 +2375,7 @@ function updPrecUm(){
   window._PREC_CUSTO_ITEM=custoItem;
 
   const umNome=umEl.options[umEl.selectedIndex]?(umEl.options[umEl.selectedIndex].text||umId):umId;
-  // DEBUG: mostra valores intermediários para diagnóstico
-  if(cu)cu.value='R$ '+fDec(custoUnit,6)+'/'+umNome+
-    '  [val='+regVal+' peso='+regPeso+' un='+reg.UNIDADE_MEDIDA+' c_cad='+convCadastro+' c_rec='+convReceita+']';
+  if(cu)cu.value='R$ '+fDec(custoUnit,6)+'/'+umNome;
   if(ci)ci.value=brl(custoItem);
 }
 function addPrecItem(){
@@ -2614,7 +2612,8 @@ async function salvarPrec(){
   const custTotal=custIngr+emb;
   const custLitro=vol>0?custTotal/vol:0;
   const precoSug=margem>=100?custTotal*(1+margem/100):custTotal/(1-margem/100);
-  const idRec=sabor.replace(/\s+/g,'_').toUpperCase()+'_'+data.replace(/-/g,'');
+  // ID único por save (inclui timestamp) — evita conflito com saves anteriores do mesmo sabor/data
+  const idRec=sabor.replace(/\s+/g,'_').toUpperCase()+'_'+data.replace(/-/g,'')+'_'+Date.now();
   setSS('💾 Salvando...');
   try{
     // Salva cabeçalho — verifica resultado antes de prosseguir
