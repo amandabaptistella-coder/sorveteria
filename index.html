@@ -2555,10 +2555,18 @@ async function delPrec(idRec){
   setSS('🗑️ Excluindo...');
   try{
     const rIt=await api({action:'delete',sheet:'PRECIFICACAO_ITENS',column:'ID_RECEITA',value:idRec});
-    if(!rIt.ok){showToast('Erro ao excluir ingredientes: '+(rIt.error||''),'error');setSS('');return;}
+    if(!rIt.ok||typeof rIt.deleted==='undefined'){showToast('⚠️ Action "delete" não reconhecida. Refaça o deploy do Apps Script.','error');setSS('');return;}
     const rCab=await api({action:'delete',sheet:'PRECIFICACAO',column:'ID_RECEITA',value:idRec});
-    if(!rCab.ok){showToast('Erro ao excluir receita: '+(rCab.error||''),'error');setSS('');return;}
-    showToast('Receita excluída ✅','success');
+    if(!rCab.ok||typeof rCab.deleted==='undefined'){showToast('⚠️ Action "delete" não reconhecida. Refaça o deploy do Apps Script.','error');setSS('');return;}
+    console.log('DEL ITENS:',rIt);console.log('DEL CAB:',rCab);
+    const totalDel=(rIt.deleted||0)+(rCab.deleted||0);
+    if(totalDel===0){
+      showToast('⚠️ Nada foi excluído. Verifique console (F12). Procurando por: '+idRec,'error');
+      console.warn('Sample IDs nos ITENS:',rIt.sample,'| Procurado:',rIt.looking_for);
+      console.warn('Sample IDs no CAB:',rCab.sample,'| Procurado:',rCab.looking_for);
+      setSS('');return;
+    }
+    showToast('Receita excluída ✅ ('+rIt.deleted+' itens, '+rCab.deleted+' cabeçalho)','success');
     _PREC_ALL=[];_PREC_ITENS_ALL=[];
     renderPrecHist(true);
     setSS('');
