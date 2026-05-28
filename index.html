@@ -2355,33 +2355,29 @@ function updPrecUm(){
   }
 
   const reg=custoReg[0];
-  // custoPorUnitBase = R$ por unidade-base (grama, mL, un)
-  // Ex: Açúcar 5KG R$15,50 → 15,50/(5×1000) = R$0,0031/g
-  const custoPorUnitBase=_custoUnitBase(reg);
+  const regPeso=pVal(reg.PESO_UNIDADE);
+  const regVal=pVal(reg.VALOR);
+  const convCadastro=_getConv(reg.UNIDADE_MEDIDA);
+  const convReceita=_getConv(umId);
 
-  if(!custoPorUnitBase){
-    if(cu)cu.value='Erro no cadastro';if(ci)ci.value='';
+  if(!regPeso||!regVal){
+    if(cu)cu.value='❌ Custo sem peso/valor';if(ci)ci.value='';
     window._PREC_CUSTO_UNIT=0;window._PREC_CUSTO_ITEM=0;return;
   }
 
-  // Conversão da unidade escolhida na receita (ex: GRAMAS=1, KG=1000)
-  const convUsado=_getConv(umId);
+  // Regra de três direta:
+  // custoItem = VALOR × qty × CONV_receita / (PESO × CONV_cadastro)
+  // Ex: 15,50 × 650 × 1 / (5 × 1000) = R$ 2,015
+  const custoItem=regVal*qtd*convReceita/(regPeso*convCadastro);
+  const custoUnit=qtd>0?custoItem/qtd:0;
 
-  // Custo por 1 unidade usada na receita
-  // Ex: 1 GRAMA = custoPorUnitBase × 1 = 0,0031
-  // Ex: 1 KG    = custoPorUnitBase × 1000 = 3,10
-  const custoUnit=custoPorUnitBase*convUsado;
-
-  // Custo total do item = qtd × custo por unidade
-  // Ex: 650g × 0,0031 = R$ 2,015
-  const custoItem=qtd*custoUnit;
-
-  // Guarda valores calculados para uso em addPrecItem (evita parsear brl de volta)
   window._PREC_CUSTO_UNIT=custoUnit;
   window._PREC_CUSTO_ITEM=custoItem;
 
   const umNome=umEl.options[umEl.selectedIndex]?(umEl.options[umEl.selectedIndex].text||umId):umId;
-  if(cu)cu.value='R$ '+fDec(custoUnit,6)+' / '+umNome;
+  // DEBUG: mostra valores intermediários para diagnóstico
+  if(cu)cu.value='R$ '+fDec(custoUnit,6)+'/'+umNome+
+    '  [val='+regVal+' peso='+regPeso+' un='+reg.UNIDADE_MEDIDA+' c_cad='+convCadastro+' c_rec='+convReceita+']';
   if(ci)ci.value=brl(custoItem);
 }
 function addPrecItem(){
