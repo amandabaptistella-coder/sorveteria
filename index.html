@@ -2514,9 +2514,28 @@ function _renderPrecCards(){
     return !filt||(r.DS_SABOR||'').toUpperCase().indexOf(filt)>=0;
   }).sort(function(a,b){return(b.DT_CALCULO||'')>(a.DT_CALCULO||'')?1:-1;});
   if(chip)chip.textContent=recs.length+' precificações';
+  // Detecta itens órfãos (com ID_RECEITA mas sem cabeçalho correspondente)
+  const idsCab={};_PREC_ALL.forEach(function(r){idsCab[r.ID_RECEITA||'']=true;});
+  const orfaos=Object.keys(itensPorRec).filter(function(id){return id&&!idsCab[id];});
   if(!recs.length){
-    if(grid)grid.innerHTML='<div class="prec-hist-empty">'+(filt?'Nenhum sabor encontrado para "'+q+'".':'Nenhuma precificação cadastrada. Use a aba Nova Precificação.')+'</div>';
+    let msg='';
+    if(filt){msg='Nenhum sabor encontrado para "'+q+'".';}
+    else if(orfaos.length){
+      msg='<div style="text-align:center;">'+
+        '<div style="font-size:36px;margin-bottom:10px;">⚠️</div>'+
+        '<div style="font-size:15px;margin-bottom:8px;color:var(--fg);">Foram encontradas <b>'+orfaos.length+'</b> receita(s) órfã(s)</div>'+
+        '<div style="font-size:12px;color:var(--mu);margin-bottom:18px;">A tabela <b>PRECIFICACAO_ITENS</b> tem ingredientes salvos, mas o cabeçalho em <b>PRECIFICACAO</b> está faltando. Isso pode acontecer se as linhas foram apagadas manualmente.</div>'+
+        '<button class="btn btn-p" onclick="recoverPrecHeaders()">🔧 Reconstruir '+orfaos.length+' receita(s) a partir dos itens</button>'+
+      '</div>';
+    }
+    else{msg='Nenhuma precificação cadastrada. Use a aba Nova Precificação.';}
+    if(grid)grid.innerHTML='<div class="prec-hist-empty">'+msg+'</div>';
     return;
+  }
+  // Aviso de órfãos quando há receitas válidas mas também órfãos
+  let orfaoBanner='';
+  if(orfaos.length){
+    orfaoBanner='<div class="prec-hist-empty" style="grid-column:1/-1;border-color:var(--yw);background:rgba(232,160,69,.08);">⚠️ <b>'+orfaos.length+'</b> receita(s) órfã(s) detectada(s) (itens sem cabeçalho). <button class="btn btn-p" style="margin-left:10px;" onclick="recoverPrecHeaders()">🔧 Reconstruir</button></div>';
   }
   const html=recs.map(function(rec,idx){
     const cor=_PREC_COLORS[idx%_PREC_COLORS.length];
@@ -2573,9 +2592,55 @@ function _renderPrecCards(){
       '</div>'+
     '</div>';
   }).join('');
-  if(grid)grid.innerHTML=html;
+  if(grid)grid.innerHTML=orfaoBanner+html;
 }
 function _filterPrecCards(){_renderPrecCards();}
+async function recoverPrecHeaders(){
+  // Reconstrói cabeçalhos em PRECIFICACAO a partir dos ID_RECEITA presentes em PRECIFICACAO_ITENS
+  const itensPorRec={};
+  _PREC_ITENS_ALL.forEach(function(it){
+    const id=it.ID_RECEITA||'';if(!id)return;
+    if(!itensPorRec[id])itensPorRec[id]=[];
+    itensPorRec[id].push(it);
+  });
+  const idsCab={};_PREC_ALL.forEach(function(r){idsCab[r.ID_RECEITA||'']=true;});
+  const orfaos=Object.keys(itensPorRec).filter(function(id){return !idsCab[id];});
+  if(!orfaos.length){showToast('Nenhuma receita órfã para reconstruir.','success');return;}
+  if(!confirm('Reconstruir '+orfaos.length+' receita(s) a partir dos itens?\n\nVolume padrão: 10L\nMargem padrão: 60%\n\nVocê pode editar depois clicando em "Carregar para Edição".'))return;
+  const tot=orfaos.length;
+  showProg('🔧 Reconstruindo receitas','Recriando cabeçalhos a partir dos itens...',0,tot);
+  let ok=0;
+  for(var i=0;i<orfaos.length;i++){
+    const id=orfaos[i];
+    const itens=itensPorRec[id];
+    // Deriva sabor e data do ID (formato SABOR_YYYYMMDD_timestamp)
+    const parts=id.split('_');
+    let sabor=id,data='';
+    // procura o último segmento que seja YYYYMMDD (8 dígitos)
+    for(var k=parts.length-1;k>=0;k--){
+      if(/^\d{8}$/.test(parts[k])){
+        data=parts[k].slice(0,4)+'-'+parts[k].slice(4,6)+'-'+parts[k].slice(6,8);
+        sabor=parts.slice(0,k).join(' ');
+        break;
+      }
+    }
+    if(!sabor)sabor=id;
+    const custIngr=itens.reduce(function(s,it){return s+pVal(it.CUSTO_ITEM);},0);
+    const vol=10,emb=0,margem=60;
+    const custTotal=custIngr+emb;
+    const custLitro=vol>0?custTotal/vol:0;
+    const precoSug=custTotal/(1-margem/100);
+    showProg('🔧 Reconstruindo receitas','Recriando: '+sabor,i+1,tot);
+    const cab={ID_RECEITA:id,DS_SABOR:sabor,DT_CALCULO:data,VOLUME_LITROS:vol,CUSTO_INGREDIENTES:custIngr,CUSTO_EMBALAGEM:emb,CUSTO_TOTAL:custTotal,CUSTO_POR_LITRO:custLitro,MARGEM_LUCRO:margem,PRECO_SUGERIDO:precoSug,OBSERVACAO:'⚠️ Reconstruída automaticamente — verifique volume e margem.'};
+    const r=await api({action:'append',sheet:'PRECIFICACAO',data:encodeURIComponent(JSON.stringify(cab))});
+    if(r.ok)ok++;
+  }
+  showProg('✅ Concluído',ok+' de '+tot+' receita(s) reconstruída(s).',tot,tot);
+  setTimeout(hideProg,900);
+  showToast('Reconstrução: '+ok+'/'+tot+' ✅','success');
+  _PREC_ALL=[];_PREC_ITENS_ALL=[];
+  renderPrecHist(true);
+}
 async function delPrec(idRec){
   const rec=_PREC_ALL.find(function(r){return r.ID_RECEITA===idRec;});
   const nome=rec?(rec.DS_SABOR||idRec):idRec;
