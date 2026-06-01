@@ -772,6 +772,7 @@ function mkTable(opts){
   }
 }
 function _esc(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function _jq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function _tSort(id,col){
   const st=_TS[id]||{col:0,dir:-1,f:{}};
   if(st.col===col)st.dir=-st.dir;else{st.col=col;st.dir=-1;}
@@ -1519,7 +1520,7 @@ function renderTabelaRec(REC){
       {label:'Forma',     sk:function(r){return r._forma||'';},plain:function(r){return r._forma||'';},render:function(r){return r._forma||'—';}},
       {label:'Tipo Pag.', sk:function(r){return r._tipag||'';},plain:function(r){return r._tipag||'';},render:function(r){return'<span class="bge bg-bl">'+(r._tipag||'—')+'</span>';}},
       {label:'Valor',     sk:function(r){return r._val;},plain:function(r){return String(r._val);},tdCls:'tx-r tx-gn fm',render:function(r){return brl(r._val);}},
-      {label:'',noFilter:true,tdCls:'',render:function(r,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditRec('+i+')">✏️</button>';}}
+      {label:'',noFilter:true,tdCls:'',render:function(r,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditRec('+i+')">✏️</button> <button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'RECEITAS\','+(r._row||0)+',\'Receita '+_jq((r._tipo||'—')+' '+brl(r._val||0))+'\',function(){syncAll(true);})">🗑️</button>';}}
     ]
   });
 }
@@ -1546,7 +1547,7 @@ function renderTabelaDesp(DESP){
       {label:'Categoria', sk:function(d){return d._cat||'';},plain:function(d){return d._cat||'';},render:function(d){return d._cat||'—';}},
       {label:'Despesa',   sk:function(d){return d._desp||'';},plain:function(d){return d._desp||'';},render:function(d){return d._desp||'—';}},
       {label:'Valor',     sk:function(d){return d._val;},plain:function(d){return String(d._val);},tdCls:'tx-r tx-rd fm',render:function(d){return brl(d._val);}},
-      {label:'',noFilter:true,tdCls:'',render:function(d,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditDesp('+i+')">✏️</button>';}}
+      {label:'',noFilter:true,tdCls:'',render:function(d,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditDesp('+i+')">✏️</button> <button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'DESPESAS\','+(d._row||0)+',\'Despesa '+_jq((d._desp||d._tipo||'—')+' '+brl(d._val||0))+'\',function(){syncAll(true);})">🗑️</button>';}}
     ]
   });
 }
@@ -1567,7 +1568,7 @@ function renderTabelaProd(PROD){
       {label:'Sabor',     sk:function(p){return p._sabor||'';},plain:function(p){return p._sabor||'';},render:function(p){return p._sabor||'—';}},
       {label:'Litros',    sk:function(p){return p._lts;},plain:function(p){return String(p._lts);},tdCls:'tx-yw fm',render:function(p){return p._lts+'L';}},
       {label:'Qtd',       sk:function(p){return p._qtd;},plain:function(p){return String(p._qtd);},tdCls:'tx-mu',render:function(p){return p._qtd;}},
-      {label:'',noFilter:true,tdCls:'',render:function(p,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditProd('+i+')">✏️</button>';}}
+      {label:'',noFilter:true,tdCls:'',render:function(p,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditProd('+i+')">✏️</button> <button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'PRODUCAO\','+(p._row||0)+',\'Produção '+_jq((p._sabor||'—')+' '+(p._lts||0)+'L')+'\',function(){syncAll(true);})">🗑️</button>';}}
     ]
   });
 }
@@ -1662,6 +1663,7 @@ function renderCadList(sheet,dsField,listId,chipId){
         '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="openEditCad(\''+sheet+'\',\''+dsField+'\','+rowNum+',\''+nm.replace(/'/g,"\\'")+'\')">✏️ Editar</button>'+
         '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="toggleAtivoCad(\''+sheet+'\','+rowNum+',\''+dsField+'\','+i+')">'+
         (ativo?'⛔':'✅')+'</button>'+
+        '<button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\''+sheet+'\','+rowNum+',\''+_jq(nm)+'\',_refreshCad)">🗑️</button>'+
         '</td></tr>';
     }).join('')+'</tbody></table>':'<p class="empty">Sem registros</p>';
 }
@@ -1681,6 +1683,7 @@ function renderCadFuncionarios(){
         '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="openEditFunc('+rowNum+',\''+nm+'\',\''+cargo+'\')">✏️ Editar</button>'+
         '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="toggleAtivoFunc('+rowNum+','+i+')">'+
         (ativo?'⛔':'✅')+'</button>'+
+        '<button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'CAD_FUNCIONARIO\','+rowNum+',\'Funcionário '+_jq(r.DS_FUNCIONARIO||'')+'\',_refreshCad)">🗑️</button>'+
         '</td></tr>';
     }).join('')+'</tbody></table>':'<p class="empty">Sem registros</p>';
 }
@@ -1786,6 +1789,7 @@ function renderCadTaxas(){
         '<td style="display:flex;gap:5px;padding:6px 11px;">'+
         '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="openEditTaxa('+rowNum+',\''+forma+'\',\''+tipo+'\','+taxa+')">✏️</button>'+
         '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="toggleAtivoTaxa('+rowNum+','+i+')">'+(ativo?'⛔':'✅')+'</button>'+
+        '<button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'CAD_TAXAS_CARTAO\','+rowNum+',\'Taxa '+_jq(forma+' '+tipo+' '+taxa+'%')+'\',_refreshCad)">🗑️</button>'+
         '</td></tr>';
     }).join('')+'</tbody></table>';
 }
@@ -2122,7 +2126,7 @@ function _renderPagTable(){
       }},
       {label:'Dt. Pag.',  sk:function(p){return p.DT_PAGAMENTO||'';},plain:function(p){return p.DT_PAGAMENTO||'';},render:function(p){return p.DT_PAGAMENTO?fData(p.DT_PAGAMENTO):'—';}},
       {label:'Obs.',      sk:function(p){return p.OBSERVACAO||'';},plain:function(p){return p.OBSERVACAO||'';},render:function(p){return p.OBSERVACAO||'—';}},
-      {label:'',noFilter:true,tdCls:'',render:function(p,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditPag('+i+')">✏️</button>';}}
+      {label:'',noFilter:true,tdCls:'',render:function(p,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditPag('+i+')">✏️</button> <button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'PAGAMENTOS\','+(parseInt(p._ROW)||0)+',\'Pagamento '+_jq((p.DS_FORNECEDOR||'—')+' '+brl(pVal(p.VALOR)))+'\',renderPagamentos)">🗑️</button>';}}
     ]
   });
 }
@@ -2233,7 +2237,7 @@ function _renderCustoTable(){
       {label:'Valor',       sk:function(c){return pVal(c.VALOR);},plain:function(c){return String(pVal(c.VALOR));},tdCls:'tx-r tx-gn fm',render:function(c){return brl(pVal(c.VALOR));}},
       {label:'Custo/Unid.', sk:function(c){return _custoUnit(c);},plain:function(c){return String(_custoUnit(c));},tdCls:'tx-r tx-yw fm',noFilter:true,render:function(c){var u=_custoUnit(c);return u>0?'R$ '+fDec(u,4):'—';}},
       {label:'Atualização', sk:function(c){return c.DT_ATUALIZACAO||'';},plain:function(c){return c.DT_ATUALIZACAO||'';},render:function(c){return c.DT_ATUALIZACAO?fData(c.DT_ATUALIZACAO):'—';}},
-      {label:'',noFilter:true,tdCls:'',render:function(c,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditCusto('+i+')">✏️</button>';}}
+      {label:'',noFilter:true,tdCls:'',render:function(c,i){return'<button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditCusto('+i+')">✏️</button> <button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'CUSTOS\','+(parseInt(c._ROW)||0)+',\'Custo '+_jq(c.DS_INGREDIENTE||'')+'\',renderCustos)">🗑️</button>';}}
     ]
   });
 }
@@ -2717,6 +2721,25 @@ function loadPrecEdit(idRec){
   const btnNova=document.querySelector('#page-precificacao .tab');
   if(btnNova)btnNova.click();
   showToast('Receita "'+rec.DS_SABOR+'" carregada para edição ✅','success');
+}
+// ── Exclusão genérica por rowNum ──────────────────────────────
+function _refreshCad(){return loadAllCad().then(function(){
+  const at=document.querySelector('.cad-tab[style*="block"]');
+  renderCadTab(at?at.id:'cad-sabores');
+});}
+async function delGeneric(sheet,rowNum,label,refreshFn){
+  if(!rowNum||rowNum<2){showToast('Linha inválida','error');return;}
+  if(!confirm('Excluir "'+label+'"?\n\nEsta ação não pode ser desfeita.'))return;
+  setSS('🗑️ Excluindo...');
+  try{
+    const r=await api({action:'update',mode:'delete',sheet:sheet,rowNum:String(rowNum)});
+    console.log('DEL '+sheet+' resposta:',r);
+    if(!r.ok||typeof r.deleted==='undefined'){showToast('⚠️ Deploy desatualizado. Refaça nova versão do Apps Script.','error');setSS('');return;}
+    if(!r.deleted){showToast('⚠️ Nada foi excluído (linha '+rowNum+')','error');setSS('');return;}
+    showToast('"'+label+'" excluído ✅','success');
+    if(refreshFn)await refreshFn();
+  }catch(e){showToast('Erro: '+e.message,'error');}
+  setSS('');
 }
 function showProg(title,msg,cur,tot){
   const ov=document.getElementById('prog-overlay');if(!ov)return;
