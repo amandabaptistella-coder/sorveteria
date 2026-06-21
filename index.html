@@ -650,7 +650,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 //  COLE AQUI A URL DO SEU APPS SCRIPT (termina em /exec)
 //  Exemplo: https://script.google.com/macros/s/AKfy.../exec
 // ================================================================
-const API = 'https://script.google.com/macros/s/AKfycbzR5Aye0X6s-uXN9jslVAz8dylqEfcsFlBHEBD_o18Hr6aDzxkr7dSSwctria06G_FD1A/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzhzebwfrKdGAFcYxL-MA0cIBZPi3ktzQyRmsw78FAUQmPd6Y7d8pQQ3sXJEHJdHM_lUA/exec';
 
 // Meses em português
 const PT_MONTHS={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
@@ -1053,182 +1053,215 @@ function renderDespCats(DESP){
 //   "DESPESAS ADMINISTRATIVAS"      → ADM
 // Nosso form usa DS_TIPO_DESPESA=VARIÁVEL/FIXA + DS_CATEGORIA_DESPESA=PRODUÇÃO/OPERACIONAL/etc.
 // A função abaixo aceita ambos os formatos.
-function _catDesp(d){
-  const t=(d._tipo||'').toUpperCase();
-  const cat=(d._cat||'').toUpperCase();
-  // Formato Power BI — tipo com nome completo
-  if(t.indexOf('PRODU')>=0)return'PROD';
-  if(t.indexOf('OPERA')>=0)return'OPER';
-  if(t.indexOf('ADMINI')>=0)return'ADM';
-  // Formato novo form — combina tipo(VARIÁVEL/FIXA) + categoria
-  if(cat.indexOf('PRODU')>=0)return'PROD';
-  if(cat.indexOf('OPERA')>=0)return'OPER';
-  if(cat.indexOf('ADMINI')>=0)return'ADM';
-  // Sem categoria reconhecida → OUTROS (não assume ADM para FIXA)
-  return'OUTROS';
+// Resolve a LINHA_DRE de uma despesa via lookup em CAD_CATEGORIA_DESPESA.
+// Fallback: keyword matching no nome da categoria/tipo (compatibilidade com dados antigos).
+function _linhaDREDesp(d){
+  const cats=CAD_DATA['CAD_CATEGORIA_DESPESA']||[];
+  const catNm=String(d._cat||'').trim().toUpperCase();
+  const tipNm=String(d._tipo||'').trim().toUpperCase();
+  // 1) Lookup direto pela categoria cadastrada
+  if(catNm){
+    for(var i=0;i<cats.length;i++){
+      const c=cats[i];
+      if(String(c.ATIVO||'').toUpperCase()==='FALSE')continue;
+      const nm=String(c.DS_CATEGORIA_DESPESA||c.NOME||'').trim().toUpperCase();
+      if(nm===catNm){
+        const ln=String(c.LINHA_DRE||'').trim();
+        return ln||''; // '' = não entra na DRE (ex.: PARTICULAR)
+      }
+    }
+  }
+  // 2) Fallback por keyword no nome da categoria ou tipo
+  const s=catNm||tipNm;
+  if(s.indexOf('VARI')>=0&&s.indexOf('VEND')>=0)return'DESP_VAR_VENDA';
+  if(s.indexOf('INVEST')>=0)return'INVEST';
+  if(s.indexOf('PRODU')>=0)return'CMV';
+  if(s.indexOf('OPERA')>=0)return'DESP_OPER';
+  if(s.indexOf('ADMIN')>=0)return'DESP_ADM';
+  if(s.indexOf('PARTIC')>=0)return'';
+  return''; // não classificado
 }
 
 function renderDRE(REC,DESP){
-  // ── Medidas (idêntico ao Power BI) ──────────────────────────
-  // vROB = RECEITA where DS_MOVIMENTACAO = "ENTRADA"
-  const recEntrada=REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';});
-  const rob=soma(recEntrada);
+  // ── Carrega estrutura da DRE ────────────────────────────────
+  const linhasDRE=((CAD_DATA['CAD_LINHA_DRE']||[])
+    .filter(function(l){return String(l.ATIVO||'').toUpperCase()!=='FALSE';})
+    .map(function(l){return{ordem:parseFloat(l.ORDEM||0),codigo:String(l.CODIGO||'').trim(),label:String(l.LABEL||''),tipo:String(l.TIPO||'').toUpperCase(),sinal:String(l.SINAL||'')};})
+    .filter(function(l){return l.codigo;})
+    .sort(function(a,b){return a.ordem-b.ordem;}));
 
-  // vTAXASVENDAS = SUM(RECEITA[TAXA_SOBRE_VENDA])
-  // Estratégia: se a planilha tiver a coluna TAXA_SOBRE_VENDA, usa ela diretamente.
-  // Se não tiver (ou for 0), calcula pela tabela CAD_TAXAS_CARTAO: VALOR × taxa(forma,tipo)
+  if(!linhasDRE.length){
+    document.getElementById('dre-sorv').innerHTML='<div class="dr"><span>⚠️ Estrutura da DRE não configurada. Rode <code>action=migrateDRE</code> ou cadastre <b>CAD_LINHA_DRE</b>.</span></div>';
+    const detEl=document.getElementById('dre-sorv-det');if(detEl)detEl.innerHTML='';
+    const detBody=document.getElementById('dre-detail-body');if(detBody)detBody.innerHTML='';
+    document.getElementById('dre-part').innerHTML='';
+    return;
+  }
+
+  // ── Receitas ────────────────────────────────────────────────
+  const recEntrada=REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';});
+  const recSaida=REC.filter(function(r){return(r._tipo||'').toUpperCase()!=='ENTRADA'&&(r._tipo||'');});
+  const rob=soma(recEntrada);
+  const recSaidaTot=soma(recSaida);
+
+  // Taxas maquininha → DESP_VAR_VENDA
   const hasTaxaCol=recEntrada.some(function(r){return(r._taxa||0)>0;});
   const taxas=recEntrada.reduce(function(s,r){
     if(hasTaxaCol)return s+(r._taxa||0);
     const rate=getTaxaRate(r._forma,r._tipag);
     return s+(rate>0?r._val*rate:0);
   },0);
-  const rlo=rob-taxas;
 
-  // Despesas Sorveteria: DS_CENTRO_CUSTO = "SORVETERIA" (novo form)
-  // ou DS_LOCAL = "SORVETERIA" sem centro de custo (dados históricos)
+  // Despesas Sorveteria
   const dSorv=DESP.filter(function(d){
     const cc=(d._cc||'').toUpperCase();
     const loc=(d._local||'').toUpperCase();
     return cc==='SORVETERIA'||(loc==='SORVETERIA'&&!cc);
   });
 
-  // vCUSTOPROD — despesas classificadas como PRODUÇÃO
-  const vProd=soma(dSorv.filter(function(d){return _catDesp(d)==='PROD';}));
-  // vCUSTOOPER — despesas classificadas como OPERACIONAL (já filtrado LOCAL=SORVETERIA acima)
-  const vOper=soma(dSorv.filter(function(d){return _catDesp(d)==='OPER';}));
-  // vCUSTOADM — despesas administrativas
-  const vAdm =soma(dSorv.filter(function(d){return _catDesp(d)==='ADM';}));
-  // Outros (não classificados)
-  const vOutros=soma(dSorv.filter(function(d){return _catDesp(d)==='OUTROS';}));
+  // ── Soma despesas por linha da DRE ──────────────────────────
+  const somaPorLinha={};
+  const naoClassif=[];
+  dSorv.forEach(function(d){
+    const ln=_linhaDREDesp(d);
+    if(!ln){naoClassif.push(d);return;}
+    somaPorLinha[ln]=(somaPorLinha[ln]||0)+(d._val||0);
+  });
 
-  // Subtotais conforme Power BI
-  const vTotDesp=vProd+vOper+vAdm+vOutros;      // Total Custos e Despesas (linha 9)
-  const resOpBruto=rlo-vProd-vOper;              // Resultado Operacional Bruto (tipo_cat 2)
-  const lucroLiq=rlo-vTotDesp;                   // Lucro Líquido (linha 11)
-  const mgm=rob>0?lucroLiq/rob*100:0;
+  // Receitas SAÍDA viram DESP_OPER (conforme regra do usuário)
+  if(recSaidaTot>0)somaPorLinha['DESP_OPER']=(somaPorLinha['DESP_OPER']||0)+recSaidaTot;
+  // Taxas viram DESP_VAR_VENDA
+  if(taxas>0)somaPorLinha['DESP_VAR_VENDA']=(somaPorLinha['DESP_VAR_VENDA']||0)+taxas;
+  // ROB total
+  somaPorLinha['FAT_BRUTO']=(somaPorLinha['FAT_BRUTO']||0)+rob;
 
-  const row=function(r){
-    if(!r)return'';
-    const vc=r.v!=null?(r.v<0?'tx-rd':r.v>0?'tx-gn':''):'' ;
-    const vf=r.v!=null?'<span class="fm '+vc+'">'+(r.v<0?'('+brl(-r.v)+')':brl(r.v))+'</span>':'';
-    const pct=r.pct!=null?'<span style="font-size:11px;color:var(--mu);margin-left:8px;">'+fDec(r.pct,2)+'%</span>':'';
-    return'<div class="dr '+(r.cls||'')+' '+(r.i?'ind':'')+'"><span>'+r.l+(r.v!=null?pct:'')+'</span>'+vf+'</div>';
-  };
+  // ── Render linhas em ordem com running total ────────────────
   const p=function(v){return rob>0?v/rob*100:0;};
+  const renderRow=function(o){
+    if(!o)return'';
+    const vc=o.v!=null?(o.v<0?'tx-rd':o.v>0?'tx-gn':''):'' ;
+    const vf=o.v!=null?'<span class="fm '+vc+'">'+(o.v<0?'('+brl(-o.v)+')':brl(o.v))+'</span>':'';
+    const pct=o.pct!=null?'<span style="font-size:11px;color:var(--mu);margin-left:8px;">'+fDec(o.pct,2)+'%</span>':'';
+    return'<div class="dr '+(o.cls||'')+' '+(o.i?'ind':'')+'"><span>'+o.l+(o.v!=null?pct:'')+'</span>'+vf+'</div>';
+  };
 
-  document.getElementById('dre-sorv').innerHTML=[
-    // RECEITA
-    {l:'(=) RECEITA OPERACIONAL BRUTA',v:null,cls:'sec'},
-    {l:'(+) Receita Operacional Bruta',v:rob,i:true,pct:p(rob)},
-    // RLO
-    {l:'(=) RECEITA OPERACIONAL LÍQUIDA',v:rlo,cls:'tot',pct:p(rlo)},
-    {l:'(-) Imposto sobre Vendas (Taxas)',v:-taxas,i:true,pct:p(taxas)},
-    // Resultado Operacional Bruto
-    {l:'(=) RESULTADO OPERACIONAL BRUTO',v:resOpBruto,cls:'tot',pct:p(resOpBruto)},
-    {l:'(-) Custo Variável de Produção',v:-vProd,i:true,pct:p(vProd)},
-    {l:'(-) Custo Variável Operacional',v:-vOper,i:true,pct:p(vOper)},
-    {l:'(-) Despesas Administrativas',v:-vAdm,i:true,pct:p(vAdm)},
-    vOutros>0?{l:'(-) Outras Despesas Sorveteria',v:-vOutros,i:true,pct:p(vOutros)}:null,
-    {l:'(=) Total Custos e Despesas',v:-vTotDesp,cls:'tot',pct:p(vTotDesp)},
-    // Lucro Líquido
-    {l:'(=) LUCRO LÍQUIDO',v:lucroLiq,cls:'tot',pct:mgm},
-  ].filter(Boolean).map(row).join('');
+  let running=0;
+  const out=[];
+  let lastSubtotal=0;
+  linhasDRE.forEach(function(L){
+    if(L.tipo==='RECEITA'){
+      const v=somaPorLinha[L.codigo]||0;running+=v;
+      out.push({l:'(+) '+L.label,v:v,i:true,pct:p(v)});
+    }else if(L.tipo==='DEDUCAO'||L.tipo==='CUSTO'||L.tipo==='DESPESA'||L.tipo==='INVEST'){
+      const v=somaPorLinha[L.codigo]||0;running-=v;
+      out.push({l:'(-) '+L.label,v:-v,i:true,pct:p(v)});
+    }else if(L.tipo==='SUBTOTAL'){
+      out.push({l:'(=) '+L.label.toUpperCase(),v:running,cls:'tot',pct:p(running)});
+      lastSubtotal=running;
+    }else if(L.tipo==='TOTAL'){
+      const pctT=rob>0?running/rob*100:0;
+      out.push({l:'(=) '+L.label.toUpperCase(),v:running,cls:'tot',pct:pctT});
+    }
+  });
+  // Mostra aviso de não classificadas no topo
+  if(naoClassif.length){
+    const tot=soma(naoClassif);
+    out.unshift({l:'⚠️ Despesas não classificadas: '+naoClassif.length+' lançamentos ('+brl(tot)+'). Defina a categoria/LINHA_DRE.',v:null,cls:'sec'});
+  }
+  document.getElementById('dre-sorv').innerHTML=out.map(renderRow).join('');
 
-  // Detalhe por categoria — agrupado por linha da DRE
+  // ── Detalhe por categoria (painel direito) ──────────────────
+  // Agrupa as despesas Sorveteria por LINHA_DRE → mostra breakdown por categoria/tipo
+  const cores={FAT_BRUTO:'var(--gn)',DESP_VAR_VENDA:'#a07fd4',CMV:'var(--yw)',DESP_OPER:'var(--bl)',DESP_ADM:'var(--rd)',INVEST:'#70b8e8'};
   const detEl=document.getElementById('dre-sorv-det');
   if(detEl){
-    const groups=[
-      {label:'Custo Variável de Produção',cat:'PROD',color:'var(--yw)',total:vProd},
-      {label:'Custo Variável Operacional', cat:'OPER',color:'var(--bl)',total:vOper},
-      {label:'Despesas Administrativas',   cat:'ADM', color:'var(--rd)',total:vAdm},
-      vOutros>0?{label:'Outras Despesas',cat:'OUTROS',color:'var(--mu)',total:vOutros}:null
-    ].filter(Boolean);
     let dh='';
-    groups.forEach(function(g){
+    linhasDRE.filter(function(L){return L.tipo==='CUSTO'||L.tipo==='DESPESA'||L.tipo==='DEDUCAO'||L.tipo==='INVEST';}).forEach(function(L){
+      const total=somaPorLinha[L.codigo]||0;
+      if(total<=0)return;
       const items={};
-      dSorv.filter(function(d){return _catDesp(d)===g.cat;})
+      // Tudo que veio de DESPESAS com aquela LINHA_DRE
+      dSorv.filter(function(d){return _linhaDREDesp(d)===L.codigo;})
            .forEach(function(d){const k=d._cat||d._desp||d._tipo||'Outros';items[k]=(items[k]||0)+d._val;});
+      // Adiciona taxas dentro de DESP_VAR_VENDA
+      if(L.codigo==='DESP_VAR_VENDA'&&taxas>0)items['Taxas Maquininha (auto)']=(items['Taxas Maquininha (auto)']||0)+taxas;
+      // Receitas SAÍDA dentro de DESP_OPER
+      if(L.codigo==='DESP_OPER'&&recSaidaTot>0)items['Saídas em Receitas (auto)']=(items['Saídas em Receitas (auto)']||0)+recSaidaTot;
       const sorted=Object.entries(items).sort(function(a,b){return b[1]-a[1];});
       const maxV=sorted.length?sorted[0][1]:1;
+      const cor=cores[L.codigo]||'var(--mu)';
       dh+='<div style="margin-bottom:14px;">';
       dh+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--bd);">';
-      dh+='<span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);">'+g.label+'</span>';
-      dh+='<span class="fm" style="font-size:12px;font-weight:700;color:'+g.color+';">'+brl(g.total)+'</span>';
-      dh+='</div>';
+      dh+='<span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);">'+L.label+'</span>';
+      dh+='<span class="fm" style="font-size:12px;font-weight:700;color:'+cor+';">'+brl(total)+'</span></div>';
       sorted.forEach(function(x){
         const pct=maxV>0?x[1]/maxV*100:0;
-        dh+='<div style="margin-bottom:6px;">';
-        dh+='<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">';
-        dh+='<span style="color:var(--tx);">'+x[0]+'</span>';
-        dh+='<span class="fm" style="color:var(--mu);">'+brl(x[1])+'</span>';
-        dh+='</div>';
-        dh+='<div style="height:4px;background:var(--sf2);border-radius:2px;overflow:hidden;">';
-        dh+='<div style="height:100%;width:'+pct+'%;background:'+g.color+';opacity:.65;border-radius:2px;transition:width .4s;"></div>';
-        dh+='</div></div>';
+        dh+='<div style="margin-bottom:6px;"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">';
+        dh+='<span style="color:var(--tx);">'+x[0]+'</span><span class="fm" style="color:var(--mu);">'+brl(x[1])+'</span></div>';
+        dh+='<div style="height:4px;background:var(--sf2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+cor+';opacity:.65;border-radius:2px;transition:width .4s;"></div></div></div>';
       });
       dh+='</div>';
     });
     detEl.innerHTML=dh||'<p class="empty">Sem despesas no período</p>';
   }
 
-  // ── Detalhamento completo (tabela full-width) ─────────────────
+  // ── Detalhamento completo (cards full-width) ────────────────
   const detBody=document.getElementById('dre-detail-body');
   const detChip=document.getElementById('dre-detail-chip');
   if(detBody){
-    const grpsDet=[
-      {label:'(-) Custo Variável de Produção',cat:'PROD',color:'#e8a045',total:vProd},
-      {label:'(-) Custo Variável Operacional', cat:'OPER',color:'#5b8fbf',total:vOper},
-      {label:'(-) Despesas Administrativas',   cat:'ADM', color:'#d4574a',total:vAdm},
-      {label:'(-) Outras Despesas Sorveteria',cat:'OUTROS',color:'#7a756e',total:vOutros}
-    ].filter(function(g){return g.total>0;});
     let dh2='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">';
-    grpsDet.forEach(function(g){
-      const rows={};
-      dSorv.filter(function(d){return _catDesp(d)===g.cat;})
+    let totalDesp=0;
+    linhasDRE.filter(function(L){return L.tipo==='CUSTO'||L.tipo==='DESPESA'||L.tipo==='DEDUCAO'||L.tipo==='INVEST';}).forEach(function(L){
+      const total=somaPorLinha[L.codigo]||0;
+      if(total<=0)return;
+      totalDesp+=total;
+      const items={};
+      dSorv.filter(function(d){return _linhaDREDesp(d)===L.codigo;})
            .forEach(function(d){
              const k=d._cat||d._desp||d._tipo||'Outros';
-             if(!rows[k])rows[k]={total:0,cc:new Set()};
-             rows[k].total+=d._val;
-             if(d._cc)rows[k].cc.add(d._cc);
+             if(!items[k])items[k]={total:0};
+             items[k].total+=d._val;
            });
-      const sortedR=Object.entries(rows).sort(function(a,b){return b[1].total-a[1].total;});
+      if(L.codigo==='DESP_VAR_VENDA'&&taxas>0)items['Taxas Maquininha (auto)']={total:taxas};
+      if(L.codigo==='DESP_OPER'&&recSaidaTot>0)items['Saídas em Receitas (auto)']={total:recSaidaTot};
+      const sortedR=Object.entries(items).sort(function(a,b){return b[1].total-a[1].total;});
       const maxV=sortedR.length?sortedR[0][1].total:1;
-      const pctTot=rob>0?g.total/rob*100:0;
-      dh2+='<div style="background:var(--sf2);border-radius:9px;padding:16px;border-left:3px solid '+g.color+';">';
+      const pctTot=rob>0?total/rob*100:0;
+      const cor=cores[L.codigo]||'#7a756e';
+      dh2+='<div style="background:var(--sf2);border-radius:9px;padding:16px;border-left:3px solid '+cor+';">';
       dh2+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
-      dh2+='<span style="font-size:11px;font-weight:600;color:var(--tx);">'+g.label+'</span>';
-      dh2+='<div style="text-align:right;"><div class="fm" style="font-size:14px;font-weight:700;color:'+g.color+';">'+brl(g.total)+'</div>';
-      dh2+='<div style="font-size:10px;color:var(--mu);">'+fDec(pctTot,1)+'% ROB</div></div>';
-      dh2+='</div>';
+      dh2+='<span style="font-size:11px;font-weight:600;color:var(--tx);">(-) '+L.label+'</span>';
+      dh2+='<div style="text-align:right;"><div class="fm" style="font-size:14px;font-weight:700;color:'+cor+';">'+brl(total)+'</div>';
+      dh2+='<div style="font-size:10px;color:var(--mu);">'+fDec(pctTot,1)+'% ROB</div></div></div>';
       sortedR.forEach(function(x){
         const it=x[1];
         const pct=maxV>0?it.total/maxV*100:0;
         const pctR=rob>0?it.total/rob*100:0;
-        dh2+='<div style="margin-bottom:8px;">';
-        dh2+='<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;">';
+        dh2+='<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;">';
         dh2+='<span style="color:var(--tx);flex:1;padding-right:8px;">'+x[0]+'</span>';
-        dh2+='<span class="fm" style="color:var(--mu);white-space:nowrap;">'+brl(it.total)+'</span>';
-        dh2+='</div>';
+        dh2+='<span class="fm" style="color:var(--mu);white-space:nowrap;">'+brl(it.total)+'</span></div>';
         dh2+='<div style="display:flex;align-items:center;gap:6px;">';
         dh2+='<div style="flex:1;height:3px;background:var(--bd);border-radius:2px;overflow:hidden;">';
-        dh2+='<div style="height:100%;width:'+pct+'%;background:'+g.color+';opacity:.7;border-radius:2px;"></div></div>';
-        dh2+='<span style="font-size:9px;color:var(--mu);white-space:nowrap;">'+fDec(pctR,1)+'%</span>';
-        dh2+='</div></div>';
+        dh2+='<div style="height:100%;width:'+pct+'%;background:'+cor+';opacity:.7;border-radius:2px;"></div></div>';
+        dh2+='<span style="font-size:9px;color:var(--mu);white-space:nowrap;">'+fDec(pctR,1)+'%</span></div></div>';
       });
       dh2+='</div>';
     });
     dh2+='</div>';
     detBody.innerHTML=dh2;
-    if(detChip)detChip.textContent=brl(vTotDesp)+' total · '+fDec(p(vTotDesp),1)+'% ROB';
+    if(detChip)detChip.textContent=brl(totalDesp)+' total · '+fDec(p(totalDesp),1)+'% ROB';
   }
 
-  // ── Particular ──────────────────────────────────────────────
-  const dPart=DESP.filter(function(d){return(d._local||'').toUpperCase()==='PARTICULAR';});
+  // ── Particular (fora da DRE) ────────────────────────────────
+  const dPart=DESP.filter(function(d){
+    const loc=(d._local||'').toUpperCase();
+    const cat=(d._cat||'').toUpperCase();
+    return loc==='PARTICULAR'||cat==='PARTICULAR';
+  });
   const bP={};
   dPart.forEach(function(d){bP[d._cat||d._tipo||'Outros']=(bP[d._cat||d._tipo||'Outros']||0)+d._val;});
   const sortedP=Object.entries(bP).sort(function(a,b){return b[1]-a[1];}).map(function(x){return{l:x[0],v:-x[1],i:true};});
-  document.getElementById('dre-part').innerHTML=[{l:'DESPESAS PESSOAIS',cls:'sec'}].concat(sortedP).concat([{l:'TOTAL DESPESAS PARTICULARES',v:-soma(dPart),cls:'tot'}]).map(row).join('');
+  document.getElementById('dre-part').innerHTML=[{l:'DESPESAS PESSOAIS',cls:'sec'}].concat(sortedP).concat([{l:'TOTAL DESPESAS PARTICULARES',v:-soma(dPart),cls:'tot'}]).map(renderRow).join('');
 }
 
 // ── Produção Avançada ─────────────────────────────────────────
@@ -1603,7 +1636,7 @@ async function loadAllCad(){
   await Promise.all([
     loadCad('CAD_SABORES'),loadCad('CAD_FORMA_PAGAMENTO'),loadCad('CAD_TIPO_PAGAMENTO'),
     loadCad('CAD_DESPESAS'),loadCad('CAD_CENTRO_CUSTO'),loadCad('CAD_FUNCIONARIO'),
-    loadCad('CAD_TAXAS_CARTAO')
+    loadCad('CAD_TAXAS_CARTAO'),loadCad('CAD_CATEGORIA_DESPESA'),loadCad('CAD_LINHA_DRE')
   ]);
 }
 function populateSelect(id,items,valFn){
