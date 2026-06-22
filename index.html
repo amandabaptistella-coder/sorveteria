@@ -1066,7 +1066,8 @@ function _linhaDREDesp(d){
       if(String(c.ATIVO||'').toUpperCase()==='FALSE')continue;
       const nm=String(c.DS_CATEGORIA_DESPESA||c.NOME||'').trim().toUpperCase();
       if(nm===catNm){
-        const ln=String(c.LINHA_DRE||'').trim();
+        // tolera variações de nomenclatura: LINHDA_DRE (typo), LINHA_DA_DRE
+        const ln=String(c.LINHA_DRE||c.LINHDA_DRE||c.LINHA_DA_DRE||'').trim();
         return ln||''; // '' = não entra na DRE (ex.: PARTICULAR)
       }
     }
@@ -1648,6 +1649,13 @@ async function populateFormDropdowns(){
   populateSelect('prod-sabor',CAD_DATA['CAD_SABORES'],function(i){return i.DS_SABORES||'';});
   populateSelect('rec-forma',CAD_DATA['CAD_FORMA_PAGAMENTO'],function(i){return i.DS_FORMA_PAGAMENTO||'';});
   populateSelect('rec-tipag',CAD_DATA['CAD_TIPO_PAGAMENTO']||[{DS_TIPO_PAGAMENTO:'À VISTA'},{DS_TIPO_PAGAMENTO:'DÉBITO'},{DS_TIPO_PAGAMENTO:'CRÉDITO'},{DS_TIPO_PAGAMENTO:'PIX'}],function(i){return i.DS_TIPO_PAGAMENTO||'';});
+  // Categorias de despesa (form de Nova Despesa + Edit)
+  const cats=(CAD_DATA['CAD_CATEGORIA_DESPESA']||[]).filter(function(c){return(c.ATIVO||'').toString().toUpperCase()!=='FALSE';});
+  if(cats.length){
+    const opts=cats.map(function(c){return'<option>'+(c.DS_CATEGORIA_DESPESA||c.NOME||'')+'</option>';}).join('');
+    const el1=document.getElementById('desp-cat');if(el1)el1.innerHTML=opts;
+    const el2=document.getElementById('ed-cat');if(el2)el2.innerHTML=opts;
+  }
   updDespFields();
   // Popula o select de forma no cadastro de taxas
   const taxaFormaEl=document.getElementById('taxa-forma');
