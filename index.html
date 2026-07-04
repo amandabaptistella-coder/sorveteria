@@ -2136,25 +2136,28 @@ function _renderPagTable(){
     if(mes&&dt.slice(5,7)!==mes)return false;
     return true;
   });
-  // KPIs (sobre dados filtrados)
-  const aberto=PAG_FILT.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()!=='SIM';});
-  const pago  =PAG_FILT.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()==='SIM';});
-  const sumA=aberto.reduce(function(s,p){return s+pVal(p.VALOR);},0);
-  const sumP=pago.reduce(function(s,p){return s+pVal(p.VALOR);},0);
-  const elA=document.getElementById('kpi-pag-aberto');if(elA)elA.textContent=brl(sumA);
-  const elAs=document.getElementById('kpi-pag-aberto-s');if(elAs)elAs.innerHTML='<span class="kb neg">'+aberto.length+' boletos</span>';
-  const elP=document.getElementById('kpi-pag-pago');if(elP)elP.textContent=brl(sumP);
-  const elPs=document.getElementById('kpi-pag-pago-s');if(elPs)elPs.innerHTML='<span class="kb pos">'+pago.length+' boletos</span>';
-  const elT=document.getElementById('kpi-pag-total');if(elT)elT.textContent=brl(sumA+sumP);
-  const elTs=document.getElementById('kpi-pag-total-s');if(elTs)elTs.innerHTML='<span class="kb">'+PAG_FILT.length+' total</span>';
-  // Tabela
+  // Tabela — KPIs recalculam a cada filtro (vis = linhas visíveis após filtros da tabela)
   _TR['tbl-pag']=function(){_renderPagTable();};
   mkTable({
     id:'tbl-pag',
     defaultSort:2, // DT_VENCIMENTO
     snap:'_PAG_SNAP',
     chipId:'chip-pag',
-    chipFn:function(all,vis){return vis.length+'/'+all.length+' boletos';},
+    chipFn:function(all,vis){
+      const aberto=vis.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()!=='SIM';});
+      const pago  =vis.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()==='SIM';});
+      const sumA=aberto.reduce(function(s,p){return s+pVal(p.VALOR);},0);
+      const sumP=pago.reduce(function(s,p){return s+pVal(p.VALOR);},0);
+      const set=function(id,txt){const el=document.getElementById(id);if(el)el.textContent=txt;};
+      const setH=function(id,txt){const el=document.getElementById(id);if(el)el.innerHTML=txt;};
+      set('kpi-pag-aberto',brl(sumA));
+      setH('kpi-pag-aberto-s','<span class="kb neg">'+aberto.length+' boletos</span>');
+      set('kpi-pag-pago',brl(sumP));
+      setH('kpi-pag-pago-s','<span class="kb pos">'+pago.length+' boletos</span>');
+      set('kpi-pag-total',brl(sumA+sumP));
+      setH('kpi-pag-total-s','<span class="kb">'+vis.length+' total</span>');
+      return vis.length+'/'+all.length+' boletos';
+    },
     data:PAG_FILT,
     cols:[
       {label:'Fornecedor', sk:function(p){return p.DS_FORNECEDOR||'';},plain:function(p){return p.DS_FORNECEDOR||'';},render:function(p){return p.DS_FORNECEDOR||'—';}},
