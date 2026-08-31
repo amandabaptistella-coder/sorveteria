@@ -659,6 +659,22 @@ const MN=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez
 const MF=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DS=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
 
+// ── Janela de anos da aplicação ──────────────────────────────
+// O filtro de Ano é derivado dos dados (ver anosLancados()): o teto é sempre o
+// maior ano já lançado em qualquer aba. Nada aqui precisa ser atualizado à mão.
+//
+// Os campos de data usam uma janela mais larga, e de propósito: se o max deles
+// fosse o maior ano lançado, seria impossível lançar o PRIMEIRO registro de um
+// ano novo. A janela serve só para barrar erro de digitação (ex.: 20255).
+const DATA_PISO='2020-01-01';   // nada anterior a isso é lançamento válido
+const DATA_FOLGA_ANOS=10;       // quantos anos à frente aceitar no cadastro
+function dataMinCampo(){return DATA_PISO;}
+function dataMaxCampo(){
+  const atual=new Date().getFullYear();
+  // Se já existe lançamento além da folga, acompanha (nunca bloqueia o que já foi salvo)
+  return Math.max(atual+DATA_FOLGA_ANOS,anoMaxLancado()+1)+'-12-31';
+}
+
 let ALL_REC=[], ALL_DESP=[], ALL_PROD=[];
 let autoTimer;
 
@@ -910,29 +926,67 @@ async function syncAll(silent){
   autoTimer=setTimeout(function(){syncAll(true);},120000);
 }
 
-function buildFiltros(){
-  const anos=new Set(),meses=new Set();
+// Anos efetivamente lançados no sistema, varrendo TODAS as abas com data.
+// É a única fonte do filtro de Ano — o teto acompanha o maior ano lançado.
+function anosLancados(){
+  const anos=new Set();
+  // 1) RECEITAS / DESPESAS / PRODUCAO
   ALL_REC.concat(ALL_DESP).concat(ALL_PROD).forEach(function(r){
     // Prioriza o ANO da coluna DATA (mais confiável que COMPETENCIA)
     const dataStr=r._data||'';
     const anoData=dataStr.length>=4?dataStr.slice(0,4):'';
     if(anoData&&/^\d{4}$/.test(anoData))anos.add(anoData);
-    // Mês vem da competência normalizada
-    if(r._comp){
+    // Se não tiver ano via DATA, usa o da competência
+    if(!anoData&&r._comp){
       const p=r._comp.split('-');
-      // Se não tiver ano via DATA, usa o da competência
-      if(!anoData&&p[0]&&/^\d{4}$/.test(p[0]))anos.add(p[0]);
-      if(p[1]&&/^\d{2}$/.test(p[1]))meses.add(p[1]);
+      if(p[0]&&/^\d{4}$/.test(p[0]))anos.add(p[0]);
     }
   });
+  // 2) Demais abas com data própria (fora de ALL_REC/DESP/PROD).
+  //    Sem isso, um boleto de 2035 fica invisível: o filtro não oferece o ano.
+  [[typeof ALL_PAG!=='undefined'?ALL_PAG:[],  ['DT_VENCIMENTO','DT_PAGAMENTO']],
+   [typeof ALL_CUSTO!=='undefined'?ALL_CUSTO:[],['DT_ATUALIZACAO']]].forEach(function(par){
+    (par[0]||[]).forEach(function(r){
+      par[1].forEach(function(campo){
+        const a=String(r[campo]||'').trim().slice(0,4);
+        if(/^\d{4}$/.test(a))anos.add(a);
+      });
+    });
+  });
+  return anos;
+}
+
+// Maior ano já lançado (0 se ainda não há nada) — teto do filtro de Ano.
+function anoMaxLancado(){
+  return [...anosLancados()].reduce(function(mx,a){
+    const n=parseInt(a,10);
+    return n>mx?n:mx;
+  },0);
+}
+
+function buildFiltros(){
+  const anos=anosLancados();
+  // O ano atual sempre entra, para o default do filtro funcionar mesmo numa
+  // planilha recém-criada / ainda sem lançamento no ano.
+  anos.add(String(new Date().getFullYear()));
+
   const selAno=document.getElementById('filtro-ano');
   const anoAtual=new Date().getFullYear().toString();
-  // Se não há seleção ainda, default para o ano atual (se existir nos dados)
+  // Se não há seleção ainda, default para o ano atual (se existir na lista)
   const curAno=selAno.value||(anos.has(anoAtual)?anoAtual:'');
   selAno.innerHTML='<option value="">Todos os anos</option>'+[...anos].sort().reverse().map(function(y){return'<option value="'+y+'"'+(y===curAno?' selected':'')+'>'+y+'</option>';}).join('');
   if(curAno)selAno.value=curAno; // garante seleção após innerHTML
+  // Meses: sempre os 12, para que meses futuros possam ser filtrados
   const selMes=document.getElementById('filtro-mes'),curMes=selMes.value;
-  selMes.innerHTML='<option value="">Todos os meses</option>'+[...meses].sort().map(function(m){return'<option value="'+m+'"'+(m===curMes?' selected':'')+'>'+MF[parseInt(m)-1]+'</option>';}).join('');
+  let optMes='';
+  for(var m=1;m<=12;m++){
+    const mm=String(m).padStart(2,'0');
+    optMes+='<option value="'+mm+'"'+(mm===curMes?' selected':'')+'>'+MF[m-1]+'</option>';
+  }
+  selMes.innerHTML='<option value="">Todos os meses</option>'+optMes;
+  if(curMes)selMes.value=curMes;
+  // Dados novos podem ter elevado o teto — reaplica a janela nos campos de data
+  aplicarRangeDatas(document);
 }
 
 function onAnoChange(){renderAll();}
@@ -1890,7 +1944,7 @@ function openEditTaxa(rowNum,forma,tipo,taxa){
     '<div class="fg">'+
     _field('Taxa (%)','<div style="position:relative;"><input type="number" class="fc" id="ed-taxa-perc" value="'+taxa+'" step="0.01" min="0" max="100" style="padding-right:30px;"><span style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:13px;">%</span></div>')+
     _field('Observação','<input type="text" class="fc" id="ed-taxa-obs">');
-  document.getElementById('edit-modal').style.display='flex';
+  _showEditModal();
 }
 // Retorna a taxa (0-1) para uma receita com base na tabela CAD_TAXAS_CARTAO
 function getTaxaRate(forma,tipo){
@@ -1921,7 +1975,7 @@ function openEditCad(sheet,dsField,rowNum,nomeAtual){
   document.getElementById('edit-modal-title').textContent='✏️ Editar Cadastro';
   document.getElementById('edit-modal-body').innerHTML=
     _field('Nome','<input type="text" class="fc" id="ed-cad-nome" value="'+nomeAtual+'" style="text-transform:uppercase">');
-  document.getElementById('edit-modal').style.display='flex';
+  _showEditModal();
   setTimeout(function(){const el=document.getElementById('ed-cad-nome');if(el){el.focus();el.select();}},50);
 }
 function openEditFunc(rowNum,nomeAtual,cargoAtual){
@@ -1930,7 +1984,7 @@ function openEditFunc(rowNum,nomeAtual,cargoAtual){
   document.getElementById('edit-modal-body').innerHTML=
     _field('Nome','<input type="text" class="fc" id="ed-func-nome" value="'+nomeAtual+'" style="text-transform:uppercase">')+
     _field('Cargo','<input type="text" class="fc" id="ed-func-cargo" value="'+cargoAtual+'" style="text-transform:uppercase">');
-  document.getElementById('edit-modal').style.display='flex';
+  _showEditModal();
   setTimeout(function(){const el=document.getElementById('ed-func-nome');if(el){el.focus();el.select();}},50);
 }
 
@@ -1943,6 +1997,20 @@ function closeEditModal(){
 }
 function _opt(list,cur){return list.map(function(o){return'<option'+(o===cur?' selected':'')+'>'+o+'</option>';}).join('');}
 function _field(lbl,el){return'<div class="fgr" style="margin-bottom:10px;"><label class="fgl">'+lbl+'</label>'+el+'</div>';}
+// Aplica a janela de cadastro (dataMinCampo..dataMaxCampo) nos campos de data.
+// Recalculada a cada chamada: se chegar um lançamento de ano mais alto, acompanha.
+function aplicarRangeDatas(root){
+  const sc=root||document;
+  const mn=dataMinCampo(),mx=dataMaxCampo();
+  Array.prototype.forEach.call(sc.querySelectorAll('input[type="date"]'),function(el){
+    el.min=mn;el.max=mx;
+  });
+}
+// Abre o modal de edição garantindo o range nos campos de data recém-criados
+function _showEditModal(){
+  aplicarRangeDatas(document.getElementById('edit-modal'));
+  document.getElementById('edit-modal').style.display='flex';
+}
 
 function openEditRec(idx){
   const r=(window._REC_SNAP||[])[idx];if(!r)return;
@@ -1963,7 +2031,7 @@ function openEditRec(idx){
     _field('Tipo de Pagamento','<input type="text" class="fc" id="ed-tipag" value="'+r._tipag+'">')+
     '</div>'+
     _field('Valor (R$)','<input type="number" class="fc" id="ed-val" value="'+r._val+'" step="0.01">');
-  document.getElementById('edit-modal').style.display='flex';
+  _showEditModal();
 }
 function openEditDesp(idx){
   const d=(window._DESP_SNAP||[])[idx];if(!d)return;
@@ -1994,7 +2062,7 @@ function openEditDesp(idx){
     '</div>'+
     _field('Despesa / Fornecedor',despSel)+
     _field('Valor (R$)','<input type="number" class="fc" id="ed-val" value="'+d._val+'" step="0.01">');
-  document.getElementById('edit-modal').style.display='flex';
+  _showEditModal();
 }
 function openEditProd(idx){
   const p=(window._PROD_SNAP||[])[idx];if(!p)return;
@@ -2015,7 +2083,7 @@ function openEditProd(idx){
     _field('Litros','<input type="number" class="fc" id="ed-lts" value="'+p._lts+'" step="5">')+
     _field('Quantidade (tachos)','<input type="number" class="fc" id="ed-qtd" value="'+p._qtd+'">')+
     '</div>';
-  document.getElementById('edit-modal').style.display='flex';
+  _showEditModal();
 }
 function updDia_ed(){
   const v=document.getElementById('ed-data').value;
@@ -2102,6 +2170,7 @@ let _tt;function showToast(m,t){const el=document.getElementById('toast');el.tex
 document.addEventListener('DOMContentLoaded',function(){
   const hoje=new Date().toISOString().slice(0,10);
   ['rec-data','desp-data','prod-data','pag-venc','pag-dtpag','custo-data','prec-data'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=hoje;});
+  aplicarRangeDatas(document); // janela de datas dos formulários fixos
   ['rec-data','desp-data','prod-data'].forEach(function(id){const el=document.getElementById(id);if(el)updDia(id.split('-')[0]);});
   ['rec-comp','desp-comp','prod-comp'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=hoje.slice(0,7);});
   populateFormDropdowns().then(function(){syncAll();});
@@ -2125,6 +2194,7 @@ async function renderPagamentos(){
     ALL_PAG=r.rows||[];
   }catch(e){ALL_PAG=[];}
   window._pagLoaded=true;
+  buildFiltros(); // anos vindos de boletos (ex.: 2027) entram no filtro global
   _renderPagTable();
 }
 function _renderPagTable(){
@@ -2239,7 +2309,7 @@ function openEditPag(i){
     _field('Data Pagamento','<input type="date" class="fc" id="ed-pag-dtpag" value="'+_esc(p.DT_PAGAMENTO||'')+'">') +
     _field('Observação','<input type="text" class="fc" id="ed-pag-obs" value="'+_esc(p.OBSERVACAO||'')+'" style="text-transform:uppercase">') +
     '</div>';
-  document.getElementById('edit-modal').style.display='flex';
+  _showEditModal();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2263,6 +2333,7 @@ async function renderCustos(){
     const r=await api({action:'read',sheet:'CUSTOS'});
     ALL_CUSTO=r.rows||[];
   }catch(e){ALL_CUSTO=[];}
+  buildFiltros(); // anos vindos de custos entram no filtro global
   _renderCustoTable();
 }
 function _renderCustoTable(){
@@ -2367,7 +2438,7 @@ function openEditCusto(i){
     _field('Valor (R$)','<input type="number" class="fc" id="ed-custo-valor" value="'+pVal(c.VALOR)+'" step="0.01">') +
     _field('Data Atualização','<input type="date" class="fc" id="ed-custo-data" value="'+_esc(c.DT_ATUALIZACAO||'')+'">') +
     '</div>';
-  document.getElementById('edit-modal').style.display='flex';
+  _showEditModal();
 }
 
 // ══════════════════════════════════════════════════════════════
