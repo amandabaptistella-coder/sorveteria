@@ -316,7 +316,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fg"><div class="fgr"><label class="fgl">Competência</label><input type="month" class="fc" id="rec-comp" value=""></div><div class="fgr"><label class="fgl">Data</label><input type="date" class="fc" id="rec-data" onchange="updDia('rec')"></div></div>
     <div class="fg fg3"><div class="fgr"><label class="fgl">Dia da Semana</label><input type="text" class="fc" id="rec-dia" readonly style="color:var(--mu)"></div><div class="fgr"><label class="fgl">Tipo</label><select class="fc" id="rec-tipo"><option>ENTRADA</option><option>SAÍDA (RESGATE)</option><option>COFRINHO</option></select></div><div class="fgr"><label class="fgl">Valor (R$)</label><input type="number" class="fc" id="rec-val" placeholder="0,00" step="0.01"></div></div>
     <div class="fg"><div class="fgr"><label class="fgl">Forma de Pagamento</label><select class="fc" id="rec-forma"><option>CARTÃO PAGBANK</option><option>CARTÃO MERC PAGO</option><option>DINHEIRO</option><option>PIX</option><option>QR CODE PAGBANK</option><option>QR CODE MERC PAGO</option><option>CARTÃO SUMUP</option></select></div><div class="fgr"><label class="fgl">Tipo de Pagamento</label><select class="fc" id="rec-tipag"><option>À VISTA</option><option>DÉBITO</option><option>CRÉDITO</option></select></div></div>
-    <div class="fa"><button class="btn btn-p" onclick="salvarRec()">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('rec-val').value=''">Limpar</button></div>
+    <div class="fa"><button class="btn btn-p" onclick="salvarRec(this)">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('rec-val').value=''">Limpar</button></div>
   </div>
   <div id="th-rec" style="display:none;">
     <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-rec"></div></div>
@@ -335,7 +335,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fg fg3"><div class="fgr"><label class="fgl">Dia da Semana</label><input type="text" class="fc" id="desp-dia" readonly style="color:var(--mu)"></div><div class="fgr"><label class="fgl">Local</label><select class="fc" id="desp-local" onchange="updDespFields()"><option>SORVETERIA</option><option>PARTICULAR</option></select></div><div class="fgr"><label class="fgl">Centro de Custo</label><select class="fc" id="desp-cc"><option>SORVETERIA</option></select></div></div>
     <div class="fg fg3"><div class="fgr"><label class="fgl">Tipo</label><select class="fc" id="desp-tipo"><option>VARIÁVEL</option><option>FIXA</option></select></div><div class="fgr"><label class="fgl">Categoria</label><select class="fc" id="desp-cat"><option>OPERACIONAL</option><option>PRODUÇÃO</option><option>ADMINISTRATIVA</option><option>PARTICULAR</option></select></div><div class="fgr"><label class="fgl">Despesa</label><select class="fc" id="desp-desp"></select></div></div>
     <div class="fg"><div class="fgr"><label class="fgl">Valor (R$)</label><input type="number" class="fc" id="desp-val" placeholder="0,00" step="0.01"></div></div>
-    <div class="fa"><button class="btn btn-p" onclick="salvarDesp()">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('desp-val').value=''">Limpar</button></div>
+    <div class="fa"><button class="btn btn-p" onclick="salvarDesp(this)">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('desp-val').value=''">Limpar</button></div>
   </div>
   <div id="th-desp" style="display:none;">
     <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-desp"></div></div>
@@ -353,7 +353,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fg"><div class="fgr"><label class="fgl">Competência</label><input type="month" class="fc" id="prod-comp" value=""></div><div class="fgr"><label class="fgl">Data</label><input type="date" class="fc" id="prod-data" onchange="updDia('prod')"></div></div>
     <div class="fg fg3"><div class="fgr"><label class="fgl">Dia da Semana</label><input type="text" class="fc" id="prod-dia" readonly style="color:var(--mu)"></div><div class="fgr"><label class="fgl">Sabor</label><select class="fc" id="prod-sabor"></select></div><div class="fgr"><label class="fgl">Litros</label><input type="number" class="fc" id="prod-lts" value="10" step="5"></div></div>
     <div class="fg"><div class="fgr"><label class="fgl">Quantidade (tachos)</label><input type="number" class="fc" id="prod-qtd" value="1"></div></div>
-    <div class="fa"><button class="btn btn-p" onclick="salvarProd()">💾 Salvar</button></div>
+    <div class="fa"><button class="btn btn-p" onclick="salvarProd(this)">💾 Salvar</button></div>
   </div>
   <div id="th-prod" style="display:none;">
     <div class="cd"><div class="ch"><span class="ct">Histórico de Produção</span><span class="chip" id="chip-prod-lanc">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-prod-lanc"></div></div>
@@ -496,7 +496,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
       <div class="fgr"><label class="fgl">Data de Pagamento</label><input type="date" class="fc" id="pag-dtpag"></div>
       <div class="fgr"><label class="fgl">Observação</label><input type="text" class="fc" id="pag-obs" placeholder="Opcional" style="text-transform:uppercase"></div>
     </div>
-    <div class="fa"><button class="btn btn-p" onclick="salvarPag()">💾 Salvar Boleto</button><button class="btn btn-g" onclick="clearPag()">Limpar</button></div>
+    <div class="fa"><button class="btn btn-p" onclick="salvarPag(this)">💾 Salvar Boleto</button><button class="btn btn-g" onclick="clearPag()">Limpar</button></div>
   </div>
   <div id="th-pag" style="display:none;">
     <div class="g3" style="margin-bottom:16px;">
@@ -530,7 +530,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
       Unidade: <strong>KG</strong> · Peso: <strong>5</strong> · Valor: <strong>15,50</strong>. O custo por unidade-base será calculado automaticamente.<br>
       <span style="opacity:.8;">Regra: cadastre na unidade em que você compra. A conversão é feita automaticamente na precificação.</span>
     </div>
-    <div class="fa"><button class="btn btn-p" onclick="salvarCusto()">💾 Salvar</button><button class="btn btn-g" onclick="clearCusto()">Limpar</button></div>
+    <div class="fa"><button class="btn btn-p" onclick="salvarCusto(this)">💾 Salvar</button><button class="btn btn-g" onclick="clearCusto()">Limpar</button></div>
   </div>
   <div id="th-custo" style="display:none;">
     <div class="cd"><div class="ch"><span class="ct">Histórico de Custos</span><span class="chip" id="chip-custo">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-custo"></div></div>
@@ -679,17 +679,82 @@ let ALL_REC=[], ALL_DESP=[], ALL_PROD=[];
 let autoTimer;
 
 // ── JSONP (sem CORS) ─────────────────────────────────────────
+// ── Identidade das linhas ─────────────────────────────────────
+// O backend endereça linhas por posição (_ROW), e essa posição se desloca a
+// cada exclusão, edição manual na planilha ou enquanto a tela serve o cache
+// local. Guardamos aqui o conteúdo de cada linha lida para que toda operação
+// de escrita mande junto a identidade do registro ("expect") e o backend
+// confira antes de apagar ou sobrescrever.
+const _ROWMAP={}; // sheet -> { rowNum: registro cru }
+
+// Colunas que identificam um registro em cada aba
+const _CHAVES_IDENT={
+  RECEITAS:  ['DATA','VALOR','DS_FORMA_PAGAMENTO','DS_TIPO_PAGAMENTO','DS_MOVIMENTACAO'],
+  DESPESAS:  ['DATA','VALOR','DS_DESPESA','DS_CENTRO_CUSTO','DS_CATEGORIA_DESPESA','DS_LOCAL'],
+  PRODUCAO:  ['DATA','DS_SABOR','LITROS','QUANTIDADE'],
+  PAGAMENTOS:['DT_VENCIMENTO','VALOR','DS_FORNECEDOR','PARCELA'],
+  CUSTOS:    ['DT_ATUALIZACAO','VALOR','DS_INGREDIENTE','PESO_UNIDADE']
+};
+
+function _registrarLinhas(sheet,rows){
+  const m={};
+  (rows||[]).forEach(function(r){ if(r&&r._ROW)m[String(r._ROW)]=r; });
+  _ROWMAP[sheet]=m;
+}
+// Monta o "expect" de uma linha: os valores que a tela está mostrando.
+function _expectPara(sheet,rowNum){
+  const raw=(_ROWMAP[sheet]||{})[String(rowNum)];
+  if(!raw)return null;
+  const keys=_CHAVES_IDENT[sheet]||Object.keys(raw).filter(function(k){return k!=='_ROW';});
+  const o={};
+  keys.forEach(function(k){
+    const v=raw[k];
+    if(v!==undefined&&v!==null&&String(v)!=='')o[k]=v;
+  });
+  return Object.keys(o).length?o:null;
+}
+function _novoReqId(){
+  return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+}
+// Operações que alteram a planilha — nunca podem ser repetidas às cegas
+function _ehEscrita(action){
+  return action==='append'||action==='update'||action==='delete';
+}
+
 function api(params,retries){
   retries=retries||0;
+  const escrita=_ehEscrita(params&&params.action);
+
+  // Identificador da tentativa — o backend ignora reenvios do mesmo reqId
+  if(params&&params.action==='append'&&!params.reqId){
+    params=Object.assign({},params,{reqId:_novoReqId()});
+  }
+
+  // Anexa a identidade do registro em update/delete, quando conhecida
+  if(escrita&&params.rowNum&&!params.expect){
+    const exp=_expectPara(params.sheet,params.rowNum);
+    if(exp)params=Object.assign({},params,{expect:encodeURIComponent(JSON.stringify(exp))});
+  }
+
   return new Promise(function(ok,err){
     const cb='_c'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const to=setTimeout(function(){delete window[cb];err(new Error('Timeout'));},60000);
+    const to=setTimeout(function(){
+      delete window[cb];
+      err(new Error(escrita
+        ? 'Sem confirmação do servidor. NÃO repita a operação — atualize a tela e confira se foi gravada.'
+        : 'Timeout'));
+    },60000);
     window[cb]=function(d){clearTimeout(to);delete window[cb];sc.remove();ok(d);};
     const sc=document.createElement('script');
     sc.src=API+'?'+new URLSearchParams(Object.assign({},params,{callback:cb}));
     sc.onerror=function(){
       clearTimeout(to);delete window[cb];sc.remove();
-      if(retries<2){setTimeout(function(){api(params,retries+1).then(ok,err);},3000);}
+      // NUNCA repetir uma escrita: o onerror do <script> dispara tanto quando a
+      // requisição não chegou quanto quando ela chegou, gravou e só a resposta
+      // se perdeu. Repetir nesse segundo caso duplicava o lançamento (e, em
+      // delete, apagava a linha seguinte).
+      if(!escrita&&retries<2){setTimeout(function(){api(params,retries+1).then(ok,err);},3000);}
+      else if(escrita){err(new Error('Falha de rede. A operação pode ou não ter sido gravada — atualize a tela e confira antes de repetir.'));}
       else{err(new Error('Erro de rede'));}
     };
     document.head.appendChild(sc);
@@ -865,6 +930,10 @@ function _applyData(rawRec,rawDesp,rawProd){
   ALL_REC=rawRec.map(toRec);
   ALL_DESP=rawDesp.map(toDesp);
   ALL_PROD=rawProd.map(toProd);
+  // Guarda o conteúdo de cada linha para a verificação de identidade nas escritas
+  _registrarLinhas('RECEITAS',rawRec);
+  _registrarLinhas('DESPESAS',rawDesp);
+  _registrarLinhas('PRODUCAO',rawProd);
 }
 
 // ── Sync paralelo com cache ───────────────────────────────────
@@ -1662,19 +1731,38 @@ function renderTabelaProd(PROD){
 }
 
 // ── Salvar ────────────────────────────────────────────────────
-async function salvarRec(){
+// ── Guarda contra clique duplo ────────────────────────────────
+// Trava a operação e o botão enquanto a gravação está em curso. Sem isto,
+// um segundo clique durante uma gravação lenta vira um lançamento duplicado.
+const _emCurso={};
+async function _guard(chave,btn,fn){
+  if(_emCurso[chave]){showToast('Gravação em andamento, aguarde…','error');return;}
+  _emCurso[chave]=true;
+  const txtOrig=btn?btn.innerHTML:null;
+  if(btn){btn.disabled=true;btn.style.opacity='.6';btn.style.cursor='wait';btn.innerHTML='⏳ Salvando...';}
+  try{return await fn();}
+  finally{
+    _emCurso[chave]=false;
+    if(btn){btn.disabled=false;btn.style.opacity='';btn.style.cursor='';btn.innerHTML=txtOrig;}
+  }
+}
+
+async function salvarRec(btn){return _guard('rec',btn,_salvarRec);}
+async function _salvarRec(){
   const comp=document.getElementById('rec-comp').value,data=document.getElementById('rec-data').value,dia=document.getElementById('rec-dia').value,tipo=document.getElementById('rec-tipo').value,forma=document.getElementById('rec-forma').value,tipag=document.getElementById('rec-tipag').value,val=parseFloat(document.getElementById('rec-val').value);
   if(!data||!val||val<=0){showToast('Preencha todos os campos','error');return;}
   setSS('💾 Salvando...');
   try{const r=await api({action:'append',sheet:'RECEITAS',data:encodeURIComponent(JSON.stringify({COMPETENCIA:comp,DATA:data,DIA_SEMANA:dia,DS_MOVIMENTACAO:tipo,DS_FORMA_PAGAMENTO:forma,DS_TIPO_PAGAMENTO:tipag,VALOR:val}))});if(r.ok){showToast('Receita salva ✅','success');document.getElementById('rec-val').value='';syncAll(true);}else showToast('Erro: '+(r.error||''),'error');}catch(e){showToast('Erro ao salvar','error');}
 }
-async function salvarDesp(){
+async function salvarDesp(btn){return _guard('desp',btn,_salvarDesp);}
+async function _salvarDesp(){
   const comp=document.getElementById('desp-comp').value,data=document.getElementById('desp-data').value,dia=document.getElementById('desp-dia').value,local=document.getElementById('desp-local').value,cc=document.getElementById('desp-cc').value,tipo=document.getElementById('desp-tipo').value,cat=document.getElementById('desp-cat').value,desp=document.getElementById('desp-desp').value,val=parseFloat(document.getElementById('desp-val').value);
   if(!data||!val||val<=0){showToast('Preencha todos os campos','error');return;}
   setSS('💾 Salvando...');
   try{const r=await api({action:'append',sheet:'DESPESAS',data:encodeURIComponent(JSON.stringify({COMPETENCIA:comp,DATA:data,DIA_SEMANA:dia,DS_LOCAL:local,DS_CENTRO_CUSTO:cc,DS_TIPO_DESPESA:tipo,DS_CATEGORIA_DESPESA:cat,DS_DESPESA:desp,VALOR:val}))});if(r.ok){showToast('Despesa salva ✅','success');document.getElementById('desp-val').value='';syncAll(true);}else showToast('Erro: '+(r.error||''),'error');}catch(e){showToast('Erro ao salvar','error');}
 }
-async function salvarProd(){
+async function salvarProd(btn){return _guard('prod',btn,_salvarProd);}
+async function _salvarProd(){
   const comp=document.getElementById('prod-comp').value,data=document.getElementById('prod-data').value,dia=document.getElementById('prod-dia').value,sabor=document.getElementById('prod-sabor').value,lts=parseFloat(document.getElementById('prod-lts').value),qtd=parseInt(document.getElementById('prod-qtd').value);
   if(!data||!sabor||!lts){showToast('Preencha todos os campos','error');return;}
   setSS('💾 Salvando...');
@@ -1684,7 +1772,7 @@ async function salvarProd(){
 // ── Cadastros ─────────────────────────────────────────────────
 async function loadCad(sheet){
   if(CAD_DATA[sheet]&&CAD_DATA[sheet].length)return CAD_DATA[sheet];
-  try{const r=await api({action:'read',sheet:sheet});CAD_DATA[sheet]=r.rows||[];}catch(e){CAD_DATA[sheet]=[];}
+  try{const r=await api({action:'read',sheet:sheet});CAD_DATA[sheet]=r.rows||[];_registrarLinhas(sheet,CAD_DATA[sheet]);}catch(e){CAD_DATA[sheet]=[];}
   return CAD_DATA[sheet];
 }
 async function loadAllCad(){
@@ -2174,7 +2262,36 @@ document.addEventListener('DOMContentLoaded',function(){
   ['rec-data','desp-data','prod-data'].forEach(function(id){const el=document.getElementById(id);if(el)updDia(id.split('-')[0]);});
   ['rec-comp','desp-comp','prod-comp'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=hoje.slice(0,7);});
   populateFormDropdowns().then(function(){syncAll();});
+  checarVersaoBackend();
 });
+
+// O frontend depende de um backend que verifica identidade antes de apagar ou
+// sobrescrever. Se o Apps Script não tiver sido reimplantado, avisa em vez de
+// deixar o usuário descobrir na hora de excluir.
+const API_VERSION_ESPERADA=3;
+// null = ainda não verificado · true = backend verifica identidade · false = backend antigo
+let _backendVerifica=null;
+async function checarVersaoBackend(){
+  try{
+    const r=await api({action:'ping'});
+    const v=parseInt(r&&r.version)||0;
+    _backendVerifica=(v>=API_VERSION_ESPERADA);
+    if(!_backendVerifica){
+      showToast('⚠️ Apps Script desatualizado — reimplante o backend (nova versão). Exclusões e edições estão bloqueadas.','error');
+      console.warn('Backend versão',v,'· esperada',API_VERSION_ESPERADA);
+    }
+  }catch(e){/* offline: o próprio sync já avisa */}
+}
+// Um backend antigo ACEITA o "expect" e o ignora, voltando a apagar por
+// posição. Por isso bloqueamos a escrita até confirmar que ele verifica.
+async function _backendPodeEscrever(){
+  if(_backendVerifica===null)await checarVersaoBackend();
+  if(_backendVerifica===false){
+    showToast('⚠️ Bloqueado: reimplante o Apps Script (nova versão) antes de excluir ou editar.','error');
+    return false;
+  }
+  return true; // indeterminado (offline) → deixa seguir; o backend novo recusa sozinho
+}
 
 // ══════════════════════════════════════════════════════════════
 //  PAGAMENTOS
@@ -2192,6 +2309,7 @@ async function renderPagamentos(){
   try{
     const r=await api({action:'read',sheet:'PAGAMENTOS'});
     ALL_PAG=r.rows||[];
+    _registrarLinhas('PAGAMENTOS',ALL_PAG);
   }catch(e){ALL_PAG=[];}
   window._pagLoaded=true;
   buildFiltros(); // anos vindos de boletos (ex.: 2027) entram no filtro global
@@ -2244,7 +2362,8 @@ function _renderPagTable(){
     ]
   });
 }
-async function salvarPag(){
+async function salvarPag(btn){return _guard('pag',btn,_salvarPag);}
+async function _salvarPag(){
   const fornEl=document.getElementById('pag-forn');
   const fornId=fornEl?fornEl.value:'';
   const fornNm=fornEl?(fornEl.options[fornEl.selectedIndex]||{}).text||'':'';
@@ -2332,6 +2451,7 @@ async function renderCustos(){
   try{
     const r=await api({action:'read',sheet:'CUSTOS'});
     ALL_CUSTO=r.rows||[];
+    _registrarLinhas('CUSTOS',ALL_CUSTO);
   }catch(e){ALL_CUSTO=[];}
   buildFiltros(); // anos vindos de custos entram no filtro global
   _renderCustoTable();
@@ -2384,7 +2504,8 @@ function _getConv(um){
   }
   return 1;
 }
-async function salvarCusto(){
+async function salvarCusto(btn){return _guard('custo',btn,_salvarCusto);}
+async function _salvarCusto(){
   const ingrEl=document.getElementById('custo-ingr');
   const ingrId=ingrEl?ingrEl.value:'';
   const ingrNm=ingrEl?(ingrEl.options[ingrEl.selectedIndex]||{}).text||'':'';
@@ -2842,18 +2963,47 @@ function _refreshCad(){return loadAllCad().then(function(){
   const at=document.querySelector('.cad-tab[style*="block"]');
   renderCadTab(at?at.id:'cad-sabores');
 });}
+let _excluindo=false;
 async function delGeneric(sheet,rowNum,label,refreshFn){
   if(!rowNum||rowNum<2){showToast('Linha inválida','error');return;}
+  if(_excluindo){showToast('Aguarde a exclusão anterior terminar','error');return;}
+  if(!await _backendPodeEscrever())return;
+  // A identidade sai do que a tela está mostrando. Sem ela o backend recusa —
+  // melhor avisar aqui do que deixar a requisição sair incompleta.
+  if(!_expectPara(sheet,rowNum)){
+    showToast('Dados desatualizados. Atualizando… tente de novo em seguida.','error');
+    try{await syncAll(true);}catch(e){}
+    return;
+  }
   if(!confirm('Excluir "'+label+'"?\n\nEsta ação não pode ser desfeita.'))return;
+
+  _excluindo=true;
   setSS('🗑️ Excluindo...');
   try{
     const r=await api({action:'update',mode:'delete',sheet:sheet,rowNum:String(rowNum)});
     console.log('DEL '+sheet+' resposta:',r);
-    if(!r.ok||typeof r.deleted==='undefined'){showToast('⚠️ Deploy desatualizado. Refaça nova versão do Apps Script.','error');setSS('');return;}
-    if(!r.deleted){showToast('⚠️ Nada foi excluído (linha '+rowNum+')','error');setSS('');return;}
-    showToast('"'+label+'" excluído ✅','success');
+    if(!r.ok&&/expect/i.test(r.error||'')){
+      showToast('⚠️ Apps Script desatualizado — reimplante o backend (nova versão).','error');
+      setSS('');return;
+    }
+    if(!r.ok){showToast('⚠️ '+(r.error||'Falha ao excluir'),'error');setSS('');return;}
+    if(typeof r.deleted==='undefined'){showToast('⚠️ Deploy desatualizado. Refaça nova versão do Apps Script.','error');setSS('');return;}
+    if(!r.deleted){
+      // O registro não está mais lá — a tela é que estava velha
+      showToast('⚠️ '+(r.error||'Nada foi excluído')+' Atualizando…','error');
+      if(refreshFn)await refreshFn();
+      setSS('');return;
+    }
+    if(r.status==='realocada'){
+      // A posição estava errada e o backend achou o registro certo — antes
+      // isso teria apagado silenciosamente a linha errada.
+      showToast('"'+label+'" excluído ✅ (posição corrigida)','success');
+    }else{
+      showToast('"'+label+'" excluído ✅','success');
+    }
     if(refreshFn)await refreshFn();
   }catch(e){showToast('Erro: '+e.message,'error');}
+  finally{_excluindo=false;}
   setSS('');
 }
 function showProg(title,msg,cur,tot){
