@@ -650,7 +650,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 //  COLE AQUI A URL DO SEU APPS SCRIPT (termina em /exec)
 //  Exemplo: https://script.google.com/macros/s/AKfy.../exec
 // ================================================================
-const API = 'https://script.google.com/macros/s/AKfycbwrwDj-w5anrdFmivZGnXkXusyot5kEFntp3f_7AX8WbzolUFE6C5hLhVoowbkvLyOYyg/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxtweRM7japiZTBKzCXhDWLyziXUeeX_BL_RRhh5zNfzdu0T1TDLkQeienishKs5ITo5g/exec';
 
 // Meses em português
 const PT_MONTHS={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
@@ -687,6 +687,20 @@ let autoTimer;
 // confira antes de apagar ou sobrescrever.
 const _ROWMAP={}; // sheet -> { rowNum: registro cru }
 
+// O backend pode responder no formato compacto ({headers, rows:[[...]]}),
+// que corta ~54% do tamanho por nao repetir o nome das colunas em cada
+// linha. Aqui voltamos para objetos, que e o que o resto do app espera.
+function _expandir(resp){
+  if(!resp||!resp.rows)return [];
+  if(resp.fmt!=='rows')return resp.rows;
+  const h=resp.headers||[];
+  return resp.rows.map(function(r){
+    const o={};
+    for(var i=0;i<h.length;i++)o[h[i]]=r[i];
+    return o;
+  });
+}
+
 // Colunas que identificam um registro em cada aba
 const _CHAVES_IDENT={
   RECEITAS:  ['DATA','VALOR','DS_FORMA_PAGAMENTO','DS_TIPO_PAGAMENTO','DS_MOVIMENTACAO'],
@@ -721,6 +735,11 @@ function _ehEscrita(action){
   return action==='append'||action==='update'||action==='delete';
 }
 
+// Leituras pesadas chegavam a 52s de parede; 60s deixava margem de 8s.
+const TIMEOUT_MS=120000;
+// Cada sync move alguns MB; a cada 2 min isso mantinha o app em carga
+// permanente. 10 min é suficiente para um painel de gestão.
+const AUTO_REFRESH_MS=600000;
 function api(params,retries){
   retries=retries||0;
   const escrita=_ehEscrita(params&&params.action);
@@ -743,7 +762,7 @@ function api(params,retries){
       err(new Error(escrita
         ? 'Sem confirmação do servidor. NÃO repita a operação — atualize a tela e confira se foi gravada.'
         : 'Timeout'));
-    },60000);
+    },TIMEOUT_MS);
     window[cb]=function(d){clearTimeout(to);delete window[cb];sc.remove();ok(d);};
     const sc=document.createElement('script');
     sc.src=API+'?'+new URLSearchParams(Object.assign({},params,{callback:cb}));
@@ -909,18 +928,20 @@ function labelFiltro(){
 }
 
 // ── Cache local (localStorage) ────────────────────────────────
-const LS_KEY='sorv_cache_v3';
+const LS_KEY='sorv_cache_v4';
 const LS_TTL=10*60*1000; // 10 minutos — dados servidos do cache enquanto atualiza
 
+// O cache local passa a ser por conjunto de anos carregado
+function _lsKey(){return LS_KEY+'_'+(ANOS_CARREGADOS.join('-')||'all');}
 function _saveCache(rawRec,rawDesp,rawProd){
   try{
     const payload=JSON.stringify({ts:Date.now(),rec:rawRec,desp:rawDesp,prod:rawProd});
-    if(payload.length<4.5*1024*1024)localStorage.setItem(LS_KEY,payload); // max ~4.5 MB
+    if(payload.length<4.5*1024*1024)localStorage.setItem(_lsKey(),payload); // max ~4.5 MB
   }catch(e){/* quota excedida — ignora */}
 }
 function _loadCache(){
   try{
-    const item=JSON.parse(localStorage.getItem(LS_KEY)||'null');
+    const item=JSON.parse(localStorage.getItem(_lsKey())||'null');
     if(!item)return null;
     if(Date.now()-item.ts>LS_TTL)return null; // expirado
     return item;
@@ -934,6 +955,17 @@ function _applyData(rawRec,rawDesp,rawProd){
   _registrarLinhas('RECEITAS',rawRec);
   _registrarLinhas('DESPESAS',rawDesp);
   _registrarLinhas('PRODUCAO',rawProd);
+}
+
+// Quais anos precisam estar em memória: o selecionado e o anterior (o
+// anterior alimenta as comparações "vs mês anterior" do dashboard).
+// Filtro em "Todos os anos" → carrega tudo (string vazia).
+function _anosParaCarregar(){
+  const sel=document.getElementById('filtro-ano');
+  const ano=sel?sel.value:'';
+  if(!ano)return '';
+  const n=parseInt(ano,10);
+  return isNaN(n)?ano:[String(n-1),String(n)].join(',');
 }
 
 // ── Sync paralelo com cache ───────────────────────────────────
@@ -959,17 +991,21 @@ async function syncAll(silent){
   }
 
   // ── 2. Carrega as 3 abas SIMULTANEAMENTE (Promise.all) ───────
+  // Só os anos necessários, em formato compacto: carregar a base inteira
+  // levava ~52s de parede contra um timeout de 60s.
+  const anoParam=_anosParaCarregar();
+  ANOS_CARREGADOS=anoParam?anoParam.split(','):[];
   try{
     const [rR,rD,rP]=await Promise.all([
-      api({action:'read',sheet:'RECEITAS',competencia:''}),
-      api({action:'read',sheet:'DESPESAS',competencia:''}),
-      api({action:'read',sheet:'PRODUCAO',competencia:''}),
+      api({action:'read',sheet:'RECEITAS',competencia:'',ano:anoParam,fmt:'rows'}),
+      api({action:'read',sheet:'DESPESAS',competencia:'',ano:anoParam,fmt:'rows'}),
+      api({action:'read',sheet:'PRODUCAO',competencia:'',ano:anoParam,fmt:'rows'}),
     ]);
 
     // Taxas em paralelo com os dados principais (já foi disparado acima, só aguarda)
     if(!CAD_DATA['CAD_TAXAS_CARTAO'])await loadCad('CAD_TAXAS_CARTAO');
 
-    const rawRec=rR.rows||[],rawDesp=rD.rows||[],rawProd=rP.rows||[];
+    const rawRec=_expandir(rR),rawDesp=_expandir(rD),rawProd=_expandir(rP);
     _saveCache(rawRec,rawDesp,rawProd); // persiste para próxima visita
     _applyData(rawRec,rawDesp,rawProd);
     buildFiltros();
@@ -992,13 +1028,33 @@ async function syncAll(silent){
     autoTimer=setTimeout(function(){syncAll(true);},30000);
     return;
   }
-  autoTimer=setTimeout(function(){syncAll(true);},120000);
+  autoTimer=setTimeout(function(){syncAll(true);},AUTO_REFRESH_MS);
 }
 
-// Anos efetivamente lançados no sistema, varrendo TODAS as abas com data.
-// É a única fonte do filtro de Ano — o teto acompanha o maior ano lançado.
+// Anos que o backend reporta existirem na planilha (action=anos).
+// Antes isto era derivado dos dados carregados — o que deixou de funcionar
+// quando passamos a carregar só o ano selecionado.
+let ANOS_DISPONIVEIS=[];
+let ANOS_CARREGADOS=[];
+async function carregarAnos(){
+  try{
+    const r=await api({action:'anos'});
+    if(r&&r.ok&&r.anos){
+      const set=new Set();
+      Object.keys(r.anos).forEach(function(aba){
+        (r.anos[aba]||[]).forEach(function(a){if(/^\d{4}$/.test(a))set.add(a);});
+      });
+      if(set.size)ANOS_DISPONIVEIS=[...set].sort();
+    }
+  }catch(e){/* mantém o que já tiver */}
+  return ANOS_DISPONIVEIS;
+}
+
+// Anos efetivamente lançados, varrendo o que está carregado em memória.
+// Serve de complemento/fallback quando o backend ainda não respondeu.
 function anosLancados(){
   const anos=new Set();
+  ANOS_DISPONIVEIS.forEach(function(a){anos.add(a);});
   // 1) RECEITAS / DESPESAS / PRODUCAO
   ALL_REC.concat(ALL_DESP).concat(ALL_PROD).forEach(function(r){
     // Prioriza o ANO da coluna DATA (mais confiável que COMPETENCIA)
@@ -1058,7 +1114,17 @@ function buildFiltros(){
   aplicarRangeDatas(document);
 }
 
-function onAnoChange(){renderAll();}
+async function onAnoChange(){
+  renderAll(); // resposta imediata com o que já está em memória
+  // Se o ano escolhido não está carregado, busca — é o custo da carga por ano
+  const precisa=_anosParaCarregar();
+  const faltando=(precisa?precisa.split(','):[]).filter(function(a){return ANOS_CARREGADOS.indexOf(a)<0;});
+  const querTudo=(precisa==='');
+  if(faltando.length||(querTudo&&ANOS_CARREGADOS.length)){
+    setSS(querTudo?'🔄 Carregando todos os anos…':'🔄 Carregando '+faltando.join(', ')+'…');
+    await syncAll(true);
+  }
+}
 function onFiltroChange(){renderAll();}
 
 // ── Render ────────────────────────────────────────────────────
@@ -1772,19 +1838,49 @@ async function _salvarProd(){
 // ── Cadastros ─────────────────────────────────────────────────
 async function loadCad(sheet){
   if(CAD_DATA[sheet]&&CAD_DATA[sheet].length)return CAD_DATA[sheet];
-  try{const r=await api({action:'read',sheet:sheet});CAD_DATA[sheet]=r.rows||[];_registrarLinhas(sheet,CAD_DATA[sheet]);}catch(e){CAD_DATA[sheet]=[];}
+  try{const r=await api({action:'read',sheet:sheet,fmt:'rows'});CAD_DATA[sheet]=_expandir(r);_registrarLinhas(sheet,CAD_DATA[sheet]);}catch(e){CAD_DATA[sheet]=[];}
   return CAD_DATA[sheet];
 }
-async function loadAllCad(){
-  await Promise.all([
-    loadCad('CAD_SABORES'),loadCad('CAD_FORMA_PAGAMENTO'),loadCad('CAD_TIPO_PAGAMENTO'),
-    loadCad('CAD_DESPESAS'),loadCad('CAD_CENTRO_CUSTO'),loadCad('CAD_FUNCIONARIO'),
-    loadCad('CAD_TAXAS_CARTAO'),loadCad('CAD_CATEGORIA_DESPESA'),loadCad('CAD_LINHA_DRE')
-  ]);
+const CADASTROS_BASE=['CAD_SABORES','CAD_FORMA_PAGAMENTO','CAD_TIPO_PAGAMENTO',
+  'CAD_DESPESAS','CAD_CENTRO_CUSTO','CAD_FUNCIONARIO','CAD_TAXAS_CARTAO',
+  'CAD_CATEGORIA_DESPESA','CAD_LINHA_DRE'];
+
+// Antes eram 9 requisições JSONP independentes: cada falha silenciosa deixava
+// um dropdown vazio sem avisar ninguém. Agora é uma só, com retry e aviso.
+async function loadAllCad(tentativa){
+  tentativa=tentativa||0;
+  const faltando=CADASTROS_BASE.filter(function(c){return !(CAD_DATA[c]&&CAD_DATA[c].length);});
+  if(!faltando.length)return;
+  try{
+    const r=await api({action:'readMany',sheets:faltando.join(','),fmt:'rows'});
+    if(r&&r.ok&&r.sheets){
+      Object.keys(r.sheets).forEach(function(nome){
+        const bloco=r.sheets[nome];
+        if(bloco&&bloco.ok){
+          CAD_DATA[nome]=_expandir(bloco);
+          _registrarLinhas(nome,CAD_DATA[nome]);
+        }
+      });
+    }
+  }catch(e){/* tratado abaixo */}
+
+  const aindaFaltam=CADASTROS_BASE.filter(function(c){return !(CAD_DATA[c]&&CAD_DATA[c].length);});
+  if(aindaFaltam.length&&tentativa<2){
+    await new Promise(function(r){setTimeout(r,1500);});
+    return loadAllCad(tentativa+1);
+  }
+  if(aindaFaltam.length){
+    // Garante array vazio: um undefined aqui derrubava populateFormDropdowns
+    // inteiro, deixando TODOS os dropdowns vazios por causa de um só cadastro.
+    aindaFaltam.forEach(function(c){ if(!CAD_DATA[c])CAD_DATA[c]=[]; });
+    // Falha silenciosa era a causa dos dropdowns vazios — agora aparece
+    console.warn('Cadastros não carregados:',aindaFaltam);
+    showToast('⚠️ Alguns cadastros não carregaram ('+aindaFaltam.length+'). Clique em Atualizar para tentar de novo.','error');
+  }
 }
 function populateSelect(id,items,valFn){
   const el=document.getElementById(id);if(!el)return;
-  el.innerHTML=items.filter(function(i){return(i.ATIVO||'').toString().toUpperCase()!=='FALSE';}).map(function(i){return'<option>'+valFn(i)+'</option>';}).join('');
+  el.innerHTML=(items||[]).filter(function(i){return(i.ATIVO||'').toString().toUpperCase()!=='FALSE';}).map(function(i){return'<option>'+valFn(i)+'</option>';}).join('');
 }
 async function populateFormDropdowns(){
   await loadAllCad();
@@ -2247,7 +2343,7 @@ function updDia(p){const v=document.getElementById(p+'-data').value;if(!v)return
 function updCC(){updDespFields();}
 function setSS(m){document.getElementById('sync-status').textContent=m;}
 function forceRefresh(){
-  try{localStorage.removeItem(LS_KEY);}catch(e){}
+  try{Object.keys(localStorage).forEach(function(k){if(k.indexOf(LS_KEY)===0)localStorage.removeItem(k);});}catch(e){}
   CAD_DATA={};
   showToast('🔄 Atualizando dados...','success');
   syncAll(false);
@@ -2261,14 +2357,19 @@ document.addEventListener('DOMContentLoaded',function(){
   aplicarRangeDatas(document); // janela de datas dos formulários fixos
   ['rec-data','desp-data','prod-data'].forEach(function(id){const el=document.getElementById(id);if(el)updDia(id.split('-')[0]);});
   ['rec-comp','desp-comp','prod-comp'].forEach(function(id){const el=document.getElementById(id);if(el)el.value=hoje.slice(0,7);});
-  populateFormDropdowns().then(function(){syncAll();});
+  carregarAnos().then(function(){
+    return populateFormDropdowns();
+  }).then(function(){
+    buildFiltros();   // filtro de ano pronto antes de decidir o que carregar
+    return syncAll();
+  });
   checarVersaoBackend();
 });
 
 // O frontend depende de um backend que verifica identidade antes de apagar ou
 // sobrescrever. Se o Apps Script não tiver sido reimplantado, avisa em vez de
 // deixar o usuário descobrir na hora de excluir.
-const API_VERSION_ESPERADA=3;
+const API_VERSION_ESPERADA=4;
 // null = ainda não verificado · true = backend verifica identidade · false = backend antigo
 let _backendVerifica=null;
 async function checarVersaoBackend(){
@@ -2307,8 +2408,8 @@ async function renderPagamentos(){
   }
   // Carrega pagamentos
   try{
-    const r=await api({action:'read',sheet:'PAGAMENTOS'});
-    ALL_PAG=r.rows||[];
+    const r=await api({action:'read',sheet:'PAGAMENTOS',fmt:'rows'});
+    ALL_PAG=_expandir(r);
     _registrarLinhas('PAGAMENTOS',ALL_PAG);
   }catch(e){ALL_PAG=[];}
   window._pagLoaded=true;
