@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🍦 Sorveteria</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0f0e0d">
+<link rel="icon" href="./icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icone.svg">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0f0e0d;--sf:#1a1917;--sf2:#242220;--bd:#2e2c29;--tx:#f0ede8;--mu:#7a756e;--ac:#e8a045;--gn:#5bbfa3;--rd:#d4574a;--yw:#e8a045;--bl:#5b8fbf;--pu:#a07fd4;}
@@ -27,6 +31,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-h
 .pt{font-family:'DM Serif Display',serif;font-size:26px;line-height:1.1;}
 .ps{color:var(--mu);font-size:12px;margin-top:3px;}
 .kg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.kg3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.kc-s{padding:14px 16px;}
+.kc-s .kv{font-size:20px;}
+@media(max-width:900px){.kg3{grid-template-columns:1fr;}}
 .kc{background:var(--sf);border:1px solid var(--bd);border-radius:11px;padding:18px;position:relative;overflow:hidden;}
 .kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
 .kc.gn::before{background:var(--gn)}.kc.rd::before{background:var(--rd)}.kc.yw::before{background:var(--yw)}.kc.bl::before{background:var(--bl)}.kc.pu::before{background:var(--pu)}
@@ -207,6 +215,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
       <option value="">Todos os meses</option>
     </select>
     <div style="font-size:10px;color:var(--mu);margin-top:4px;" id="filtro-info">Carregando dados...</div>
+    <div style="display:none;font-size:10px;color:var(--yw);margin-top:6px;line-height:1.4;" id="aviso-fila"></div>
   </div>
 </aside>
 
@@ -319,6 +328,11 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarRec(this)">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('rec-val').value=''">Limpar</button></div>
   </div>
   <div id="th-rec" style="display:none;">
+    <div class="kg3">
+      <div class="kc kc-s gn"><div class="kl">Valor total</div><div class="kv fm" id="cd-rec-total">—</div><div class="ks" id="cd-rec-total-s">&nbsp;</div></div>
+      <div class="kc kc-s bl"><div class="kl">Média mensal</div><div class="kv fm" id="cd-rec-mes">—</div><div class="ks" id="cd-rec-mes-s">&nbsp;</div></div>
+      <div class="kc kc-s pu"><div class="kl">Média diária</div><div class="kv fm" id="cd-rec-dia">—</div><div class="ks" id="cd-rec-dia-s">&nbsp;</div></div>
+    </div>
     <div class="cd"><div class="ch"><span class="ct">Histórico de Receitas</span><span class="chip" id="chip-rec">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-rec"></div></div>
   </div>
 </div>
@@ -338,6 +352,11 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarDesp(this)">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('desp-val').value=''">Limpar</button></div>
   </div>
   <div id="th-desp" style="display:none;">
+    <div class="kg3">
+      <div class="kc kc-s rd"><div class="kl">Valor total</div><div class="kv fm" id="cd-desp-total">—</div><div class="ks" id="cd-desp-total-s">&nbsp;</div></div>
+      <div class="kc kc-s bl"><div class="kl">Média mensal</div><div class="kv fm" id="cd-desp-mes">—</div><div class="ks" id="cd-desp-mes-s">&nbsp;</div></div>
+      <div class="kc kc-s pu"><div class="kl">Média diária</div><div class="kv fm" id="cd-desp-dia">—</div><div class="ks" id="cd-desp-dia-s">&nbsp;</div></div>
+    </div>
     <div class="cd"><div class="ch"><span class="ct">Histórico de Despesas</span><span class="chip" id="chip-desp">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-desp"></div></div>
   </div>
 </div>
@@ -356,6 +375,11 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarProd(this)">💾 Salvar</button></div>
   </div>
   <div id="th-prod" style="display:none;">
+    <div class="kg3">
+      <div class="kc kc-s yw"><div class="kl">Produção total</div><div class="kv fm" id="cd-prod-total">—</div><div class="ks" id="cd-prod-total-s">&nbsp;</div></div>
+      <div class="kc kc-s bl"><div class="kl">Média mensal</div><div class="kv fm" id="cd-prod-mes">—</div><div class="ks" id="cd-prod-mes-s">&nbsp;</div></div>
+      <div class="kc kc-s pu"><div class="kl">Média diária</div><div class="kv fm" id="cd-prod-dia">—</div><div class="ks" id="cd-prod-dia-s">&nbsp;</div></div>
+    </div>
     <div class="cd"><div class="ch"><span class="ct">Histórico de Produção</span><span class="chip" id="chip-prod-lanc">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-prod-lanc"></div></div>
   </div>
 </div>
@@ -740,6 +764,32 @@ const TIMEOUT_MS=120000;
 // Cada sync move alguns MB; a cada 2 min isso mantinha o app em carga
 // permanente. 10 min é suficiente para um painel de gestão.
 const AUTO_REFRESH_MS=600000;
+
+// ── Transporte ────────────────────────────────────────────────
+// Era JSONP (<script> injetado). Trocamos por fetch porque:
+//  · JSONP punha um callback aleatório na URL, então NENHUMA resposta era
+//    cacheável pelo navegador nem pelo Service Worker;
+//  · onerror não distinguia "não chegou" de "chegou, gravou e a resposta
+//    se perdeu" — origem dos lançamentos duplicados e do "deu erro mas
+//    apareceu lançado";
+//  · não havia timeout cancelável nem status HTTP.
+// O endpoint responde Access-Control-Allow-Origin: *, então CORS funciona.
+function _urlApi(params){
+  return API+'?'+new URLSearchParams(params);
+}
+
+async function _fetchApi(params,timeoutMs){
+  const ctrl=new AbortController();
+  const to=setTimeout(function(){ctrl.abort();},timeoutMs||TIMEOUT_MS);
+  try{
+    const r=await fetch(_urlApi(params),{signal:ctrl.signal,redirect:'follow',cache:'no-store'});
+    if(!r.ok)throw Object.assign(new Error('HTTP '+r.status),{status:r.status,respondeu:true});
+    return await r.json();
+  }finally{
+    clearTimeout(to);
+  }
+}
+
 function api(params,retries){
   retries=retries||0;
   const escrita=_ehEscrita(params&&params.action);
@@ -755,29 +805,48 @@ function api(params,retries){
     if(exp)params=Object.assign({},params,{expect:encodeURIComponent(JSON.stringify(exp))});
   }
 
-  return new Promise(function(ok,err){
-    const cb='_c'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const to=setTimeout(function(){
-      delete window[cb];
-      err(new Error(escrita
-        ? 'Sem confirmação do servidor. NÃO repita a operação — atualize a tela e confira se foi gravada.'
-        : 'Timeout'));
-    },TIMEOUT_MS);
-    window[cb]=function(d){clearTimeout(to);delete window[cb];sc.remove();ok(d);};
-    const sc=document.createElement('script');
-    sc.src=API+'?'+new URLSearchParams(Object.assign({},params,{callback:cb}));
-    sc.onerror=function(){
-      clearTimeout(to);delete window[cb];sc.remove();
-      // NUNCA repetir uma escrita: o onerror do <script> dispara tanto quando a
-      // requisição não chegou quanto quando ela chegou, gravou e só a resposta
-      // se perdeu. Repetir nesse segundo caso duplicava o lançamento (e, em
-      // delete, apagava a linha seguinte).
-      if(!escrita&&retries<2){setTimeout(function(){api(params,retries+1).then(ok,err);},3000);}
-      else if(escrita){err(new Error('Falha de rede. A operação pode ou não ter sido gravada — atualize a tela e confira antes de repetir.'));}
-      else{err(new Error('Erro de rede'));}
-    };
-    document.head.appendChild(sc);
+  return _fetchApi(params).catch(async function(e){
+    const abortou=(e&&e.name==='AbortError');
+
+    // Leitura pode ser repetida à vontade
+    if(!escrita&&retries<2){
+      await new Promise(function(r){setTimeout(r,1500);});
+      return api(params,retries+1);
+    }
+
+    // Escrita NUNCA é repetida às cegas. Se foi append, dá para perguntar ao
+    // servidor se gravou — é o que elimina o "deu erro mas apareceu lançado".
+    if(escrita&&params.action==='append'&&params.reqId){
+      const st=await _consultarReq(params.sheet,params.reqId);
+      if(st&&st.processado){
+        return {ok:true,reconciliado:true,rowNum:st.rowNum,
+                msg:'A gravação tinha dado certo — a resposta é que se perdeu.'};
+      }
+      if(st&&st.processado===false){
+        // Confirmado que NÃO gravou: pode enfileirar com segurança
+        await filaAdicionar(params);
+        return {ok:false,enfileirado:true,
+                error:'Sem conexão. O lançamento foi guardado e será enviado automaticamente.'};
+      }
+    }
+
+    throw new Error(abortou
+      ? 'O servidor demorou demais. Atualize a tela e confira antes de repetir.'
+      : 'Falha de rede. A operação pode ou não ter sido gravada — atualize a tela e confira antes de repetir.');
   });
+}
+
+// Pergunta ao backend se um reqId já foi gravado. Devolve null se nem isso
+// deu para descobrir (aí não dá para afirmar nada e não se enfileira).
+async function _consultarReq(sheet,reqId){
+  for(var tent=0;tent<2;tent++){
+    try{
+      const r=await _fetchApi({action:'checkReq',sheet:sheet,reqId:reqId},20000);
+      if(r&&r.ok)return r;
+    }catch(e){/* tenta de novo */}
+    await new Promise(function(r){setTimeout(r,1200);});
+  }
+  return null;
 }
 
 // ── Parsers ───────────────────────────────────────────────────
@@ -818,7 +887,25 @@ function mkTable(opts){
     const fv=(st.f[ci]||'').toLowerCase().trim();
     if(!fv)return;
     const col=opts.cols[parseInt(ci)];
-    rows=rows.filter(function(r){return String(col.sk?col.sk(r):(col.plain?col.plain(r):'')).toLowerCase().indexOf(fv)>=0;});
+    // Colunas de data aceitam período ("01/02/2026..01/05/2026", "01/02/2026 a
+    // 01/05/2026"). Qualquer outro texto continua filtrando por trecho.
+    const per=(col.tipoFiltro==='data')?_lerPeriodo(fv):null;
+    if(per){
+      rows=rows.filter(function(r){
+        const d=_dataISO(col.sk?col.sk(r):'');
+        return d&&d>=per.de&&d<=per.ate;
+      });
+    }else if(col.tipoFiltro==='data'){
+      // Na coluna de data, o usuário vê DD/MM/AAAA mas o valor interno é ISO.
+      // Aceita os dois, senão digitar "/03/2026" não encontrava nada.
+      rows=rows.filter(function(r){
+        const iso=String(col.sk?col.sk(r):'').toLowerCase();
+        const vis=String(col.plain?col.plain(r):'').toLowerCase();
+        return iso.indexOf(fv)>=0||vis.indexOf(fv)>=0;
+      });
+    }else{
+      rows=rows.filter(function(r){return String(col.sk?col.sk(r):(col.plain?col.plain(r):'')).toLowerCase().indexOf(fv)>=0;});
+    }
   });
 
   // Ordenação
@@ -870,6 +957,86 @@ function mkTable(opts){
     const ch=document.getElementById(opts.chipId);
     if(ch)ch.textContent=opts.chipFn(opts.data,rows);
   }
+
+  // Cards de resumo: recebem exatamente as linhas visíveis, já filtradas e
+  // ordenadas — é o que mantém os números em sintonia com a tabela.
+  if(opts.onVis){try{opts.onVis(opts.data,rows);}catch(e){console.warn('cards:',e);}}
+}
+
+// Normaliza uma data para AAAA-MM-DD (aceita ISO e DD/MM/AAAA)
+function _dataISO(v){
+  const t=String(v||'').trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(t))return t.slice(0,10);
+  const m=t.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  return m?m[3]+'-'+m[2]+'-'+m[1]:'';
+}
+
+// Interpreta "de .. até" num filtro de coluna de data.
+// Aceita: 01/02/2026..01/05/2026 · 01/02/2026 a 01/05/2026 · 2026-02-01..2026-05-01
+// Devolve null quando não é período (aí vale o filtro por trecho de sempre).
+function _lerPeriodo(txt){
+  const t=String(txt||'').trim();
+  const D='(\\d{2}\\/\\d{2}\\/\\d{4}|\\d{4}-\\d{2}-\\d{2})';
+  const m=t.match(new RegExp('^'+D+'\\s*(?:\\.\\.|a|até|ate|-)\\s*'+D+'$','i'));
+  if(!m)return null;
+  let de=_dataISO(m[1]),ate=_dataISO(m[2]);
+  if(!de||!ate)return null;
+  if(de>ate){const x=de;de=ate;ate=x;} // tolera o período invertido
+  return {de:de,ate:ate};
+}
+
+// ── Cards de resumo dos históricos ────────────────────────────
+// total, média mensal e média diária das linhas VISÍVEIS.
+// As médias usam o período coberto pelos próprios registros filtrados:
+// de a data mais antiga até a mais recente — inclusive quando o filtro foi
+// aplicado numa coluna que não é data (forma de pagamento, centro de custo…).
+function _resumoHist(pref,vis,valorDe,unidade,extraFn,rotuloReg){
+  rotuloReg=rotuloReg||'registro(s)';
+  const nada=function(){
+    ['total','mes','dia'].forEach(function(k){
+      const v=document.getElementById(pref+'-'+k);
+      const sb=document.getElementById(pref+'-'+k+'-s');
+      if(v)v.textContent=unidade==='L'?'0 L':'R$ 0,00';
+      if(sb)sb.innerHTML='&nbsp;';
+    });
+  };
+  if(!vis||!vis.length)return nada();
+
+  var total=0;const datas=[];
+  vis.forEach(function(r){
+    total+=(valorDe(r)||0);
+    const d=_dataISO(r._data||r._comp||'');
+    if(d)datas.push(d);
+  });
+  datas.sort();
+
+  const fmt=function(v){
+    return unidade==='L'
+      ? fDec(v,v>=100?0:1)+' L'
+      : brl(v);
+  };
+
+  var meses=0,dias=0,de='',ate='';
+  if(datas.length){
+    de=datas[0];ate=datas[datas.length-1];
+    const dDe=new Date(de+'T00:00:00'),dAte=new Date(ate+'T00:00:00');
+    dias=Math.round((dAte-dDe)/86400000)+1;
+    meses=(dAte.getFullYear()-dDe.getFullYear())*12+(dAte.getMonth()-dDe.getMonth())+1;
+  }
+
+  const set=function(k,val,sub){
+    const v=document.getElementById(pref+'-'+k);
+    const sb=document.getElementById(pref+'-'+k+'-s');
+    if(v)v.textContent=val;
+    if(sb)sb.innerHTML=sub||'&nbsp;';
+  };
+
+  const periodo=datas.length
+    ? '<span class="kb">'+fData(de)+' a '+fData(ate)+'</span>'
+    : '';
+  set('total',fmt(total),(extraFn?extraFn(vis)+' · ':'')+vis.length+' '+rotuloReg);
+  set('mes', meses?fmt(total/meses):'—', meses?periodo+' · '+meses+(meses>1?' meses':' mês'):'sem data');
+  set('dia', dias ?fmt(total/dias) :'—', dias ?dias+(dias>1?' dias corridos':' dia'):'sem data');
 }
 function _esc(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function _jq(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;');}
@@ -928,22 +1095,118 @@ function labelFiltro(){
 }
 
 // ── Cache local (localStorage) ────────────────────────────────
+// ── Armazenamento local ───────────────────────────────────────
+// localStorage tem ~5 MB e é síncrono (trava a interface). O IndexedDB
+// aguarda centenas de MB, o que permite manter TODOS os anos em disco e
+// abrir o painel sem rede nenhuma.
+const IDB_NOME='sorveteria', IDB_VER=1, IDB_DADOS='dados', IDB_FILA='fila';
+let _idbConn=null;
+function _idb(){
+  if(_idbConn)return Promise.resolve(_idbConn);
+  return new Promise(function(res,rej){
+    if(!self.indexedDB)return rej(new Error('IndexedDB indisponível'));
+    const req=indexedDB.open(IDB_NOME,IDB_VER);
+    req.onupgradeneeded=function(){
+      const db=req.result;
+      if(!db.objectStoreNames.contains(IDB_DADOS))db.createObjectStore(IDB_DADOS);
+      if(!db.objectStoreNames.contains(IDB_FILA)) db.createObjectStore(IDB_FILA,{keyPath:'id'});
+    };
+    req.onsuccess=function(){_idbConn=req.result;res(_idbConn);};
+    req.onerror=function(){rej(req.error);};
+  });
+}
+function _idbOp(store,modo,fn){
+  return _idb().then(function(db){
+    return new Promise(function(res,rej){
+      const tx=db.transaction(store,modo);
+      const r=fn(tx.objectStore(store));
+      tx.oncomplete=function(){res(r&&r.result!==undefined?r.result:undefined);};
+      tx.onerror=function(){rej(tx.error);};
+      tx.onabort=function(){rej(tx.error);};
+    });
+  });
+}
+const idbGet =function(st,k){return _idbOp(st,'readonly', function(o){return o.get(k);});};
+const idbSet =function(st,k,v){return _idbOp(st,'readwrite',function(o){return k===undefined?o.put(v):o.put(v,k);});};
+const idbDel =function(st,k){return _idbOp(st,'readwrite',function(o){return o.delete(k);});};
+const idbAll =function(st){return _idbOp(st,'readonly', function(o){return o.getAll();});};
+
+// ── Fila de escrita offline ───────────────────────────────────
+// Só lançamentos (append). Reenviar é seguro porque cada item carrega o
+// reqId original e o backend ignora repetições.
+let _filaRodando=false;
+async function filaAdicionar(params){
+  try{
+    await idbSet(IDB_FILA,undefined,{id:params.reqId,params:params,criadoEm:Date.now(),tentativas:0});
+    atualizarAvisoFila();
+  }catch(e){console.warn('Não foi possível enfileirar:',e);}
+}
+async function filaTamanho(){
+  try{return (await idbAll(IDB_FILA)||[]).length;}catch(e){return 0;}
+}
+async function filaProcessar(silencioso){
+  if(_filaRodando||!navigator.onLine)return;
+  let itens=[];
+  try{itens=await idbAll(IDB_FILA)||[];}catch(e){return;}
+  if(!itens.length)return;
+  _filaRodando=true;
+  let enviados=0,falhou=0;
+  try{
+    for(var i=0;i<itens.length;i++){
+      const it=itens[i];
+      try{
+        const r=await _fetchApi(it.params);
+        if(r&&r.ok){ await idbDel(IDB_FILA,it.id); enviados++; }
+        else { falhou++; }
+      }catch(e){
+        // Pode ter gravado mesmo assim — pergunta antes de desistir
+        const st=await _consultarReq(it.params.sheet,it.id);
+        if(st&&st.processado){ await idbDel(IDB_FILA,it.id); enviados++; }
+        else { falhou++; break; } // sem rede: para e tenta mais tarde
+      }
+    }
+  }finally{_filaRodando=false;}
+  atualizarAvisoFila();
+  if(enviados&&!silencioso){
+    showToast(enviados+' lançamento(s) pendente(s) enviado(s) ✅','success');
+    syncAll(true);
+  }
+  return {enviados:enviados,falhou:falhou};
+}
+async function atualizarAvisoFila(){
+  const n=await filaTamanho();
+  const el=document.getElementById('aviso-fila');
+  if(!el)return;
+  if(n>0){
+    el.style.display='';
+    el.textContent='⏳ '+n+' lançamento(s) aguardando conexão';
+  }else{
+    el.style.display='none';
+  }
+}
+
 const LS_KEY='sorv_cache_v4';
 const LS_TTL=10*60*1000; // 10 minutos — dados servidos do cache enquanto atualiza
 
 // O cache local passa a ser por conjunto de anos carregado
 function _lsKey(){return LS_KEY+'_'+(ANOS_CARREGADOS.join('-')||'all');}
+
+// Grava no IndexedDB (sem o teto de ~5 MB do localStorage e sem travar a
+// interface). Assíncrono: ninguém espera por ele.
 function _saveCache(rawRec,rawDesp,rawProd){
-  try{
-    const payload=JSON.stringify({ts:Date.now(),rec:rawRec,desp:rawDesp,prod:rawProd});
-    if(payload.length<4.5*1024*1024)localStorage.setItem(_lsKey(),payload); // max ~4.5 MB
-  }catch(e){/* quota excedida — ignora */}
+  const chave=_lsKey();
+  idbSet(IDB_DADOS,chave,{ts:Date.now(),rec:rawRec,desp:rawDesp,prod:rawProd})
+    .catch(function(e){console.warn('cache local:',e);});
+  try{localStorage.removeItem(chave);}catch(e){} // limpa resquício da versão antiga
 }
-function _loadCache(){
+
+// Lê o cache local. Sem rede, serve dado antigo em vez de tela vazia —
+// o TTL só decide se avisamos que está desatualizado.
+async function _loadCache(){
   try{
-    const item=JSON.parse(localStorage.getItem(_lsKey())||'null');
+    const item=await idbGet(IDB_DADOS,_lsKey());
     if(!item)return null;
-    if(Date.now()-item.ts>LS_TTL)return null; // expirado
+    item.velho=(Date.now()-item.ts>LS_TTL);
     return item;
   }catch(e){return null;}
 }
@@ -975,7 +1238,7 @@ async function syncAll(silent){
 
   // ── 1. Renderiza do cache local imediatamente (visita não-inicial) ──
   if(!silent){
-    const cached=_loadCache();
+    const cached=await _loadCache();
     if(cached){
       _applyData(cached.rec,cached.desp,cached.prod);
       if(!CAD_DATA['CAD_TAXAS_CARTAO']&&cached.taxas)CAD_DATA['CAD_TAXAS_CARTAO']=cached.taxas;
@@ -1715,7 +1978,7 @@ function _renderProdHist(PROD){
     },
     data:PROD,
     cols:[
-      {label:'Data',   sk:function(p){return p._data||'';},plain:function(p){return fData(p._data);},render:function(p){return fData(p._data);}},
+      {label:'Data',tipoFiltro:'data',   sk:function(p){return p._data||'';},plain:function(p){return fData(p._data);},render:function(p){return fData(p._data);}},
       {label:'Dia',    sk:function(p){return p._dia||'';},plain:function(p){return p._dia||'';},tdCls:'tx-mu',render:function(p){return p._dia||'—';}},
       {label:'Sabor',  sk:function(p){return p._sabor||'';},plain:function(p){return p._sabor||'';},render:function(p){return p._sabor||'—';}},
       {label:'Litros', sk:function(p){return p._lts;},plain:function(p){return String(p._lts);},tdCls:'tx-yw fm',render:function(p){return p._lts+'L';}},
@@ -1733,11 +1996,16 @@ function renderTabelaRec(REC){
     defaultSort:1, // Data
     snap:'_REC_SNAP',
     chipId:'chip-rec',
+    onVis:function(all,vis){
+      // Só ENTRADA conta como receita, igual ao chip e ao dashboard
+      _resumoHist('cd-rec',vis.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';}),
+                  function(r){return r._val;},'R$',null,'entradas');
+    },
     chipFn:function(all,vis){return'Total entradas: '+brl(soma(vis.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';})))+' · '+vis.length+'/'+all.length+' registros';},
     data:REC,
     cols:[
       {label:'Competência',sk:function(r){return r._comp;},plain:function(r){return r._comp;},render:function(r){return'<span class="tx-mu fm">'+r._comp+'</span>';}},
-      {label:'Data',      sk:function(r){return r._data||'';},plain:function(r){return fData(r._data);},render:function(r){return fData(r._data);}},
+      {label:'Data',      tipoFiltro:'data',sk:function(r){return r._data||'';},plain:function(r){return fData(r._data);},render:function(r){return fData(r._data);}},
       {label:'Dia',       sk:function(r){return r._dia||'';},plain:function(r){return r._dia||'';},tdCls:'tx-mu',render:function(r){return r._dia||'—';}},
       {label:'Tipo',      sk:function(r){return r._tipo||'';},plain:function(r){return r._tipo||'';},render:function(r){return'<span class="bge bg-gn">'+(r._tipo||'—')+'</span>';}},
       {label:'Forma',     sk:function(r){return r._forma||'';},plain:function(r){return r._forma||'';},render:function(r){return r._forma||'—';}},
@@ -1755,6 +2023,9 @@ function renderTabelaDesp(DESP){
     defaultSort:1, // Data
     snap:'_DESP_SNAP',
     chipId:'chip-desp',
+    onVis:function(all,vis){
+      _resumoHist('cd-desp',vis,function(r){return r._val;},'R$',null,'lançamentos');
+    },
     chipFn:function(all,vis){
       const isSorv=function(d){const c=(d._cc||'').toUpperCase(),l=(d._local||'').toUpperCase();return c==='SORVETERIA'||(l==='SORVETERIA'&&!c);};
       return'Total Sorveteria: '+brl(soma(vis.filter(isSorv)))+' · '+vis.length+'/'+all.length+' registros';
@@ -1762,7 +2033,7 @@ function renderTabelaDesp(DESP){
     data:DESP,
     cols:[
       {label:'Competência',sk:function(d){return d._comp;},plain:function(d){return d._comp;},render:function(d){return'<span class="tx-mu fm">'+d._comp+'</span>';}},
-      {label:'Data',      sk:function(d){return d._data||'';},plain:function(d){return fData(d._data);},render:function(d){return fData(d._data);}},
+      {label:'Data',tipoFiltro:'data',      sk:function(d){return d._data||'';},plain:function(d){return fData(d._data);},render:function(d){return fData(d._data);}},
       {label:'Dia',       sk:function(d){return d._dia||'';},plain:function(d){return d._dia||'';},tdCls:'tx-mu',render:function(d){return d._dia||'—';}},
       {label:'Local',     sk:function(d){return d._local||'';},plain:function(d){return d._local||'';},render:function(d){const loc=(d._local||'').toUpperCase();return'<span class="bge '+(loc==='SORVETERIA'?'bg-yw':'bg-bl')+'">'+(d._local||'—')+'</span>';}},
       {label:'C. Custo',  sk:function(d){return d._cc||'';},plain:function(d){return d._cc||'';},render:function(d){return d._cc||'—';}},
@@ -1782,11 +2053,15 @@ function renderTabelaProd(PROD){
     defaultSort:1, // Data
     snap:'_PROD_SNAP',
     chipId:'chip-prod-lanc',
+    onVis:function(all,vis){
+      _resumoHist('cd-prod',vis,function(r){return r._lts;},'L',
+                  function(rows){return rows.reduce(function(a,r){return a+(r._qtd||0);},0)+' un';},'lotes');
+    },
     chipFn:function(all,vis){return vis.length+'/'+all.length+' lotes';},
     data:PROD,
     cols:[
       {label:'Competência',sk:function(p){return p._comp;},plain:function(p){return p._comp;},render:function(p){return'<span class="tx-mu fm">'+p._comp+'</span>';}},
-      {label:'Data',      sk:function(p){return p._data||'';},plain:function(p){return fData(p._data);},render:function(p){return fData(p._data);}},
+      {label:'Data',tipoFiltro:'data',      sk:function(p){return p._data||'';},plain:function(p){return fData(p._data);},render:function(p){return fData(p._data);}},
       {label:'Dia',       sk:function(p){return p._dia||'';},plain:function(p){return p._dia||'';},tdCls:'tx-mu',render:function(p){return p._dia||'—';}},
       {label:'Sabor',     sk:function(p){return p._sabor||'';},plain:function(p){return p._sabor||'';},render:function(p){return p._sabor||'—';}},
       {label:'Litros',    sk:function(p){return p._lts;},plain:function(p){return String(p._lts);},tdCls:'tx-yw fm',render:function(p){return p._lts+'L';}},
@@ -2344,6 +2619,7 @@ function updCC(){updDespFields();}
 function setSS(m){document.getElementById('sync-status').textContent=m;}
 function forceRefresh(){
   try{Object.keys(localStorage).forEach(function(k){if(k.indexOf(LS_KEY)===0)localStorage.removeItem(k);});}catch(e){}
+  _idbOp(IDB_DADOS,'readwrite',function(o){return o.clear();}).catch(function(){});
   CAD_DATA={};
   showToast('🔄 Atualizando dados...','success');
   syncAll(false);
@@ -2364,12 +2640,43 @@ document.addEventListener('DOMContentLoaded',function(){
     return syncAll();
   });
   checarVersaoBackend();
+  registrarServiceWorker();
+  atualizarAvisoFila();
+  filaProcessar(true);
+  // Quando a conexão volta, sobe o que ficou pendente
+  window.addEventListener('online',function(){
+    setSS('🔌 Conexão restabelecida');
+    filaProcessar();
+    syncAll(true);
+  });
+  window.addEventListener('offline',function(){
+    setSS('📴 Offline — os lançamentos ficam na fila');
+  });
 });
+
+// ── Service Worker ────────────────────────────────────────────
+// É o que faz o painel abrir instantâneo: o shell vem do cache local e a
+// rede só é consultada em segundo plano.
+function registrarServiceWorker(){
+  if(!('serviceWorker' in navigator))return;
+  if(location.protocol!=='https:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1')return;
+  navigator.serviceWorker.register('./sw.js').then(function(reg){
+    reg.addEventListener('updatefound',function(){
+      const novo=reg.installing;
+      if(!novo)return;
+      novo.addEventListener('statechange',function(){
+        if(novo.state==='installed'&&navigator.serviceWorker.controller){
+          showToast('🔄 Nova versão do painel disponível — recarregue a página','success');
+        }
+      });
+    });
+  }).catch(function(e){console.warn('Service Worker não registrado:',e);});
+}
 
 // O frontend depende de um backend que verifica identidade antes de apagar ou
 // sobrescrever. Se o Apps Script não tiver sido reimplantado, avisa em vez de
 // deixar o usuário descobrir na hora de excluir.
-const API_VERSION_ESPERADA=4;
+const API_VERSION_ESPERADA=5;
 // null = ainda não verificado · true = backend verifica identidade · false = backend antigo
 let _backendVerifica=null;
 async function checarVersaoBackend(){

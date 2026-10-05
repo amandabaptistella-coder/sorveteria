@@ -1,0 +1,16 @@
+{
+  "name": "Sorveteria — Painel de Gestão",
+  "short_name": "Sorveteria",
+  "description": "Painel de gestão: receitas, despesas, produção, DRE e contas a pagar.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f0e0d",
+  "theme_color": "#0f0e0d",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "./icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "./icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
