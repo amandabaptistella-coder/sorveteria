@@ -122,6 +122,22 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 .selbar .sb-n{font-size:12px;color:var(--ac);font-weight:600;}
 .selbar .sb-v{font-family:'DM Serif Display',serif;font-size:18px;color:var(--tx);}
 .selbar .sb-x{margin-left:auto;display:flex;gap:8px;}
+.sim-lv{display:grid;grid-template-columns:1.4fr 90px 110px;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);}
+.sim-lv:last-child{border-bottom:none;}
+.sim-lv .nm{font-size:12px;}
+.sim-lv .at{font-size:10px;color:var(--mu);display:block;margin-top:2px;}
+.sim-lv input{width:100%;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);padding:5px 7px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;text-align:right;}
+.sim-lv input:focus{border-color:var(--ac);}
+.sim-nv{font-family:'DM Sans',sans-serif;font-size:12px;text-align:right;color:var(--gn);}
+.sim-res{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px;}
+.sim-res:last-child{border-bottom:none;}
+.sim-res .v1{color:var(--mu);font-family:'DM Sans',sans-serif;text-align:right;min-width:112px;}
+.sim-res .v2{font-family:'DM Sans',sans-serif;text-align:right;min-width:112px;font-weight:600;}
+.sim-res.tot{border-top:2px solid var(--ac);margin-top:5px;padding-top:11px;font-size:15px;font-weight:600;}
+.sim-gap{display:grid;grid-template-columns:1.3fr repeat(3,1fr);gap:8px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:12px;}
+.sim-gap.h{color:var(--mu);font-size:10px;text-transform:uppercase;letter-spacing:.08em;}
+.sim-gap .n{text-align:right;font-family:'DM Sans',sans-serif;}
+@media(max-width:900px){.sim-lv{grid-template-columns:1fr 70px 90px;}}
 .cfi:focus{border-color:var(--ac);}
 .cfi::placeholder{color:var(--mu);opacity:.6;}
 .bge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;}
@@ -219,6 +235,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="nl">Visão Geral</div>
     <button class="ni active" onclick="goTo('dashboard',this)"><span class="ic">📊</span> Dashboard</button>
     <button class="ni" onclick="goTo('dre',this)"><span class="ic">📋</span> DRE</button>
+    <button class="ni" onclick="goTo('simulador',this)"><span class="ic">🎯</span> Simulador</button>
     <div class="nl">Análises</div>
     <button class="ni" onclick="goTo('producao-dash',this)"><span class="ic">🏭</span> Produção</button>
     <div class="nl">Lançamentos</div>
@@ -525,6 +542,52 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
         <div class="tsc" id="list-cad-taxas"><p class="empty">Carregando...</p></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ===== SIMULADOR ===== -->
+<div class="pg" id="page-simulador">
+  <div class="ph">
+    <div><div class="pt">Simulador de Cenários</div>
+    <div class="ps" id="sub-sim">Quanto sobra se os custos caírem e a receita subir</div></div>
+    <button class="btn btn-g" onclick="simZerar()">↩️ Zerar simulação</button>
+  </div>
+
+  <div class="kg">
+    <div class="kc gn"><div class="kl">Receita simulada</div><div class="kv fm" id="sim-k-rec">—</div><div class="ks" id="sim-k-rec-s">&nbsp;</div></div>
+    <div class="kc rd"><div class="kl">Despesas simuladas</div><div class="kv fm" id="sim-k-desp">—</div><div class="ks" id="sim-k-desp-s">&nbsp;</div></div>
+    <div class="kc yw"><div class="kl">Saldo final simulado</div><div class="kv fm" id="sim-k-saldo">—</div><div class="ks" id="sim-k-saldo-s">&nbsp;</div></div>
+    <div class="kc bl"><div class="kl">Margem simulada</div><div class="kv fm" id="sim-k-marg">—</div><div class="ks" id="sim-k-marg-s">&nbsp;</div></div>
+  </div>
+
+  <div class="g2">
+    <div class="cd">
+      <div class="ch"><span class="ct">Alavancas</span><span class="chip">% ou R$ por mês</span></div>
+      <div style="padding:14px 18px 18px;">
+        <div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Receita</div>
+        <div id="sim-receita"></div>
+        <div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin:16px 0 4px;">Despesas por categoria</div>
+        <div id="sim-categorias"></div>
+        <div style="font-size:10px;color:var(--mu);margin-top:12px;line-height:1.5;">
+          Use <b>%</b> para variação proporcional ou <b>R$</b> para um valor fixo por mês.
+          Positivo aumenta, negativo reduz. Em despesas, um valor negativo é economia.
+        </div>
+      </div>
+    </div>
+
+    <div class="cd">
+      <div class="ch"><span class="ct">Resultado</span><span class="chip" id="sim-chip-periodo">—</span></div>
+      <div style="padding:14px 18px 18px;" id="sim-resultado"></div>
+    </div>
+  </div>
+
+  <div class="cd" style="margin-top:16px;">
+    <div class="ch"><span class="ct">Onde está o gap</span>
+      <span class="chip">comparar com
+        <select id="sim-ano-ref" onchange="simComparar()" style="background:var(--sf2);border:1px solid var(--bd);color:var(--tx);border-radius:5px;padding:2px 6px;font-size:11px;margin-left:5px;"></select>
+      </span>
+    </div>
+    <div style="padding:14px 18px 18px;" id="sim-gap"></div>
   </div>
 </div>
 
@@ -1711,6 +1774,7 @@ function renderPage(p,REC,DESP,PROD){
     renderKPIs(REC,DESP,PROD);renderBarChart(filtAno(ALL_REC),filtAno(ALL_DESP));renderDonut(REC);renderRecentes(REC,DESP);renderDespCats(DESP);
   }
   else if(p==='dre'){renderDRE(REC,DESP);}
+  else if(p==='simulador'){renderSimulador(REC,DESP);}
   else if(p==='producao-dash'){renderProdDash(PROD);}
   else if(p==='receitas'){renderTabelaRec(REC);}
   else if(p==='despesas'){renderTabelaDesp(DESP);}
@@ -1832,6 +1896,223 @@ function _linhaDREDesp(d){
   if(s.indexOf('ADMIN')>=0)return'DESP_ADM';
   if(s.indexOf('PARTIC')>=0)return'';
   return''; // não classificado
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SIMULADOR DE CENÁRIOS
+//  Mede o efeito de mexer em receita e em cada categoria de despesa
+//  sobre o saldo final, usando o período do filtro como ponto de partida.
+// ══════════════════════════════════════════════════════════════
+const SIM={rec:{pct:0,abs:0},cats:{}};   // alavancas aplicadas
+let _SIM_BASE=null;                      // números reais do período
+const _SIM_REF={};                       // ano de comparação -> base
+
+// Base do período: receita, taxas e despesas da sorveteria por categoria
+function _simBase(REC,DESP){
+  const entradas=REC.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';});
+  const rob=soma(entradas);
+
+  // Taxas de maquininha (mesma regra da DRE)
+  const temTaxa=entradas.some(function(r){return(r._taxa||0)>0;});
+  const taxas=entradas.reduce(function(a,r){
+    if(temTaxa)return a+(r._taxa||0);
+    const t=getTaxaRate(r._forma,r._tipag);
+    return a+(t>0?r._val*t:0);
+  },0);
+
+  const sorv=DESP.filter(function(d){
+    const cc=(d._cc||'').toUpperCase(),loc=(d._local||'').toUpperCase();
+    return cc==='SORVETERIA'||(loc==='SORVETERIA'&&!cc);
+  });
+  const cats={};
+  sorv.forEach(function(d){
+    const c=(d._cat||'(sem categoria)').toUpperCase();
+    cats[c]=(cats[c]||0)+(d._val||0);
+  });
+
+  // Quantos meses o período cobre — tudo é exibido por mês para comparar anos
+  const datas=REC.concat(DESP).map(function(r){return r._data||'';}).filter(function(d){return/^\d{4}-\d{2}/.test(d);}).sort();
+  let meses=1;
+  if(datas.length){
+    const a=new Date(datas[0]+'T00:00:00'),b=new Date(datas[datas.length-1]+'T00:00:00');
+    meses=Math.max(1,(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+1);
+  }
+  return {rob:rob,taxas:taxas,cats:cats,meses:meses,
+          desp:Object.keys(cats).reduce(function(a,k){return a+cats[k];},0)};
+}
+
+function _simAplicar(base){
+  const rec=base.rob*(1+(SIM.rec.pct||0)/100)+(SIM.rec.abs||0)*base.meses;
+  // Taxas acompanham a receita (são percentuais sobre venda)
+  const taxas=base.rob>0?base.taxas*(rec/base.rob):base.taxas;
+  const cats={};
+  Object.keys(base.cats).forEach(function(c){
+    const lv=SIM.cats[c]||{pct:0,abs:0};
+    cats[c]=Math.max(0,base.cats[c]*(1+(lv.pct||0)/100)+(lv.abs||0)*base.meses);
+  });
+  const desp=Object.keys(cats).reduce(function(a,k){return a+cats[k];},0);
+  return {rec:rec,taxas:taxas,cats:cats,desp:desp,saldo:rec-taxas-desp};
+}
+
+function renderSimulador(REC,DESP){
+  _SIM_BASE=_simBase(REC,DESP);
+  const b=_SIM_BASE;
+  document.getElementById('sub-sim').textContent=labelFiltro()+' · '+b.meses+(b.meses>1?' meses':' mês');
+  document.getElementById('sim-chip-periodo').textContent=b.meses+(b.meses>1?' meses':' mês');
+
+  // Alavanca de receita
+  document.getElementById('sim-receita').innerHTML=_simLinha('__REC__','Receita bruta',b.rob,b.meses);
+  // Uma alavanca por categoria, da maior para a menor
+  const cats=Object.keys(b.cats).sort(function(a,c){return b.cats[c]-b.cats[a];});
+  document.getElementById('sim-categorias').innerHTML=
+    cats.map(function(c){return _simLinha(c,c,b.cats[c],b.meses);}).join('')||'<div class="empty">Sem despesas no período</div>';
+
+  // Seletor de ano de referência
+  const sel=document.getElementById('sim-ano-ref');
+  const anoAtual=getAno();
+  if(sel&&!sel.options.length){
+    sel.innerHTML='<option value="">—</option>'+ANOS_DISPONIVEIS.map(function(y){
+      return'<option value="'+y+'"'+(y!==anoAtual&&y<anoAtual?'':'')+'>'+y+'</option>';}).join('');
+    const anteriores=ANOS_DISPONIVEIS.filter(function(y){return y<anoAtual;});
+    if(anteriores.length)sel.value=anteriores[0];   // o mais antigo = melhor contraste
+  }
+  simCalcular();
+  simComparar();
+}
+
+function _simLinha(chave,rotulo,valor,meses){
+  const lv=(chave==='__REC__')?SIM.rec:(SIM.cats[chave]||{pct:0,abs:0});
+  const id=chave.replace(/[^A-Za-z0-9]/g,'_');
+  return'<div class="sim-lv">'+
+    '<div><span class="nm">'+_esc(rotulo)+'</span>'+
+      '<span class="at">hoje: '+brl(valor/meses)+'/mês</span></div>'+
+    '<input type="number" step="1" placeholder="%" id="sim-p-'+id+'" value="'+(lv.pct||'')+'" '+
+      'oninput="simSet(\''+_jq(chave)+'\',\'pct\',this.value)">'+
+    '<input type="number" step="10" placeholder="R$/mês" id="sim-a-'+id+'" value="'+(lv.abs||'')+'" '+
+      'oninput="simSet(\''+_jq(chave)+'\',\'abs\',this.value)">'+
+  '</div>';
+}
+
+function simSet(chave,campo,valor){
+  const v=parseFloat(valor);
+  const alvo=(chave==='__REC__')?SIM.rec:(SIM.cats[chave]=SIM.cats[chave]||{pct:0,abs:0});
+  alvo[campo]=isNaN(v)?0:v;
+  simCalcular();
+}
+
+function simZerar(){
+  SIM.rec={pct:0,abs:0};
+  Object.keys(SIM.cats).forEach(function(k){delete SIM.cats[k];});
+  if(_SIM_BASE)renderSimulador(filtrar(ALL_REC),filtrar(ALL_DESP));
+}
+
+function simCalcular(){
+  const b=_SIM_BASE;if(!b)return;
+  const s=_simAplicar(b);
+  const saldoBase=b.rob-b.taxas-b.desp;
+  const m=b.meses;
+
+  const set=function(id,v,sub){
+    const e=document.getElementById(id);if(e)e.textContent=v;
+    const t=document.getElementById(id+'-s');if(t)t.innerHTML=sub||'&nbsp;';
+  };
+  const delta=function(novo,velho){
+    const d=novo-velho;
+    if(Math.abs(d)<0.005)return'<span class="kb">sem mudança</span>';
+    return'<span class="kb '+(d>0?'pos':'neg')+'">'+(d>0?'▲':'▼')+' '+brl(Math.abs(d)/m)+'/mês</span>';
+  };
+
+  set('sim-k-rec',brl(s.rec/m)+'/mês',delta(s.rec,b.rob));
+  set('sim-k-desp',brl((s.desp+s.taxas)/m)+'/mês',delta(s.desp+s.taxas,b.desp+b.taxas));
+  set('sim-k-saldo',brl(s.saldo/m)+'/mês',delta(s.saldo,saldoBase));
+  const margem=s.rec>0?s.saldo/s.rec*100:0;
+  const margemBase=b.rob>0?saldoBase/b.rob*100:0;
+  set('sim-k-marg',fDec(margem,1)+'%',
+      '<span class="kb '+(margem>=margemBase?'pos':'neg')+'">'+
+      (margem>=margemBase?'▲':'▼')+' '+fDec(Math.abs(margem-margemBase),1)+' p.p.</span>');
+
+  // Demonstrativo lado a lado
+  const linha=function(rot,v1,v2,cls,tot){
+    const d=v2-v1;
+    return'<div class="sim-res'+(tot?' tot':'')+'">'+
+      '<span>'+rot+'</span>'+
+      '<span class="v1">'+brl(v1/m)+'</span>'+
+      '<span class="v2 '+(cls||'')+'">'+brl(v2/m)+
+        (Math.abs(d)>=0.005?'<span style="font-size:10px;color:'+(d>0?'var(--gn)':'var(--rd)')+';display:block;">'+
+        (d>0?'+':'')+brl(d/m)+'</span>':'')+'</span></div>';
+  };
+  let html='<div class="sim-res" style="color:var(--mu);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bd);">'+
+    '<span>por mês</span><span class="v1">hoje</span><span class="v2">simulado</span></div>';
+  html+=linha('(+) Receita bruta',b.rob,s.rec,'tx-gn');
+  html+=linha('(−) Taxas sobre venda',b.taxas,s.taxas,'tx-rd');
+  Object.keys(b.cats).sort(function(x,y){return b.cats[y]-b.cats[x];}).forEach(function(c){
+    html+=linha('(−) '+c,b.cats[c],s.cats[c],'tx-rd');
+  });
+  html+=linha('(=) Saldo final',saldoBase,s.saldo,s.saldo>=0?'tx-gn':'tx-rd',true);
+  document.getElementById('sim-resultado').innerHTML=html;
+}
+
+// ── Comparação com outro ano: mostra o que mudou, por categoria ──
+async function simComparar(){
+  const sel=document.getElementById('sim-ano-ref');
+  const alvo=document.getElementById('sim-gap');
+  if(!sel||!alvo||!_SIM_BASE)return;
+  const ano=sel.value;
+  if(!ano){alvo.innerHTML='<div class="empty">Escolha um ano para comparar</div>';return;}
+
+  if(!_SIM_REF[ano]){
+    alvo.innerHTML='<div class="empty">⏳ Carregando '+ano+'…</div>';
+    try{
+      const [rR,rD]=await Promise.all([
+        api({action:'read',sheet:'RECEITAS',competencia:'',ano:ano,fmt:'rows'}),
+        api({action:'read',sheet:'DESPESAS',competencia:'',ano:ano,fmt:'rows'})
+      ]);
+      _SIM_REF[ano]=_simBase(_expandir(rR).map(toRec),_expandir(rD).map(toDesp));
+    }catch(e){
+      alvo.innerHTML='<div class="empty tx-rd">Não foi possível carregar '+ano+'.</div>';return;
+    }
+  }
+
+  const ref=_SIM_REF[ano],b=_SIM_BASE;
+  const pm=function(base,v){return v/base.meses;};   // por mês
+  const linhas=[];
+  const cats=[...new Set(Object.keys(ref.cats).concat(Object.keys(b.cats)))];
+  cats.forEach(function(c){
+    const a=pm(ref,ref.cats[c]||0),x=pm(b,b.cats[c]||0);
+    linhas.push({nome:c,de:a,para:x,dif:x-a});
+  });
+  linhas.sort(function(p,q){return q.dif-p.dif;});
+
+  const recA=pm(ref,ref.rob),recB=pm(b,b.rob);
+  const saldoA=pm(ref,ref.rob-ref.taxas-ref.desp),saldoB=pm(b,b.rob-b.taxas-b.desp);
+
+  let html='<div class="sim-gap h"><span>por mês</span><span class="n">'+ano+'</span><span class="n">hoje</span><span class="n">diferença</span></div>';
+  const row=function(nome,a,x,destaque){
+    const d=x-a;
+    const cor=destaque?(d>0?'var(--rd)':'var(--gn)'):'';
+    return'<div class="sim-gap"'+(destaque?' style="font-weight:600;"':'')+'>'+
+      '<span>'+_esc(nome)+'</span>'+
+      '<span class="n tx-mu">'+brl(a)+'</span>'+
+      '<span class="n">'+brl(x)+'</span>'+
+      '<span class="n" style="color:'+(cor||(d>0?'var(--rd)':'var(--gn)'))+';">'+(d>0?'+':'')+brl(d)+'</span></div>';
+  };
+  html+=row('Receita bruta',recA,recB);
+  linhas.forEach(function(l){html+=row(l.nome,l.de,l.para);});
+  html+='<div style="border-top:2px solid var(--ac);margin-top:6px;padding-top:4px;"></div>';
+  html+=row('SALDO FINAL',saldoA,saldoB,true);
+
+  // Conclusão em uma frase, com a maior alavanca
+  const pior=linhas[0];
+  if(pior&&pior.dif>0){
+    const pctSaldo=(saldoA-saldoB)!==0?100*pior.dif/(saldoA-saldoB):0;
+    html+='<div style="margin-top:14px;padding:11px 13px;background:var(--sf2);border-radius:8px;font-size:12px;line-height:1.6;">'+
+      '💡 O saldo caiu <b>'+brl(saldoA-saldoB)+'/mês</b> desde '+ano+'. '+
+      'A maior parte vem de <b>'+_esc(pior.nome)+'</b>, que subiu '+brl(pior.dif)+'/mês'+
+      (pctSaldo>0&&pctSaldo<=100?' — sozinha, '+fDec(pctSaldo,0)+'% da queda':'')+'.'+
+      (recB<recA?' A receita também caiu '+brl(recA-recB)+'/mês.':' A receita se manteve.')+
+      '</div>';
+  }
+  alvo.innerHTML=html;
 }
 
 function renderDRE(REC,DESP){
@@ -2752,6 +3033,19 @@ function getTaxaRate(forma,tipo){
 }
 
 // ── Editar Cadastros ──────────────────────────────────────────
+// Unidade de medida tem três campos, então ganha um modal próprio
+function openEditUM(i){
+  const r=(CAD_DATA['CAD_UNIDADE_MEDIDA']||[])[i];
+  if(!r){showToast('Registro não encontrado','error');return;}
+  _editCtx={type:'UM',sheet:'CAD_UNIDADE_MEDIDA',row:parseInt(r._ROW)||0,idx:i};
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Unidade de Medida';
+  document.getElementById('edit-modal-body').innerHTML=
+    _field('Sigla','<input type="text" class="fc" id="ed-um-sigla" value="'+_esc(r.ID_UNIDADE_MEDIDA||'')+'" style="text-transform:uppercase">')+
+    _field('Descrição','<input type="text" class="fc" id="ed-um-desc" value="'+_esc(r.DS_UNIDADE_MEDIDA||'')+'">')+
+    _field('Fator de conversão','<input type="number" step="0.0001" class="fc" id="ed-um-conv" value="'+_esc(r.CONVERSAO||'')+'">');
+  _showEditModal();
+}
+
 function openEditCad(sheet,dsField,rowNum,nomeAtual){
   _editCtx={type:'CAD',sheet:sheet,dsField:dsField,row:rowNum};
   document.getElementById('edit-modal-title').textContent='✏️ Editar Cadastro';
@@ -2889,6 +3183,12 @@ async function saveEdit(){
     const novoNome=gv('ed-cad-nome').trim().toUpperCase();
     if(!novoNome){showToast('Preencha o nome','error');return;}
     data={};data[_editCtx.dsField]=novoNome;
+  }else if(_editCtx.type==='UM'){
+    const sigla=gv('ed-um-sigla').trim().toUpperCase();
+    const desc=gv('ed-um-desc').trim();
+    if(!sigla||!desc){showToast('Preencha sigla e descrição','error');return;}
+    const conv=parseFloat(gv('ed-um-conv'));
+    data={ID_UNIDADE_MEDIDA:sigla,DS_UNIDADE_MEDIDA:desc,CONVERSAO:isNaN(conv)?'':conv};
   }else if(_editCtx.type==='FUNC'){
     const nm=gv('ed-func-nome').trim().toUpperCase();
     const cg=gv('ed-func-cargo').trim().toUpperCase();
@@ -2905,7 +3205,7 @@ async function saveEdit(){
     if(r.ok){
       showToast('Alteração salva ✅','success');
       closeEditModal();
-      if(_editCtx&&(_editCtx.type==='CAD'||_editCtx.type==='FUNC'||_editCtx.type==='TAXA')){
+      if(_editCtx&&(_editCtx.type==='CAD'||_editCtx.type==='FUNC'||_editCtx.type==='TAXA'||_editCtx.type==='UM')){
         // Recarrega o cadastro específico e re-renderiza
         const sh=_editCtx.type==='FUNC'?'CAD_FUNCIONARIO':_editCtx.type==='TAXA'?'CAD_TAXAS_CARTAO':_editCtx.sheet;
         delete CAD_DATA[sh];
@@ -3871,7 +4171,7 @@ async function renderCadFornecedor(){
   const chip=document.getElementById('chip-cad-forn');if(chip)chip.textContent=rows.length+' fornecedores';
   const el=document.getElementById('list-cad-forn');if(!el)return;
   el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Fornecedor</th><th>Status</th><th style="width:170px"></th></tr></thead><tbody>'+
-    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-mu fm">'+(r.ID_FORNECEDOR||i+1)+'</td><td><strong>'+(r.DS_FORNECEDOR||r.NOME||'')+'</strong></td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_FORNECEDOR\','+row+','+i+',\'renderCadFornecedor\')">'+(ativo?'Inativar':'Ativar')+'</button></td></tr>';}).join('')+'</tbody></table>'
+    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-mu fm">'+(r.ID_FORNECEDOR||i+1)+'</td><td><strong>'+(r.DS_FORNECEDOR||r.NOME||'')+'</strong></td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td style="display:flex;gap:5px;padding:6px 11px;"><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditCad(\'CAD_FORNECEDOR\',\'DS_FORNECEDOR\','+row+',\''+_jq(r.DS_FORNECEDOR||r.NOME||'')+'\')">✏️ Editar</button><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_FORNECEDOR\','+row+','+i+',\'renderCadFornecedor\')">'+(ativo?'⛔ Inativar':'✅ Ativar')+'</button><button class="btn" style="padding:3px 9px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'CAD_FORNECEDOR\','+row+',\''+_jq(r.DS_FORNECEDOR||r.NOME||'')+'\',_refreshCad)">🗑️</button></td></tr>';}).join('')+'</tbody></table>'
     :'<p class="empty">Nenhum fornecedor cadastrado</p>';
 }
 async function salvarCadForn(){
@@ -3893,7 +4193,7 @@ async function renderCadIngr(){
   const chip=document.getElementById('chip-cad-ingr');if(chip)chip.textContent=rows.length+' ingredientes';
   const el=document.getElementById('list-cad-ingr');if(!el)return;
   el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Ingrediente</th><th>Status</th><th style="width:170px"></th></tr></thead><tbody>'+
-    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-mu fm">'+(r.ID_INGREDIENTE||i+1)+'</td><td><strong>'+(r.DS_INGREDIENTE||r.NOME||'')+'</strong></td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_INGREDIENTES\','+row+','+i+',\'renderCadIngr\')">'+(ativo?'Inativar':'Ativar')+'</button></td></tr>';}).join('')+'</tbody></table>'
+    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-mu fm">'+(r.ID_INGREDIENTE||i+1)+'</td><td><strong>'+(r.DS_INGREDIENTE||r.NOME||'')+'</strong></td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td style="display:flex;gap:5px;padding:6px 11px;"><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditCad(\'CAD_INGREDIENTES\',\'DS_INGREDIENTE\','+row+',\''+_jq(r.DS_INGREDIENTE||r.NOME||'')+'\')">✏️ Editar</button><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_INGREDIENTES\','+row+','+i+',\'renderCadIngr\')">'+(ativo?'⛔ Inativar':'✅ Ativar')+'</button><button class="btn" style="padding:3px 9px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'CAD_INGREDIENTES\','+row+',\''+_jq(r.DS_INGREDIENTE||r.NOME||'')+'\',_refreshCad)">🗑️</button></td></tr>';}).join('')+'</tbody></table>'
     :'<p class="empty">Nenhum ingrediente cadastrado</p>';
 }
 async function salvarCadIngr(){
@@ -3915,7 +4215,7 @@ async function renderCadUM(){
   const chip=document.getElementById('chip-cad-um');if(chip)chip.textContent=rows.length+' unidades';
   const el=document.getElementById('list-cad-um');if(!el)return;
   el.innerHTML=rows.length?'<table><thead><tr><th>Sigla</th><th>Descrição</th><th class="tx-r">Fator Conv.</th><th>Status</th><th style="width:140px"></th></tr></thead><tbody>'+
-    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-yw fm">'+(r.ID_UNIDADE_MEDIDA||'')+'</td><td>'+(r.DS_UNIDADE_MEDIDA||'')+'</td><td class="tx-r tx-mu fm">'+(r.CONVERSAO||'')+'</td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_UNIDADE_MEDIDA\','+row+','+i+',\'renderCadUM\')">'+(ativo?'Inativar':'Ativar')+'</button></td></tr>';}).join('')+'</tbody></table>'
+    rows.map(function(r,i){const ativo=(r.ATIVO||'').toUpperCase()!=='FALSE';const row=parseInt(r._ROW)||0;return'<tr><td class="tx-yw fm">'+(r.ID_UNIDADE_MEDIDA||'')+'</td><td>'+(r.DS_UNIDADE_MEDIDA||'')+'</td><td class="tx-r tx-mu fm">'+(r.CONVERSAO||'')+'</td><td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td><td style="display:flex;gap:5px;padding:6px 11px;"><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="openEditUM('+i+')">✏️ Editar</button><button class="btn btn-g" style="padding:3px 9px;font-size:11px;" onclick="toggleCadGeneric(\'CAD_UNIDADE_MEDIDA\','+row+','+i+',\'renderCadUM\')">'+(ativo?'⛔ Inativar':'✅ Ativar')+'</button><button class="btn" style="padding:3px 9px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'CAD_UNIDADE_MEDIDA\','+row+',\''+_jq(r.DS_UNIDADE_MEDIDA||r.ID_UNIDADE_MEDIDA||'')+'\',_refreshCad)">🗑️</button></td></tr>';}).join('')+'</tbody></table>'
     :'<p class="empty">Nenhuma unidade cadastrada</p>';
 }
 async function salvarCadUM(){
