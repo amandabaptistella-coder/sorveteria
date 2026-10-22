@@ -94,6 +94,34 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 .sa{color:var(--ac)!important;opacity:1!important;}
 .frow th{padding:3px 6px 5px;border-bottom:1px solid var(--bd);}
 .cfi{width:100%;background:var(--sf);border:1px solid var(--bd);color:var(--tx);padding:3px 7px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:11px;outline:none;transition:border-color .15s;}
+.fbt{width:100%;background:var(--sf);border:1px solid var(--bd);color:var(--mu);padding:3px 7px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .15s;}
+.fbt:hover{border-color:var(--ac);color:var(--tx);}
+.fbt.on{border-color:var(--ac);color:var(--ac);background:rgba(232,160,69,.08);font-weight:600;}
+.fpop{position:fixed;z-index:9999;background:var(--sf);border:1px solid var(--bd);border-radius:9px;box-shadow:0 12px 36px rgba(0,0,0,.6);width:272px;display:none;flex-direction:column;overflow:hidden;}
+.fpop.show{display:flex;}
+.fpop-h{padding:9px 11px 7px;border-bottom:1px solid var(--bd);}
+.fpop-s{width:100%;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);padding:5px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;}
+.fpop-s:focus{border-color:var(--ac);}
+.fpop-per{display:flex;gap:6px;align-items:center;margin-top:7px;}
+.fpop-per input{flex:1;min-width:0;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);padding:4px 6px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:11px;outline:none;}
+.fpop-per span{font-size:10px;color:var(--mu);}
+.fpop-l{max-height:230px;overflow-y:auto;padding:5px 4px;}
+.fpop-i{display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--tx);}
+.fpop-i:hover{background:var(--sf2);}
+.fpop-i input{accent-color:var(--ac);cursor:pointer;flex-shrink:0;}
+.fpop-i span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fpop-i.all{border-bottom:1px solid var(--bd);border-radius:0;margin-bottom:3px;padding-bottom:7px;font-weight:600;color:var(--mu);}
+.fpop-f{display:flex;gap:7px;padding:9px 11px;border-top:1px solid var(--bd);}
+.fpop-f button{flex:1;padding:5px 0;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bd);font-family:'DM Sans',sans-serif;}
+.fpop-ok{background:var(--ac);color:#0f0e0d;border-color:var(--ac)!important;}
+.fpop-cl{background:var(--sf2);color:var(--mu);}
+.fpop-n{font-size:10px;color:var(--mu);padding:0 11px 7px;}
+.selchk{accent-color:var(--ac);cursor:pointer;width:15px;height:15px;vertical-align:middle;}
+.selbar{display:none;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(232,160,69,.1);border:1px solid var(--ac);border-radius:9px;padding:10px 14px;margin-bottom:12px;}
+.selbar.show{display:flex;}
+.selbar .sb-n{font-size:12px;color:var(--ac);font-weight:600;}
+.selbar .sb-v{font-family:'DM Serif Display',serif;font-size:18px;color:var(--tx);}
+.selbar .sb-x{margin-left:auto;display:flex;gap:8px;}
 .cfi:focus{border-color:var(--ac);}
 .cfi::placeholder{color:var(--mu);opacity:.6;}
 .bge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;}
@@ -328,6 +356,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarRec(this)">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('rec-val').value=''">Limpar</button></div>
   </div>
   <div id="th-rec" style="display:none;">
+    <div class="selbar" id="selbar-rec"></div>
     <div class="kg3">
       <div class="kc kc-s gn"><div class="kl">Valor total</div><div class="kv fm" id="cd-rec-total">—</div><div class="ks" id="cd-rec-total-s">&nbsp;</div></div>
       <div class="kc kc-s bl"><div class="kl">Média mensal</div><div class="kv fm" id="cd-rec-mes">—</div><div class="ks" id="cd-rec-mes-s">&nbsp;</div></div>
@@ -352,6 +381,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarDesp(this)">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('desp-val').value=''">Limpar</button></div>
   </div>
   <div id="th-desp" style="display:none;">
+    <div class="selbar" id="selbar-desp"></div>
     <div class="kg3">
       <div class="kc kc-s rd"><div class="kl">Valor total</div><div class="kv fm" id="cd-desp-total">—</div><div class="ks" id="cd-desp-total-s">&nbsp;</div></div>
       <div class="kc kc-s bl"><div class="kl">Média mensal</div><div class="kv fm" id="cd-desp-mes">—</div><div class="ks" id="cd-desp-mes-s">&nbsp;</div></div>
@@ -375,6 +405,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <div class="fa"><button class="btn btn-p" onclick="salvarProd(this)">💾 Salvar</button></div>
   </div>
   <div id="th-prod" style="display:none;">
+    <div class="selbar" id="selbar-prod"></div>
     <div class="kg3">
       <div class="kc kc-s yw"><div class="kl">Produção total</div><div class="kv fm" id="cd-prod-total">—</div><div class="ks" id="cd-prod-total-s">&nbsp;</div></div>
       <div class="kc kc-s bl"><div class="kl">Média mensal</div><div class="kv fm" id="cd-prod-mes">—</div><div class="ks" id="cd-prod-mes-s">&nbsp;</div></div>
@@ -528,6 +559,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
       <div class="kc gn" style="border-radius:9px;padding:14px;background:var(--sf);border:1px solid var(--bd);"><div class="kl">Pagos</div><div class="kv fm tx-gn" id="kpi-pag-pago">—</div><div class="ks" id="kpi-pag-pago-s"></div></div>
       <div class="kc yw" style="border-radius:9px;padding:14px;background:var(--sf);border:1px solid var(--bd);"><div class="kl">Total Geral</div><div class="kv fm" id="kpi-pag-total">—</div><div class="ks" id="kpi-pag-total-s"></div></div>
     </div>
+    <div class="selbar" id="selbar-pag"></div>
     <div class="cd"><div class="ch"><span class="ct">Boletos Lançados</span><span class="chip" id="chip-pag">—</span></div><div class="tsc" style="max-height:620px;" id="tbl-pag"></div></div>
   </div>
 </div>
@@ -674,7 +706,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 //  COLE AQUI A URL DO SEU APPS SCRIPT (termina em /exec)
 //  Exemplo: https://script.google.com/macros/s/AKfy.../exec
 // ================================================================
-const API = 'https://script.google.com/macros/s/AKfycbwchkosdCLBFtpWzYg3XFJS87J9Qc9hv5s5X80-BiPuqma0sGJBjo4yAdH1SimCbdj6/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxDJjtJ7W-X1MO_qyYjZAR4S-9q1DScjIraiffgUxNClO0qsNYnUA9Ht_SOvIwnI-tBzg/exec';
 
 // Meses em português
 const PT_MONTHS={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
@@ -884,27 +916,31 @@ function mkTable(opts){
   // Filtragem por coluna
   let rows=opts.data||[];
   Object.keys(st.f).forEach(function(ci){
-    const fv=(st.f[ci]||'').toLowerCase().trim();
-    if(!fv)return;
+    const f=_normFiltro(st.f[ci]);
+    if(!f)return;
     const col=opts.cols[parseInt(ci)];
-    // Colunas de data aceitam período ("01/02/2026..01/05/2026", "01/02/2026 a
-    // 01/05/2026"). Qualquer outro texto continua filtrando por trecho.
-    const per=(col.tipoFiltro==='data')?_lerPeriodo(fv):null;
-    if(per){
+
+    if(f.tipo==='periodo'){
       rows=rows.filter(function(r){
         const d=_dataISO(col.sk?col.sk(r):'');
-        return d&&d>=per.de&&d<=per.ate;
+        return d&&d>=f.de&&d<=f.ate;
       });
-    }else if(col.tipoFiltro==='data'){
-      // Na coluna de data, o usuário vê DD/MM/AAAA mas o valor interno é ISO.
-      // Aceita os dois, senão digitar "/03/2026" não encontrava nada.
-      rows=rows.filter(function(r){
-        const iso=String(col.sk?col.sk(r):'').toLowerCase();
-        const vis=String(col.plain?col.plain(r):'').toLowerCase();
-        return iso.indexOf(fv)>=0||vis.indexOf(fv)>=0;
-      });
+    }else if(f.tipo==='lista'){
+      // Seleção de valores, como o filtro do Excel
+      const sel={};f.sel.forEach(function(v){sel[v]=1;});
+      rows=rows.filter(function(r){return sel[_valorFiltro(col,r)]===1;});
     }else{
-      rows=rows.filter(function(r){return String(col.sk?col.sk(r):(col.plain?col.plain(r):'')).toLowerCase().indexOf(fv)>=0;});
+      const fv=f.txt.toLowerCase();
+      if(col.tipoFiltro==='data'){
+        // O usuário vê DD/MM/AAAA mas o valor interno é ISO: aceita os dois
+        rows=rows.filter(function(r){
+          const iso=String(col.sk?col.sk(r):'').toLowerCase();
+          const vis=String(col.plain?col.plain(r):'').toLowerCase();
+          return iso.indexOf(fv)>=0||vis.indexOf(fv)>=0;
+        });
+      }else{
+        rows=rows.filter(function(r){return String(col.sk?col.sk(r):(col.plain?col.plain(r):'')).toLowerCase().indexOf(fv)>=0;});
+      }
     }
   });
 
@@ -920,6 +956,17 @@ function mkTable(opts){
 
   // Salva snap para edição (com índice original no array filtrado+ordenado)
   if(opts.snap)window[opts.snap]=rows;
+  opts._vis=rows;
+  _TCFG[id]=opts; // o painel de filtro e a seleção precisam das colunas e das linhas
+
+  // Coluna de seleção (quando a tabela habilita)
+  const selOn=!!opts.selecao;
+  const selSt=selOn?_selDe(id):null;
+  const todosSel=selOn&&rows.length>0&&rows.every(function(r){return selSt.has(_selKey(r));});
+  const thSel=selOn?('<th style="width:34px;padding:6px 4px;text-align:center;">'
+      +'<input type="checkbox" class="selchk" '+(todosSel?'checked':'')
+      +' title="Selecionar todos os visíveis" onclick="event.stopPropagation();_selTodos(\''+id+'\',this.checked)"></th>'):'';
+  const thSelF=selOn?'<th style="padding:3px 4px;"></th>':'';
 
   // Thead (headers clicáveis)
   const ths=opts.cols.map(function(c,i){
@@ -930,27 +977,35 @@ function mkTable(opts){
       +c.label+' <span class="si '+ac+'">'+arr+'</span></th>';
   }).join('');
 
-  // Linha de filtros
+  // Linha de filtros — botões que abrem o painel.
+  // Era um <input> que filtrava a cada tecla; como a tabela inteira é
+  // re-renderizada a cada filtro, o input era destruído e o foco se perdia:
+  // digitar "28" virava uma busca por "2" e depois outra por "8".
   const fths=opts.cols.map(function(c,i){
     if(c.noFilter)return'<th style="padding:3px 6px;"></th>';
-    const fv=st.f[i]||'';
+    const fv=st.f[i];
+    const rot=_rotuloFiltro(fv);
     return'<th style="padding:3px 6px 5px;">'
-      +'<input class="cfi" value="'+_esc(fv)+'" placeholder="▼ filtrar"'
-      +' oninput="_tFilter(\''+id+'\','+i+',this.value)"></th>';
+      +'<button class="fbt'+(rot.ativo?' on':'')+'" title="'+_esc(rot.titulo)+'"'
+      +' onclick="_fpopAbrir(event,\''+id+'\','+i+')">'+_esc(rot.texto)+'</button></th>';
   }).join('');
 
   // Tbody
   const tbhtml=rows.length
     ?rows.map(function(r,i){
-      return'<tr>'+opts.cols.map(function(c){
+      const marcada=selOn&&selSt.has(_selKey(r));
+      const tdSel=selOn?('<td style="text-align:center;padding:6px 4px;">'
+        +'<input type="checkbox" class="selchk" '+(marcada?'checked':'')
+        +' onclick="event.stopPropagation();_selAlternar(\''+id+'\',\''+_jq(_selKey(r))+'\')"></td>'):'';
+      return'<tr'+(marcada?' style="background:rgba(232,160,69,.07);"':'')+'>'+tdSel+opts.cols.map(function(c){
         return'<td class="'+(c.tdCls||'')+'">'+c.render(r,i)+'</td>';
       }).join('')+'</tr>';
     }).join('')
-    :'<tr><td colspan="'+opts.cols.length+'" class="empty">Nenhum resultado</td></tr>';
+    :'<tr><td colspan="'+(opts.cols.length+(selOn?1:0))+'" class="empty">Nenhum resultado</td></tr>';
 
   const el=document.getElementById(id);
   if(!el)return;
-  el.innerHTML='<table><thead><tr>'+ths+'</tr><tr class="frow">'+fths+'</tr></thead><tbody>'+tbhtml+'</tbody></table>';
+  el.innerHTML='<table><thead><tr>'+thSel+ths+'</tr><tr class="frow">'+thSelF+fths+'</tr></thead><tbody>'+tbhtml+'</tbody></table>';
 
   // Chip
   if(opts.chipId&&opts.chipFn){
@@ -961,6 +1016,9 @@ function mkTable(opts){
   // Cards de resumo: recebem exatamente as linhas visíveis, já filtradas e
   // ordenadas — é o que mantém os números em sintonia com a tabela.
   if(opts.onVis){try{opts.onVis(opts.data,rows);}catch(e){console.warn('cards:',e);}}
+
+  // Barra de seleção
+  if(selOn&&opts.selecao)_selBarra(id,opts.selecao);
 }
 
 // Normaliza uma data para AAAA-MM-DD (aceita ISO e DD/MM/AAAA)
@@ -1046,6 +1104,247 @@ function _tSort(id,col){
   _TS[id]=st;
   if(_TR[id])_TR[id]();
 }
+const _TCFG={};   // id da tabela -> opts do mkTable
+
+// ── Seleção de linhas por checkbox ────────────────────────────
+// Guarda as linhas marcadas por uma chave estável (_ROW da planilha), para a
+// seleção sobreviver a reordenações e re-renderizações da tabela.
+const _SEL={};   // id da tabela -> Set de chaves
+function _selKey(r){return String(r._row||r._ROW||'');}
+function _selDe(id){if(!_SEL[id])_SEL[id]=new Set();return _SEL[id];}
+function _selTem(id,r){return _selDe(id).has(_selKey(r));}
+
+function _selAlternar(id,chave){
+  const st=_selDe(id);
+  if(st.has(chave))st.delete(chave);else st.add(chave);
+  if(_TR[id])_TR[id]();
+}
+function _selTodos(id,marcar){
+  const st=_selDe(id);
+  const vis=(_TCFG[id]&&_TCFG[id]._vis)||[];
+  vis.forEach(function(r){
+    const k=_selKey(r);
+    if(marcar)st.add(k);else st.delete(k);
+  });
+  if(_TR[id])_TR[id]();
+}
+function _selLimpar(id){
+  _SEL[id]=new Set();
+  if(_TR[id])_TR[id]();
+}
+// Linhas marcadas que estão visíveis agora (respeita os filtros da tabela)
+function _selLinhas(id){
+  const st=_selDe(id);
+  return ((_TCFG[id]&&_TCFG[id]._vis)||[]).filter(function(r){return st.has(_selKey(r));});
+}
+
+// Barra de resumo da seleção
+function _selBarra(id,cfg){
+  const bar=document.getElementById(cfg.barra);
+  if(!bar)return;
+  const linhas=_selLinhas(id);
+  if(!linhas.length){bar.classList.remove('show');return;}
+  bar.classList.add('show');
+  const total=linhas.reduce(function(a,r){return a+(cfg.valor(r)||0);},0);
+  const vTxt=cfg.unidade==='L'?(fDec(total,total>=100?0:1)+' L'):brl(total);
+  bar.innerHTML='<span class="sb-n">'+linhas.length+' selecionado(s)</span>'
+    +'<span class="sb-v">'+vTxt+'</span>'
+    +(cfg.extra?'<span class="sb-n" style="color:var(--mu);font-weight:400;">'+cfg.extra(linhas)+'</span>':'')
+    +'<span class="sb-x">'
+    +(cfg.acoes?cfg.acoes(linhas):'')
+    +'<button class="btn btn-g" style="padding:4px 12px;font-size:11px;" onclick="_selLimpar(\'' +id+ '\')">Limpar seleção</button>'
+    +'</span>';
+}
+
+// Valor que representa a linha nesta coluna (o texto que aparece na tela)
+function _valorFiltro(col,r){
+  const v=col.plain?col.plain(r):(col.sk?col.sk(r):'');
+  return String(v===null||v===undefined?'':v);
+}
+
+// Aceita o formato antigo (string) e os novos (objeto), para não quebrar
+// nada que ainda chame _tFilter com texto.
+function _normFiltro(f){
+  if(!f)return null;
+  if(typeof f==='string'){
+    const t=f.trim();
+    if(!t)return null;
+    const per=_lerPeriodo(t);
+    return per?{tipo:'periodo',de:per.de,ate:per.ate}:{tipo:'texto',txt:t};
+  }
+  if(f.tipo==='lista')return (f.sel&&f.sel.length)?f:null;
+  if(f.tipo==='periodo')return (f.de&&f.ate)?f:null;
+  if(f.tipo==='texto')return (f.txt&&f.txt.trim())?{tipo:'texto',txt:f.txt.trim()}:null;
+  return null;
+}
+
+// Texto do botão de filtro da coluna
+function _rotuloFiltro(f){
+  const n=_normFiltro(f);
+  if(!n)return{ativo:false,texto:'▼ filtrar',titulo:'Clique para filtrar'};
+  if(n.tipo==='periodo')return{ativo:true,texto:'▼ '+fData(n.de)+'–'+fData(n.ate),
+                               titulo:'Período de '+fData(n.de)+' até '+fData(n.ate)};
+  if(n.tipo==='lista'){
+    const t=n.sel.length===1?('▼ '+n.sel[0]):('▼ '+n.sel.length+' selecionados');
+    return{ativo:true,texto:t,titulo:n.sel.slice(0,25).join('\n')+(n.sel.length>25?'\n…':'')};
+  }
+  return{ativo:true,texto:'▼ '+n.txt,titulo:'Contém "'+n.txt+'"'};
+}
+
+// ── Painel de filtro ──────────────────────────────────────────
+let _fpopCtx=null; // {id, col, valores:[], marcados:Set}
+
+function _fpopAbrir(ev,id,col){
+  ev.stopPropagation();
+  const opts=_TCFG[id];
+  if(!opts)return;
+  const c=opts.cols[col];
+
+  // Valores distintos da coluna, na base completa da tabela
+  const vistos={},valores=[];
+  (opts.data||[]).forEach(function(r){
+    const v=_valorFiltro(c,r);
+    if(vistos[v]===undefined){vistos[v]=1;valores.push(v);}
+  });
+  valores.sort(function(a,b){
+    const na=parseFloat(String(a).replace(/[^0-9.-]/g,'')),nb=parseFloat(String(b).replace(/[^0-9.-]/g,''));
+    if(!isNaN(na)&&!isNaN(nb)&&String(a).replace(/[^0-9.,-]/g,'')!==''&&String(b).replace(/[^0-9.,-]/g,'')!=='')return na-nb;
+    return String(a).localeCompare(String(b),'pt-BR');
+  });
+
+  const atual=_normFiltro((_TS[id]||{f:{}}).f[col]);
+  const marcados=new Set(
+    atual&&atual.tipo==='lista' ? atual.sel : valores   // sem filtro = tudo marcado
+  );
+  _fpopCtx={id:id,col:col,valores:valores,marcados:marcados,ehData:c.tipoFiltro==='data'};
+
+  // Campos de período só aparecem em coluna de data
+  const per=document.getElementById('fpop-periodo');
+  per.style.display=_fpopCtx.ehData?'flex':'none';
+  if(_fpopCtx.ehData){
+    document.getElementById('fpop-de').value =(atual&&atual.tipo==='periodo')?atual.de :'';
+    document.getElementById('fpop-ate').value=(atual&&atual.tipo==='periodo')?atual.ate:'';
+  }
+
+  const busca=document.getElementById('fpop-busca');
+  busca.value=(atual&&atual.tipo==='texto')?atual.txt:'';
+  busca.oninput=function(){_fpopLista(this.value);};
+
+  _fpopLista('');
+  _fpopPosicionar(ev.currentTarget);
+  document.getElementById('fpop').classList.add('show');
+  setTimeout(function(){busca.focus();},30);
+}
+
+function _fpopPosicionar(botao){
+  const pop=document.getElementById('fpop');
+  const r=botao.getBoundingClientRect();
+  pop.classList.add('show'); // precisa estar visível para medir
+  const larg=pop.offsetWidth||272, alt=pop.offsetHeight||340;
+  let x=r.left, y=r.bottom+4;
+  if(x+larg>window.innerWidth-8)x=Math.max(8,window.innerWidth-larg-8);
+  if(y+alt>window.innerHeight-8)y=Math.max(8,r.top-alt-4);
+  pop.style.left=x+'px';
+  pop.style.top=y+'px';
+}
+
+const _FPOP_MAX=400; // teto de itens exibidos por vez
+function _fpopLista(busca){
+  if(!_fpopCtx)return;
+  const q=(busca||'').toLowerCase().trim();
+  const vis=_fpopCtx.valores.filter(function(v){return !q||String(v).toLowerCase().indexOf(q)>=0;});
+  const corte=vis.slice(0,_FPOP_MAX);
+  const todosMarcados=corte.length>0&&corte.every(function(v){return _fpopCtx.marcados.has(v);});
+
+  const nota=document.getElementById('fpop-nota');
+  if(vis.length>_FPOP_MAX){
+    nota.style.display='';
+    nota.textContent='Mostrando '+_FPOP_MAX+' de '+vis.length+' valores — use a busca para refinar.';
+  }else{nota.style.display='none';}
+
+  const html=['<label class="fpop-i all"><input type="checkbox" '+(todosMarcados?'checked':'')+
+              ' onchange="_fpopTodos(this.checked)"><span>(Selecionar tudo)</span></label>'];
+  corte.forEach(function(v,i){
+    html.push('<label class="fpop-i"><input type="checkbox" '+(_fpopCtx.marcados.has(v)?'checked':'')+
+              ' onchange="_fpopMarcar('+i+',this.checked)"><span>'+_esc(v===''?'(vazio)':v)+'</span></label>');
+  });
+  if(!corte.length)html.push('<div class="fpop-n" style="padding:10px 11px;">Nenhum valor encontrado</div>');
+  const lst=document.getElementById('fpop-lista');
+  lst.innerHTML=html.join('');
+  lst._vis=corte;
+}
+
+function _fpopMarcar(i,marcado){
+  const lst=document.getElementById('fpop-lista');
+  const v=(lst._vis||[])[i];
+  if(v===undefined)return;
+  if(marcado)_fpopCtx.marcados.add(v);else _fpopCtx.marcados.delete(v);
+}
+
+function _fpopTodos(marcado){
+  const lst=document.getElementById('fpop-lista');
+  (lst._vis||[]).forEach(function(v){
+    if(marcado)_fpopCtx.marcados.add(v);else _fpopCtx.marcados.delete(v);
+  });
+  _fpopLista(document.getElementById('fpop-busca').value);
+}
+
+function _fpopFechar(){
+  document.getElementById('fpop').classList.remove('show');
+  _fpopCtx=null;
+}
+
+function _fpopLimpar(){
+  if(!_fpopCtx)return;
+  const {id,col}=_fpopCtx;
+  const st=_TS[id]||{col:0,dir:-1,f:{}};
+  delete st.f[col];
+  _TS[id]=st;
+  _fpopFechar();
+  if(_TR[id])_TR[id]();
+}
+
+function _fpopAplicar(){
+  if(!_fpopCtx)return;
+  const {id,col,valores,marcados,ehData}=_fpopCtx;
+  const st=_TS[id]||{col:0,dir:-1,f:{}};
+
+  // 1) Período (só em coluna de data) tem precedência
+  if(ehData){
+    const de=document.getElementById('fpop-de').value;
+    const ate=document.getElementById('fpop-ate').value;
+    if(de&&ate){
+      st.f[col]=(de<=ate)?{tipo:'periodo',de:de,ate:ate}:{tipo:'periodo',de:ate,ate:de};
+      _TS[id]=st;_fpopFechar();if(_TR[id])_TR[id]();return;
+    }
+  }
+
+  // 2) Seleção de valores
+  const sel=valores.filter(function(v){return marcados.has(v);});
+  if(sel.length===0){
+    showToast('Selecione ao menos um valor','error');return;
+  }
+  if(sel.length===valores.length){
+    delete st.f[col];            // tudo marcado = sem filtro
+  }else{
+    st.f[col]={tipo:'lista',sel:sel};
+  }
+  _TS[id]=st;
+  _fpopFechar();
+  if(_TR[id])_TR[id]();
+}
+
+// Fecha ao clicar fora, rolar ou apertar Esc
+document.addEventListener('mousedown',function(e){
+  const pop=document.getElementById('fpop');
+  if(pop&&pop.classList.contains('show')&&!pop.contains(e.target))_fpopFechar();
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape')_fpopFechar();
+  else if(e.key==='Enter'&&_fpopCtx&&document.getElementById('fpop').classList.contains('show'))_fpopAplicar();
+});
+window.addEventListener('resize',_fpopFechar);
+
 function _tFilter(id,col,val){
   const st=_TS[id]||{col:0,dir:-1,f:{}};
   st.f[col]=val;
@@ -1720,6 +2019,23 @@ function renderDRE(REC,DESP){
 // ── Produção Avançada ─────────────────────────────────────────
 let PROD_MODE='diario';
 let PROD_YEARS=new Set();
+
+// O gráfico de Produção compara ANOS, mas ALL_PROD passou a conter só o ano
+// selecionado e o anterior (carga por ano). Sem uma base completa, os anos
+// anteriores sumiam dos chips e das séries. Carregada sob demanda ao abrir a aba.
+let ALL_PROD_HIST=[];
+let _prodHistCarregando=false;
+function _prodBase(){return ALL_PROD_HIST.length?ALL_PROD_HIST:ALL_PROD;}
+async function carregarProdHistorico(){
+  if(ALL_PROD_HIST.length||_prodHistCarregando)return;
+  _prodHistCarregando=true;
+  try{
+    const r=await api({action:'read',sheet:'PRODUCAO',competencia:'',ano:'',fmt:'rows'});
+    ALL_PROD_HIST=_expandir(r).map(toProd);
+    if(getActivePage()==='producao-dash')renderProdDash(filtrar(ALL_PROD));
+  }catch(e){console.warn('histórico de produção não carregado:',e);}
+  finally{_prodHistCarregando=false;}
+}
 let PROD_CUR=[];
 const YC=['#e8a045','#5bbfa3','#5b8fbf','#a07fd4','#d4574a','#70b8e8'];
 const YCMAP={};
@@ -1741,6 +2057,7 @@ function toggleProdYear(y,chip){
 }
 function renderProdDash(PROD){
   PROD_CUR=PROD;
+  carregarProdHistorico(); // base completa p/ comparar anos (não bloqueia)
   const lts=PROD.reduce(function(s,p){return s+p._lts;},0);
   const lotes=PROD.length;
   const totQtd=PROD.reduce(function(s,p){return s+p._qtd;},0); // total tachos/quantidade
@@ -1752,14 +2069,16 @@ function renderProdDash(PROD){
   document.getElementById('kpi-lts-s').innerHTML='<span class="kb pos">'+lotes+' registros</span>';
   document.getElementById('kpi-lotes-s').innerHTML='<span class="kb pos">'+sabores+' sabores</span>';
   const _anoOf=function(p){return(p._data||'').slice(0,4)||(p._comp||'').slice(0,4);};
-  const anos=[...new Set(ALL_PROD.map(_anoOf))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
+  const anos=[...new Set(_prodBase().map(_anoOf))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
   anos.forEach(function(y,i){if(!YCMAP[y])YCMAP[y]=YC[i%YC.length];});
   if(PROD_YEARS.size===0&&anos.length)PROD_YEARS.add(anos[anos.length-1]);
   const sel=document.getElementById('prod-year-sel');
   sel.innerHTML=anos.map(function(y){
     const act=PROD_YEARS.has(y);
     return'<button class="yr-chip'+(act?' active':'')+'" data-yr="'+y+'" style="'+(act?'background:'+YCMAP[y]+';border-color:'+YCMAP[y]+';color:#0f0e0d;':'')+'">'+y+'</button>';
-  }).join('');
+  }).join('')
+  // Enquanto a base histórica não chega, deixa claro que faltam anos
+  +(_prodHistCarregando?'<span style="font-size:10px;color:var(--mu);margin-left:8px;">⏳ carregando anos anteriores…</span>':'');
   sel.querySelectorAll('.yr-chip').forEach(function(b){
     b.addEventListener('click',function(){toggleProdYear(this.dataset.yr,this);});
   });
@@ -1777,10 +2096,10 @@ function _drawArea(){
   if(PROD_MODE==='anual'){
     // Extrai ano de _data (mais confiável) ou de _comp como fallback
     const anoOf=function(p){return(p._data||'').slice(0,4)||(p._comp||'').slice(0,4);};
-    const anos=[...new Set(ALL_PROD.map(anoOf))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
+    const anos=[...new Set(_prodBase().map(anoOf))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
     labels=anos;
     const vals=anos.map(function(y){
-      return ALL_PROD.filter(function(p){return anoOf(p)===y;}).reduce(function(s,p){return s+p._qtd;},0);
+      return _prodBase().filter(function(p){return anoOf(p)===y;}).reduce(function(s,p){return s+p._qtd;},0);
     });
     series=[{label:'Qtd',color:YC[0],pts:vals.map(function(v,i){return{l:anos[i],v:v};})}];
   }else if(PROD_MODE==='mensal'){
@@ -1789,7 +2108,7 @@ function _drawArea(){
     series=yearsArr.map(function(y){return{label:y,color:YCMAP[y]||YC[0],pts:MN.map(function(_,i){
       const m=String(i+1).padStart(2,'0');
       // Usa _data para o mês (consistente com filtrar)
-      const sum=ALL_PROD.filter(function(p){
+      const sum=_prodBase().filter(function(p){
         const yrmo=(p._data||'').slice(0,7)||(p._comp||'').slice(0,7);
         return yrmo===y+'-'+m;
       }).reduce(function(s,p){return s+p._qtd;},0);
@@ -1920,19 +2239,19 @@ function _renderProdComp(){
   if(ano&&mes){
     const m=parseInt(mes),y=parseInt(ano);
     const pc=m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0');
-    prev=ALL_PROD.filter(function(p){return p._comp===pc;});
+    prev=_prodBase().filter(function(p){return p._comp===pc;});
     prevLbl='vs '+MF[parseInt(pc.slice(5))-1]+' '+pc.slice(0,4);
   }else if(ano){
     const py=String(parseInt(ano)-1);
-    prev=ALL_PROD.filter(function(p){return p._comp.startsWith(py);});
+    prev=_prodBase().filter(function(p){return p._comp.startsWith(py);});
     prevLbl='vs '+py;
   }else{
     // Sem filtro: compara último ano com o anterior
-    const anos=[...new Set(ALL_PROD.map(function(p){return p._comp.slice(0,4);}))].filter(Boolean).sort();
+    const anos=[...new Set(_prodBase().map(function(p){return p._comp.slice(0,4);}))].filter(Boolean).sort();
     if(anos.length>=2){
       const curAno=anos[anos.length-1],prevAno=anos[anos.length-2];
-      cur=ALL_PROD.filter(function(p){return p._comp.startsWith(curAno);});
-      prev=ALL_PROD.filter(function(p){return p._comp.startsWith(prevAno);});
+      cur=_prodBase().filter(function(p){return p._comp.startsWith(curAno);});
+      prev=_prodBase().filter(function(p){return p._comp.startsWith(prevAno);});
       prevLbl='vs '+prevAno;
     }else if(anos.length===1){
       cur=ALL_PROD;prev=[];prevLbl='Sem período anterior';
@@ -1996,6 +2315,7 @@ function renderTabelaRec(REC){
     defaultSort:1, // Data
     snap:'_REC_SNAP',
     chipId:'chip-rec',
+    selecao:{barra:'selbar-rec',unidade:'R$',valor:function(r){return r._val;}},
     onVis:function(all,vis){
       // Só ENTRADA conta como receita, igual ao chip e ao dashboard
       _resumoHist('cd-rec',vis.filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';}),
@@ -2023,6 +2343,7 @@ function renderTabelaDesp(DESP){
     defaultSort:1, // Data
     snap:'_DESP_SNAP',
     chipId:'chip-desp',
+    selecao:{barra:'selbar-desp',unidade:'R$',valor:function(r){return r._val;}},
     onVis:function(all,vis){
       _resumoHist('cd-desp',vis,function(r){return r._val;},'R$',null,'lançamentos');
     },
@@ -2053,6 +2374,8 @@ function renderTabelaProd(PROD){
     defaultSort:1, // Data
     snap:'_PROD_SNAP',
     chipId:'chip-prod-lanc',
+    selecao:{barra:'selbar-prod',unidade:'L',valor:function(r){return r._lts;},
+             extra:function(rows){return rows.reduce(function(a,r){return a+(r._qtd||0);},0)+' un';}},
     onVis:function(all,vis){
       _resumoHist('cd-prod',vis,function(r){return r._lts;},'L',
                   function(rows){return rows.reduce(function(a,r){return a+(r._qtd||0);},0)+' un';},'lotes');
@@ -2739,6 +3062,19 @@ function _renderPagTable(){
     defaultSort:2, // DT_VENCIMENTO
     snap:'_PAG_SNAP',
     chipId:'chip-pag',
+    selecao:{
+      barra:'selbar-pag',unidade:'R$',
+      valor:function(p){return pVal(p.VALOR);},
+      extra:function(rows){
+        const ab=rows.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()!=='SIM';}).length;
+        return ab+' em aberto · '+(rows.length-ab)+' já pago(s)';
+      },
+      acoes:function(rows){
+        const ab=rows.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()!=='SIM';}).length;
+        return (ab?'<button class="btn btn-p" style="padding:4px 12px;font-size:11px;" onclick="pagarSelecionados()">✅ Marcar '+ab+' como pago(s)</button>':'')
+              +'<button class="btn btn-g" style="padding:4px 12px;font-size:11px;" onclick="desmarcarSelecionados()">↩️ Marcar como não pago</button>';
+      }
+    },
     chipFn:function(all,vis){
       const aberto=vis.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()!=='SIM';});
       const pago  =vis.filter(function(p){return(p.SITUACAO_PAGAMENTO||'').toUpperCase()==='SIM';});
@@ -2802,6 +3138,55 @@ function clearPag(){
   document.getElementById('pag-dtpag').value=hoje;
   document.getElementById('pag-venc').value=hoje;
 }
+// ── Pagamento em lote ─────────────────────────────────────────
+// Percorre um a um de propósito: cada update leva a identidade do registro
+// (expect) e o backend confere antes de gravar. Um lote "atômico" aqui seria
+// mentira — o Apps Script grava linha a linha de qualquer forma.
+async function _marcarPagamentos(novaSit){
+  const linhas=_selLinhas('tbl-pag');
+  const alvo=linhas.filter(function(p){
+    return (p.SITUACAO_PAGAMENTO||'').toUpperCase()!==novaSit;
+  });
+  if(!alvo.length){showToast('Nenhum boleto a alterar na seleção','error');return;}
+
+  const total=alvo.reduce(function(a,p){return a+pVal(p.VALOR);},0);
+  const rotulo=novaSit==='SIM'?'marcar como PAGO':'marcar como NÃO pago';
+  if(!confirm('Deseja '+rotulo+' '+alvo.length+' boleto(s), somando '+brl(total)+'?'))return;
+
+  const hoje=new Date().toISOString().slice(0,10);
+  let ok=0;const falhas=[];
+  showProg('Atualizando boletos','',0,alvo.length);
+  try{
+    for(var i=0;i<alvo.length;i++){
+      const p=alvo[i];
+      showProg('Atualizando boletos',(p.DS_FORNECEDOR||'')+' · '+brl(pVal(p.VALOR)),i,alvo.length);
+      const rowNum=parseInt(p._ROW);
+      if(!rowNum||rowNum<2){falhas.push((p.DS_FORNECEDOR||'?')+': linha inválida');continue;}
+      try{
+        const r=await api({action:'update',sheet:'PAGAMENTOS',rowNum:rowNum,
+          data:encodeURIComponent(JSON.stringify({SITUACAO_PAGAMENTO:novaSit,
+                                                  DT_PAGAMENTO:novaSit==='SIM'?hoje:''}))});
+        if(r&&r.ok&&r.updated!==0)ok++;
+        else falhas.push((p.DS_FORNECEDOR||'?')+': '+(r&&r.error?r.error:'não gravou'));
+      }catch(e){
+        falhas.push((p.DS_FORNECEDOR||'?')+': '+e.message);
+        break; // sem rede: para aqui em vez de insistir em todos
+      }
+    }
+  }finally{hideProg();}
+
+  _selLimpar('tbl-pag');
+  if(falhas.length){
+    console.warn('Boletos não atualizados:',falhas);
+    showToast(ok+' atualizado(s), '+falhas.length+' com falha — veja o console (F12)','error');
+  }else{
+    showToast(ok+' boleto(s) '+(novaSit==='SIM'?'marcado(s) como pago ✅':'marcado(s) como não pago'),'success');
+  }
+  renderPagamentos();
+}
+function pagarSelecionados(){return _marcarPagamentos('SIM');}
+function desmarcarSelecionados(){return _marcarPagamentos('NÃO');}
+
 async function togglePag(i){
   const snap=window._PAG_SNAP||ALL_PAG;
   const p=snap[i];if(!p)return;
@@ -3295,12 +3680,15 @@ async function delPrec(idRec){
   if(!confirm('Excluir a receita "'+nome+'" e todos os seus ingredientes?\n\nEsta ação não pode ser desfeita.'))return;
   setSS('🗑️ Excluindo...');
   try{
-    const rIt=await api({action:'update',mode:'delete',sheet:'PRECIFICACAO_ITENS',column:'ID_RECEITA',value:idRec,rowNum:'2'});
+    // Sem rowNum: a exclusão é por ID_RECEITA. Mandar rowNum:'2' junto fazia o
+    // backend excluir por POSIÇÃO (a linha 2), apagando a receita errada e
+    // deixando os ingredientes sem cabeçalho — as "receitas órfãs".
+    const rIt=await api({action:'update',mode:'delete',sheet:'PRECIFICACAO_ITENS',column:'ID_RECEITA',value:idRec});
     console.log('DEL ITENS resposta:',rIt);
-    if(!rIt.ok||typeof rIt.deleted==='undefined'){showToast('⚠️ Deploy desatualizado. Veja console (F12).','error');setSS('');return;}
-    const rCab=await api({action:'update',mode:'delete',sheet:'PRECIFICACAO',column:'ID_RECEITA',value:idRec,rowNum:'2'});
+    if(!rIt.ok){showToast('⚠️ '+(rIt.error||'Falha ao excluir os ingredientes'),'error');setSS('');return;}
+    const rCab=await api({action:'update',mode:'delete',sheet:'PRECIFICACAO',column:'ID_RECEITA',value:idRec});
     console.log('DEL CAB resposta:',rCab);
-    if(!rCab.ok||typeof rCab.deleted==='undefined'){showToast('⚠️ Deploy desatualizado. Veja console (F12).','error');setSS('');return;}
+    if(!rCab.ok){showToast('⚠️ '+(rCab.error||'Falha ao excluir a receita')+' (os ingredientes já foram removidos)','error');setSS('');return;}
     console.log('DEL ITENS:',rIt);console.log('DEL CAB:',rCab);
     const totalDel=(rIt.deleted||0)+(rCab.deleted||0);
     if(totalDel===0){
@@ -3574,5 +3962,20 @@ window.saveEdit=async function(){
   }else if(_origSaveEdit){_origSaveEdit();}
 };
 </script>
+<!-- Painel de filtro de coluna (fica fora das tabelas para sobreviver ao re-render) -->
+<div class="fpop" id="fpop">
+  <div class="fpop-h">
+    <input class="fpop-s" id="fpop-busca" placeholder="Buscar..." autocomplete="off">
+    <div class="fpop-per" id="fpop-periodo" style="display:none;">
+      <span>De</span><input type="date" id="fpop-de"><span>até</span><input type="date" id="fpop-ate">
+    </div>
+  </div>
+  <div class="fpop-n" id="fpop-nota" style="display:none;"></div>
+  <div class="fpop-l" id="fpop-lista"></div>
+  <div class="fpop-f">
+    <button class="fpop-cl" onclick="_fpopLimpar()">Limpar</button>
+    <button class="fpop-ok" onclick="_fpopAplicar()">Aplicar</button>
+  </div>
+</div>
 </body>
 </html>
