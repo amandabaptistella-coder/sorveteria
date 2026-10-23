@@ -6,7 +6,7 @@
 // ============================================================
 
 // Mude esta versão a cada publicação do painel para forçar a troca do shell.
-const VERSAO = 'sorveteria-v5';
+const VERSAO = 'sorveteria-v6';
 const SHELL = ['./', './index.html', './manifest.json', './icone.svg'];
 
 // ── Instalação: guarda o shell ────────────────────────────────

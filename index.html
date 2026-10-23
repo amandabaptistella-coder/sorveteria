@@ -125,6 +125,15 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 .selbar .sb-n{font-size:12px;color:var(--ac);font-weight:600;}
 .selbar .sb-v{font-family:'DM Serif Display',serif;font-size:18px;color:var(--tx);}
 .selbar .sb-x{margin-left:auto;display:flex;gap:8px;}
+.sim-modo{display:flex;gap:6px;margin-bottom:14px;}
+.sim-modo button{flex:1;padding:8px 10px;border-radius:7px;border:1px solid var(--bd);background:var(--sf2);color:var(--mu);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.sim-modo button.on{background:var(--ac);border-color:var(--ac);color:#0f0e0d;}
+.sim-ref{display:flex;gap:10px;margin-top:3px;flex-wrap:wrap;}
+.sim-ref b{font-weight:600;color:var(--tx);}
+.sim-ref span{font-size:10px;color:var(--mu);cursor:pointer;border-bottom:1px dashed var(--bd);}
+.sim-ref span:hover{color:var(--ac);border-color:var(--ac);}
+.sim-meta{display:grid;grid-template-columns:1fr 90px;gap:9px;align-items:center;padding:10px 0;}
+.sim-meta input{width:100%;background:var(--sf2);border:1px solid var(--ac);color:var(--tx);padding:5px 7px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;text-align:right;}
 .sim-lv{display:grid;grid-template-columns:1.4fr 90px 110px;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);}
 .sim-lv:last-child{border-bottom:none;}
 .sim-lv .nm{font-size:12px;}
@@ -556,6 +565,23 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <button class="btn btn-g" onclick="simZerar()">↩️ Zerar simulação</button>
   </div>
 
+  <div class="sim-modo">
+    <button id="sim-btn-periodo" class="on" onclick="simTrocarModo('periodo')">📊 Período filtrado</button>
+    <button id="sim-btn-projecao" onclick="simTrocarModo('projecao')">🔮 Projetar um mês</button>
+  </div>
+
+  <div class="cd" id="sim-box-proj" style="display:none;margin-bottom:16px;">
+    <div class="ch"><span class="ct">Mês a projetar</span><span class="chip" id="sim-proj-chip">—</span></div>
+    <div style="padding:14px 18px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="fgr" style="min-width:150px;"><label class="fgl">Mês</label>
+        <select class="fc" id="sim-proj-mes" onchange="simProjMudouMes()"></select></div>
+      <div class="fgr" style="min-width:110px;"><label class="fgl">Ano</label>
+        <select class="fc" id="sim-proj-ano" onchange="simProjMudouMes()"></select></div>
+      <button class="btn btn-g" onclick="simProjUsar('anterior')">↙️ Copiar mês anterior</button>
+      <button class="btn btn-g" onclick="simProjUsar('media')">↙️ Copiar média do ano</button>
+    </div>
+  </div>
+
   <div class="kg">
     <div class="kc gn"><div class="kl">Receita simulada</div><div class="kv fm" id="sim-k-rec">—</div><div class="ks" id="sim-k-rec-s">&nbsp;</div></div>
     <div class="kc rd"><div class="kl">Despesas simuladas</div><div class="kv fm" id="sim-k-desp">—</div><div class="ks" id="sim-k-desp-s">&nbsp;</div></div>
@@ -571,6 +597,15 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
         <div id="sim-receita"></div>
         <div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;margin:16px 0 4px;">Despesas por categoria</div>
         <div id="sim-categorias"></div>
+        <div id="sim-box-meta" style="display:none;border-top:1px solid var(--bd);margin-top:14px;padding-top:10px;">
+          <div style="font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;">Meta</div>
+          <div class="sim-meta">
+            <div><span style="font-size:12px;">Margem desejada</span>
+              <span class="at" style="display:block;font-size:10px;color:var(--mu);">quanto do faturamento deve sobrar</span></div>
+            <input type="number" step="1" id="sim-meta-margem" placeholder="%" oninput="simCalcular()">
+          </div>
+          <div id="sim-meta-res" style="font-size:12px;line-height:1.6;"></div>
+        </div>
         <div style="font-size:10px;color:var(--mu);margin-top:12px;line-height:1.5;">
           Use <b>%</b> para variação proporcional ou <b>R$</b> para um valor fixo por mês.
           Positivo aumenta, negativo reduz. Em despesas, um valor negativo é economia.
@@ -1907,6 +1942,8 @@ function _linhaDREDesp(d){
 //  sobre o saldo final, usando o período do filtro como ponto de partida.
 // ══════════════════════════════════════════════════════════════
 const SIM={rec:{pct:0,abs:0},cats:{}};   // alavancas aplicadas
+let SIM_MODO='periodo';                  // 'periodo' | 'projecao'
+const SIM_PROJ={ano:'',mes:'',rec:null,cats:{}};  // valores do mês projetado
 let _SIM_BASE=null;                      // números reais do período
 const _SIM_REF={};                       // ano de comparação -> base
 
@@ -1933,15 +1970,47 @@ function _simBase(REC,DESP){
     cats[c]=(cats[c]||0)+(d._val||0);
   });
 
-  // Quantos meses o período cobre — tudo é exibido por mês para comparar anos
-  const datas=REC.concat(DESP).map(function(r){return r._data||'';}).filter(function(d){return/^\d{4}-\d{2}/.test(d);}).sort();
+  // Quantos meses o período cobre — tudo é exibido por mês para comparar anos.
+  // Com um mês escolhido no filtro, o período é esse mês e ponto: contar pelas
+  // datas daria 2, porque há lançamentos de competência setembro com data em
+  // agosto (regime de competência).
   let meses=1;
-  if(datas.length){
-    const a=new Date(datas[0]+'T00:00:00'),b=new Date(datas[datas.length-1]+'T00:00:00');
-    meses=Math.max(1,(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+1);
+  if(!getMes()){
+    const datas=REC.concat(DESP).map(function(r){return r._data||'';})
+      .filter(function(d){return/^\d{4}-\d{2}/.test(d);}).sort();
+    if(datas.length){
+      const a=new Date(datas[0]+'T00:00:00'),b=new Date(datas[datas.length-1]+'T00:00:00');
+      meses=Math.max(1,(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+1);
+    }
   }
   return {rob:rob,taxas:taxas,cats:cats,meses:meses,
           desp:Object.keys(cats).reduce(function(a,k){return a+cats[k];},0)};
+}
+
+// Base de um mês específico — serve de referência para a projeção.
+// Usa o que está em memória; se o mês não foi carregado, devolve null.
+function _simBaseDoMes(ano,mes){
+  const chave=ano+'-'+String(mes).padStart(2,'0');
+  const noMes=function(r){return String(r._data||'').slice(0,7)===chave;};
+  const rec=ALL_REC.filter(noMes),desp=ALL_DESP.filter(noMes);
+  if(!rec.length&&!desp.length)return null;
+  const b=_simBase(rec,desp);
+  b.meses=1;  // é um mês só, não faz média
+  return b;
+}
+
+// Média mensal do ano, a partir do que está carregado
+function _simBaseMediaAno(ano){
+  const noAno=function(r){return String(r._data||'').slice(0,4)===String(ano);};
+  const rec=ALL_REC.filter(noAno),desp=ALL_DESP.filter(noAno);
+  if(!rec.length&&!desp.length)return null;
+  return _simBase(rec,desp);   // meses vem do próprio período
+}
+
+// Mês anterior a (ano,mes)
+function _mesAnterior(ano,mes){
+  const m=parseInt(mes,10),a=parseInt(ano,10);
+  return m<=1?{ano:String(a-1),mes:'12'}:{ano:String(a),mes:String(m-1).padStart(2,'0')};
 }
 
 function _simAplicar(base){
@@ -1958,10 +2027,18 @@ function _simAplicar(base){
 }
 
 function renderSimulador(REC,DESP){
+  if(SIM_MODO==='projecao')return renderSimProjecao();
   _SIM_BASE=_simBase(REC,DESP);
   const b=_SIM_BASE;
-  document.getElementById('sub-sim').textContent=labelFiltro()+' · '+b.meses+(b.meses>1?' meses':' mês');
-  document.getElementById('sim-chip-periodo').textContent=b.meses+(b.meses>1?' meses':' mês');
+  // Com um único mês no filtro, não há média a fazer: são os valores daquele mês
+  const umMes=(b.meses===1);
+  const sufixo=umMes?'':'/mês';
+  document.getElementById('sub-sim').textContent=labelFiltro()+' · '+
+    (umMes?'valores do mês':b.meses+' meses (média mensal)');
+  document.getElementById('sim-chip-periodo').textContent=umMes?'mês fechado':b.meses+' meses';
+
+  document.getElementById('sim-box-proj').style.display='none';
+  document.getElementById('sim-box-meta').style.display='';
 
   // Alavanca de receita
   document.getElementById('sim-receita').innerHTML=_simLinha('__REC__','Receita bruta',b.rob,b.meses);
@@ -1988,12 +2065,164 @@ function _simLinha(chave,rotulo,valor,meses){
   const id=chave.replace(/[^A-Za-z0-9]/g,'_');
   return'<div class="sim-lv">'+
     '<div><span class="nm">'+_esc(rotulo)+'</span>'+
-      '<span class="at">hoje: '+brl(valor/meses)+'/mês</span></div>'+
+      '<span class="at">hoje: '+brl(valor/meses)+(meses>1?'/mês (média)':'')+'</span></div>'+
     '<input type="number" step="1" placeholder="%" id="sim-p-'+id+'" value="'+(lv.pct||'')+'" '+
       'oninput="simSet(\''+_jq(chave)+'\',\'pct\',this.value)">'+
     '<input type="number" step="10" placeholder="R$/mês" id="sim-a-'+id+'" value="'+(lv.abs||'')+'" '+
       'oninput="simSet(\''+_jq(chave)+'\',\'abs\',this.value)">'+
   '</div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MODO PROJEÇÃO — montar um mês que ainda não aconteceu
+//  Cada linha recebe o valor em R$ do mês, com duas referências ao lado:
+//  o mês imediatamente anterior e a média mensal do ano.
+// ══════════════════════════════════════════════════════════════
+function simTrocarModo(modo){
+  SIM_MODO=modo;
+  document.getElementById('sim-btn-periodo').classList.toggle('on',modo==='periodo');
+  document.getElementById('sim-btn-projecao').classList.toggle('on',modo==='projecao');
+  if(modo==='projecao')renderSimProjecao();
+  else renderSimulador(filtrar(ALL_REC),filtrar(ALL_DESP));
+}
+
+// Categorias conhecidas, mesmo que o mês projetado ainda não tenha nenhuma
+function _simCategoriasConhecidas(){
+  const set={};
+  (ALL_DESP||[]).forEach(function(d){
+    const cc=(d._cc||'').toUpperCase(),loc=(d._local||'').toUpperCase();
+    if(cc==='SORVETERIA'||(loc==='SORVETERIA'&&!cc))set[(d._cat||'(sem categoria)').toUpperCase()]=1;
+  });
+  return Object.keys(set);
+}
+
+function renderSimProjecao(){
+  document.getElementById('sim-box-proj').style.display='';
+  document.getElementById('sim-box-meta').style.display='';
+
+  // Seletores de mês e ano (permite meses futuros)
+  const selM=document.getElementById('sim-proj-mes'),selA=document.getElementById('sim-proj-ano');
+  if(!selM.options.length){
+    selM.innerHTML=MF.map(function(n,i){return'<option value="'+String(i+1).padStart(2,'0')+'">'+n+'</option>';}).join('');
+    const hoje=new Date();
+    const anos=[];
+    for(var a=hoje.getFullYear()-1;a<=hoje.getFullYear()+2;a++)anos.push(String(a));
+    selA.innerHTML=anos.map(function(y){return'<option>'+y+'</option>';}).join('');
+    // Começa no mês seguinte ao atual — o caso de uso é planejar o que vem
+    const prox=new Date(hoje.getFullYear(),hoje.getMonth()+1,1);
+    selM.value=String(prox.getMonth()+1).padStart(2,'0');
+    selA.value=String(prox.getFullYear());
+  }
+  SIM_PROJ.ano=selA.value;SIM_PROJ.mes=selM.value;
+
+  const ref=_simRefs();
+  document.getElementById('sim-proj-chip').textContent=
+    MF[parseInt(SIM_PROJ.mes,10)-1]+' de '+SIM_PROJ.ano+
+    (ref.jaTemDados?' · já tem lançamentos':' · mês em aberto');
+
+  // Linha de receita + uma por categoria
+  document.getElementById('sim-receita').innerHTML=_simLinhaProj('__REC__','Receita bruta',ref);
+  const cats=_simCategoriasConhecidas().sort(function(a,b){
+    return (ref.mediaAno&&ref.mediaAno.cats[b]||0)-(ref.mediaAno&&ref.mediaAno.cats[a]||0);
+  });
+  document.getElementById('sim-categorias').innerHTML=
+    cats.map(function(c){return _simLinhaProj(c,c,ref);}).join('')||'<div class="empty">Sem categorias conhecidas</div>';
+
+  document.getElementById('sub-sim').textContent=
+    'Projeção de '+MF[parseInt(SIM_PROJ.mes,10)-1]+'/'+SIM_PROJ.ano;
+  document.getElementById('sim-chip-periodo').textContent='projeção';
+  simCalcular();
+}
+
+// Referências: mês anterior e média do ano selecionado
+function _simRefs(){
+  const ant=_mesAnterior(SIM_PROJ.ano,SIM_PROJ.mes);
+  const base={
+    anterior:_simBaseDoMes(ant.ano,ant.mes),
+    anteriorLabel:MF[parseInt(ant.mes,10)-1]+'/'+ant.ano.slice(2),
+    mediaAno:_simBaseMediaAno(SIM_PROJ.ano),
+    anoLabel:SIM_PROJ.ano,
+    jaTemDados:!!_simBaseDoMes(SIM_PROJ.ano,SIM_PROJ.mes)
+  };
+  if(base.mediaAno){
+    // normaliza a média para valores mensais
+    const m=base.mediaAno.meses||1;
+    base.mediaAno={rob:base.mediaAno.rob/m,taxas:base.mediaAno.taxas/m,
+      cats:Object.keys(base.mediaAno.cats).reduce(function(o,k){o[k]=base.mediaAno.cats[k]/m;return o;},{})};
+  }
+  return base;
+}
+
+function _valorRef(ref,qual,chave){
+  const b=(qual==='anterior')?ref.anterior:ref.mediaAno;
+  if(!b)return null;
+  if(chave==='__REC__')return b.rob;
+  return b.cats[chave]||0;
+}
+
+function _simLinhaProj(chave,rotulo,ref){
+  const id=chave.replace(/[^A-Za-z0-9]/g,'_');
+  const atual=(chave==='__REC__')?SIM_PROJ.rec:SIM_PROJ.cats[chave];
+  const vAnt=_valorRef(ref,'anterior',chave),vMed=_valorRef(ref,'media',chave);
+  const refHtml=
+    (vAnt!==null?'<span onclick="simProjAplicar(\''+_jq(chave)+'\','+vAnt+')" title="clique para usar">'+
+       ref.anteriorLabel+': <b>'+brl(vAnt)+'</b></span>':'')+
+    (vMed!==null?'<span onclick="simProjAplicar(\''+_jq(chave)+'\','+vMed+')" title="clique para usar">'+
+       'média '+ref.anoLabel+': <b>'+brl(vMed)+'</b></span>':'');
+  return'<div class="sim-lv" style="grid-template-columns:1.6fr 150px;">'+
+    '<div><span class="nm">'+_esc(rotulo)+'</span>'+
+      '<span class="sim-ref">'+(refHtml||'<span style="border:none;">sem referência</span>')+'</span></div>'+
+    '<input type="number" step="10" placeholder="R$ no mês" id="sim-pj-'+id+'" '+
+      'value="'+(atual!==null&&atual!==undefined?atual:'')+'" '+
+      'oninput="simProjSet(\''+_jq(chave)+'\',this.value)">'+
+  '</div>';
+}
+
+function simProjSet(chave,valor){
+  const v=parseFloat(valor);
+  if(chave==='__REC__')SIM_PROJ.rec=isNaN(v)?null:v;
+  else if(isNaN(v))delete SIM_PROJ.cats[chave];
+  else SIM_PROJ.cats[chave]=v;
+  simCalcular();
+}
+
+function simProjAplicar(chave,valor){
+  const v=Math.round(valor*100)/100;
+  if(chave==='__REC__')SIM_PROJ.rec=v;else SIM_PROJ.cats[chave]=v;
+  renderSimProjecao();
+}
+
+function simProjMudouMes(){
+  SIM_PROJ.ano=document.getElementById('sim-proj-ano').value;
+  SIM_PROJ.mes=document.getElementById('sim-proj-mes').value;
+  renderSimProjecao();
+}
+
+// Preenche tudo de uma vez com uma das referências
+function simProjUsar(qual){
+  const ref=_simRefs();
+  const b=(qual==='anterior')?ref.anterior:ref.mediaAno;
+  if(!b){showToast('Sem dados para essa referência','error');return;}
+  SIM_PROJ.rec=Math.round(b.rob*100)/100;
+  Object.keys(SIM_PROJ.cats).forEach(function(k){delete SIM_PROJ.cats[k];});
+  Object.keys(b.cats).forEach(function(k){SIM_PROJ.cats[k]=Math.round(b.cats[k]*100)/100;});
+  renderSimProjecao();
+  showToast('Valores de '+(qual==='anterior'?ref.anteriorLabel:'média '+ref.anoLabel)+' aplicados','success');
+}
+
+// Resultado da projeção, no mesmo formato do modo período
+function _simCalcProjecao(){
+  const ref=_simRefs();
+  const rec=SIM_PROJ.rec||0;
+  // Taxas: proporção da referência disponível (são percentuais sobre venda)
+  var taxaPct=0;
+  const baseTx=ref.anterior||ref.mediaAno;
+  if(baseTx&&baseTx.rob>0)taxaPct=baseTx.taxas/baseTx.rob;
+  const taxas=rec*taxaPct;
+  const cats={};
+  _simCategoriasConhecidas().forEach(function(c){cats[c]=SIM_PROJ.cats[c]||0;});
+  const desp=Object.keys(cats).reduce(function(a,k){return a+cats[k];},0);
+  return {rec:rec,taxas:taxas,cats:cats,desp:desp,saldo:rec-taxas-desp,ref:ref,taxaPct:taxaPct};
 }
 
 function simSet(chave,campo,valor){
@@ -2010,10 +2239,14 @@ function simZerar(){
 }
 
 function simCalcular(){
+  if(SIM_MODO==='projecao')return _simCalcularProjecao();
+
   const b=_SIM_BASE;if(!b)return;
   const s=_simAplicar(b);
   const saldoBase=b.rob-b.taxas-b.desp;
   const m=b.meses;
+  const umMes=(m===1);
+  const suf=umMes?'':'/mês';
 
   const set=function(id,v,sub){
     const e=document.getElementById(id);if(e)e.textContent=v;
@@ -2022,19 +2255,18 @@ function simCalcular(){
   const delta=function(novo,velho){
     const d=novo-velho;
     if(Math.abs(d)<0.005)return'<span class="kb">sem mudança</span>';
-    return'<span class="kb '+(d>0?'pos':'neg')+'">'+(d>0?'▲':'▼')+' '+brl(Math.abs(d)/m)+'/mês</span>';
+    return'<span class="kb '+(d>0?'pos':'neg')+'">'+(d>0?'▲':'▼')+' '+brl(Math.abs(d)/m)+suf+'</span>';
   };
 
-  set('sim-k-rec',brl(s.rec/m)+'/mês',delta(s.rec,b.rob));
-  set('sim-k-desp',brl((s.desp+s.taxas)/m)+'/mês',delta(s.desp+s.taxas,b.desp+b.taxas));
-  set('sim-k-saldo',brl(s.saldo/m)+'/mês',delta(s.saldo,saldoBase));
+  set('sim-k-rec',brl(s.rec/m)+suf,delta(s.rec,b.rob));
+  set('sim-k-desp',brl((s.desp+s.taxas)/m)+suf,delta(s.desp+s.taxas,b.desp+b.taxas));
+  set('sim-k-saldo',brl(s.saldo/m)+suf,delta(s.saldo,saldoBase));
   const margem=s.rec>0?s.saldo/s.rec*100:0;
   const margemBase=b.rob>0?saldoBase/b.rob*100:0;
   set('sim-k-marg',fDec(margem,1)+'%',
       '<span class="kb '+(margem>=margemBase?'pos':'neg')+'">'+
       (margem>=margemBase?'▲':'▼')+' '+fDec(Math.abs(margem-margemBase),1)+' p.p.</span>');
 
-  // Demonstrativo lado a lado
   const linha=function(rot,v1,v2,cls,tot){
     const d=v2-v1;
     return'<div class="sim-res'+(tot?' tot':'')+'">'+
@@ -2045,7 +2277,7 @@ function simCalcular(){
         (d>0?'+':'')+brl(d/m)+'</span>':'')+'</span></div>';
   };
   let html='<div class="sim-res" style="color:var(--mu);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bd);">'+
-    '<span>por mês</span><span class="v1">hoje</span><span class="v2">simulado</span></div>';
+    '<span>'+(umMes?'no mês':'por mês')+'</span><span class="v1">hoje</span><span class="v2">simulado</span></div>';
   html+=linha('(+) Receita bruta',b.rob,s.rec,'tx-gn');
   html+=linha('(−) Taxas sobre venda',b.taxas,s.taxas,'tx-rd');
   Object.keys(b.cats).sort(function(x,y){return b.cats[y]-b.cats[x];}).forEach(function(c){
@@ -2053,6 +2285,88 @@ function simCalcular(){
   });
   html+=linha('(=) Saldo final',saldoBase,s.saldo,s.saldo>=0?'tx-gn':'tx-rd',true);
   document.getElementById('sim-resultado').innerHTML=html;
+
+  _simMeta(s.rec/m,s.taxas/m,(s.desp)/m,suf);
+}
+
+// ── Resultado no modo projeção ────────────────────────────────
+function _simCalcularProjecao(){
+  const c=_simCalcProjecao();
+  const set=function(id,v,sub){
+    const e=document.getElementById(id);if(e)e.textContent=v;
+    const t=document.getElementById(id+'-s');if(t)t.innerHTML=sub||'&nbsp;';
+  };
+  const ref=c.ref;
+  const refSaldo=(function(){
+    const b=ref.anterior||ref.mediaAno;
+    return b?b.rob-b.taxas-(b.desp!==undefined?b.desp:Object.keys(b.cats).reduce(function(a,k){return a+b.cats[k];},0)):null;
+  })();
+  const refNome=ref.anterior?ref.anteriorLabel:('média '+ref.anoLabel);
+
+  const comp=function(valor,base){
+    if(base===null||base===undefined||!base)return'&nbsp;';
+    const d=valor-base;
+    return'<span class="kb '+(d>=0?'pos':'neg')+'">'+(d>=0?'▲':'▼')+' '+brl(Math.abs(d))+' vs '+refNome+'</span>';
+  };
+
+  const baseRef=ref.anterior||ref.mediaAno;
+  set('sim-k-rec',brl(c.rec),comp(c.rec,baseRef&&baseRef.rob));
+  set('sim-k-desp',brl(c.desp+c.taxas),comp(c.desp+c.taxas,baseRef&&(baseRef.taxas+Object.keys(baseRef.cats).reduce(function(a,k){return a+baseRef.cats[k];},0))));
+  set('sim-k-saldo',brl(c.saldo),comp(c.saldo,refSaldo));
+  const margem=c.rec>0?c.saldo/c.rec*100:0;
+  const margemRef=(baseRef&&baseRef.rob>0&&refSaldo!==null)?refSaldo/baseRef.rob*100:null;
+  set('sim-k-marg',c.rec>0?fDec(margem,1)+'%':'—',
+      margemRef!==null?'<span class="kb '+(margem>=margemRef?'pos':'neg')+'">'+
+        (margem>=margemRef?'▲':'▼')+' '+fDec(Math.abs(margem-margemRef),1)+' p.p. vs '+refNome+'</span>':'');
+
+  // Demonstrativo: projetado contra a referência
+  const linha=function(rot,vRef,vProj,cls,tot){
+    const d=(vRef!==null&&vRef!==undefined)?vProj-vRef:null;
+    return'<div class="sim-res'+(tot?' tot':'')+'">'+
+      '<span>'+rot+'</span>'+
+      '<span class="v1">'+(vRef!==null&&vRef!==undefined?brl(vRef):'—')+'</span>'+
+      '<span class="v2 '+(cls||'')+'">'+brl(vProj)+
+        (d!==null&&Math.abs(d)>=0.005?'<span style="font-size:10px;color:'+(d>0?'var(--gn)':'var(--rd)')+';display:block;">'+
+        (d>0?'+':'')+brl(d)+'</span>':'')+'</span></div>';
+  };
+  let html='<div class="sim-res" style="color:var(--mu);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bd);">'+
+    '<span>no mês</span><span class="v1">'+_esc(refNome)+'</span><span class="v2">projetado</span></div>';
+  html+=linha('(+) Receita bruta',baseRef&&baseRef.rob,c.rec,'tx-gn');
+  html+=linha('(−) Taxas sobre venda ('+fDec(c.taxaPct*100,2)+'%)',baseRef&&baseRef.taxas,c.taxas,'tx-rd');
+  Object.keys(c.cats).sort(function(x,y){return c.cats[y]-c.cats[x];}).forEach(function(cat){
+    html+=linha('(−) '+cat,baseRef&&(baseRef.cats[cat]||0),c.cats[cat],'tx-rd');
+  });
+  html+=linha('(=) Saldo final',refSaldo,c.saldo,c.saldo>=0?'tx-gn':'tx-rd',true);
+  document.getElementById('sim-resultado').innerHTML=html;
+
+  _simMeta(c.rec,c.taxas,c.desp,'');
+}
+
+// ── Meta de margem: quanto cabe de despesa para sobrar X% ─────
+function _simMeta(rec,taxas,despAtual,suf){
+  const box=document.getElementById('sim-meta-res');
+  const campo=document.getElementById('sim-meta-margem');
+  if(!box||!campo)return;
+  const alvo=parseFloat(campo.value);
+  if(isNaN(alvo)||!rec){box.innerHTML='';return;}
+
+  const saldoAlvo=rec*alvo/100;
+  const tetoDespesa=rec-taxas-saldoAlvo;       // o que pode gastar fora as taxas
+  const folga=tetoDespesa-despAtual;           // positivo = ainda cabe; negativo = precisa cortar
+
+  box.innerHTML=
+    '<div style="margin-top:8px;padding:11px 13px;background:var(--sf2);border-radius:8px;">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'+
+        '<span>Para sobrar <b>'+fDec(alvo,1)+'%</b> ('+brl(saldoAlvo)+suf+')</span></div>'+
+      '<div style="display:flex;justify-content:space-between;color:var(--mu);font-size:11px;">'+
+        '<span>teto de despesas</span><span class="fm">'+brl(tetoDespesa)+suf+'</span></div>'+
+      '<div style="display:flex;justify-content:space-between;color:var(--mu);font-size:11px;">'+
+        '<span>despesas no cenário</span><span class="fm">'+brl(despAtual)+suf+'</span></div>'+
+      '<div style="display:flex;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px solid var(--bd);font-weight:600;color:'+
+        (folga>=0?'var(--gn)':'var(--rd)')+';">'+
+        '<span>'+(folga>=0?'ainda cabe':'precisa cortar')+'</span>'+
+        '<span class="fm">'+brl(Math.abs(folga))+suf+'</span></div>'+
+    '</div>';
 }
 
 // ── Comparação com outro ano: mostra o que mudou, por categoria ──
