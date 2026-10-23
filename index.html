@@ -117,6 +117,9 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 .fpop-cl{background:var(--sf2);color:var(--mu);}
 .fpop-n{font-size:10px;color:var(--mu);padding:0 11px 7px;}
 .selchk{accent-color:var(--ac);cursor:pointer;width:15px;height:15px;vertical-align:middle;}
+.fc.travado{background:var(--sf);color:var(--mu);cursor:not-allowed;border-style:dashed;}
+.trava-nota{font-size:10px;color:var(--mu);margin-top:3px;display:block;}
+.trava-nota.livre{color:var(--yw);}
 .selbar{display:none;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(232,160,69,.1);border:1px solid var(--ac);border-radius:9px;padding:10px 14px;margin-bottom:12px;}
 .selbar.show{display:flex;}
 .selbar .sb-n{font-size:12px;color:var(--ac);font-weight:600;}
@@ -393,7 +396,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
   <div id="tf-desp" class="fs2">
     <div class="fg"><div class="fgr"><label class="fgl">Competência</label><input type="month" class="fc" id="desp-comp" value=""></div><div class="fgr"><label class="fgl">Data</label><input type="date" class="fc" id="desp-data" onchange="updDia('desp')"></div></div>
     <div class="fg fg3"><div class="fgr"><label class="fgl">Dia da Semana</label><input type="text" class="fc" id="desp-dia" readonly style="color:var(--mu)"></div><div class="fgr"><label class="fgl">Local</label><select class="fc" id="desp-local" onchange="updDespFields()"><option>SORVETERIA</option><option>PARTICULAR</option></select></div><div class="fgr"><label class="fgl">Centro de Custo</label><select class="fc" id="desp-cc"><option>SORVETERIA</option></select></div></div>
-    <div class="fg fg3"><div class="fgr"><label class="fgl">Tipo</label><select class="fc" id="desp-tipo"><option>VARIÁVEL</option><option>FIXA</option></select></div><div class="fgr"><label class="fgl">Categoria</label><select class="fc" id="desp-cat"><option>OPERACIONAL</option><option>PRODUÇÃO</option><option>ADMINISTRATIVA</option><option>PARTICULAR</option></select></div><div class="fgr"><label class="fgl">Despesa</label><select class="fc" id="desp-desp"></select></div></div>
+    <div class="fg fg3"><div class="fgr"><label class="fgl">Tipo</label><select class="fc" id="desp-tipo"><option>VARIÁVEL</option><option>FIXA</option></select></div><div class="fgr"><label class="fgl">Categoria</label><select class="fc" id="desp-cat"><option>OPERACIONAL</option><option>PRODUÇÃO</option><option>ADMINISTRATIVA</option><option>PARTICULAR</option></select></div><div class="fgr"><label class="fgl">Despesa</label><select class="fc" id="desp-desp" onchange="aplicarTravaCategoria('desp-desp','desp-cat','desp-cat-nota')"></select></div></div>
     <div class="fg"><div class="fgr"><label class="fgl">Valor (R$)</label><input type="number" class="fc" id="desp-val" placeholder="0,00" step="0.01"></div></div>
     <div class="fa"><button class="btn btn-p" onclick="salvarDesp(this)">💾 Salvar</button><button class="btn btn-g" onclick="document.getElementById('desp-val').value=''">Limpar</button></div>
   </div>
@@ -769,7 +772,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 //  COLE AQUI A URL DO SEU APPS SCRIPT (termina em /exec)
 //  Exemplo: https://script.google.com/macros/s/AKfy.../exec
 // ================================================================
-const API = 'https://script.google.com/macros/s/AKfycbxDJjtJ7W-X1MO_qyYjZAR4S-9q1DScjIraiffgUxNClO0qsNYnUA9Ht_SOvIwnI-tBzg/exec';
+const API = 'https://script.google.com/macros/s/AKfycbylIhFsNmT7_D4WtU-XZtm0Y5zjnjUOS4QY5CJ1FOcLC2AdEgDNhei2O-DCvmVrLwZjOw/exec';
 
 // Meses em português
 const PT_MONTHS={jan:1,fev:2,mar:3,abr:4,mai:5,jun:6,jul:7,ago:8,set:9,out:10,nov:11,dez:12};
@@ -2701,7 +2704,7 @@ async function _salvarRec(){
 }
 async function salvarDesp(btn){return _guard('desp',btn,_salvarDesp);}
 async function _salvarDesp(){
-  const comp=document.getElementById('desp-comp').value,data=document.getElementById('desp-data').value,dia=document.getElementById('desp-dia').value,local=document.getElementById('desp-local').value,cc=document.getElementById('desp-cc').value,tipo=document.getElementById('desp-tipo').value,cat=document.getElementById('desp-cat').value,desp=document.getElementById('desp-desp').value,val=parseFloat(document.getElementById('desp-val').value);
+  const comp=document.getElementById('desp-comp').value,data=document.getElementById('desp-data').value,dia=document.getElementById('desp-dia').value,local=document.getElementById('desp-local').value,cc=document.getElementById('desp-cc').value,tipo=document.getElementById('desp-tipo').value,desp=document.getElementById('desp-desp').value,cat=(categoriaDoItem(desp)||document.getElementById('desp-cat').value),val=parseFloat(document.getElementById('desp-val').value);
   if(!data||!val||val<=0){showToast('Preencha todos os campos','error');return;}
   setSS('💾 Salvando...');
   try{const r=await api({action:'append',sheet:'DESPESAS',data:encodeURIComponent(JSON.stringify({COMPETENCIA:comp,DATA:data,DIA_SEMANA:dia,DS_LOCAL:local,DS_CENTRO_CUSTO:cc,DS_TIPO_DESPESA:tipo,DS_CATEGORIA_DESPESA:cat,DS_DESPESA:desp,VALOR:val}))});if(r.ok){showToast('Despesa salva ✅','success');document.getElementById('desp-val').value='';syncAll(true);}else showToast('Erro: '+(r.error||''),'error');}catch(e){showToast('Erro ao salvar','error');}
@@ -2781,12 +2784,56 @@ async function populateFormDropdowns(){
     taxaFormaEl.innerHTML='<option value="">Selecione...</option>'+fps.map(function(x){return'<option>'+x.DS_FORMA_PAGAMENTO+'</option>';}).join('');
   }
 }
+// ── Trava de categoria ────────────────────────────────────────
+// A categoria passa a vir do cadastro do item, não da digitação. Era isso que
+// deixava o mesmo gasto ora em OPERACIONAL, ora em ADMINISTRATIVA, e impedia
+// comparar períodos.
+function categoriaDoItem(nomeDespesa){
+  const alvo=String(nomeDespesa||'').trim().toUpperCase();
+  if(!alvo)return'';
+  const itens=CAD_DATA['CAD_DESPESAS']||[];
+  for(var i=0;i<itens.length;i++){
+    const nm=String(itens[i].DS_DESPESA||itens[i].NOME||'').trim().toUpperCase();
+    if(nm===alvo)return String(itens[i].DS_CATEGORIA_DESPESA||'').trim();
+  }
+  return'';
+}
+
+// Aplica a trava num par de selects (despesa -> categoria).
+// Sem categoria cadastrada, o campo fica livre e avisa — nunca bloqueia o lançamento.
+function aplicarTravaCategoria(idDespesa,idCategoria,idNota){
+  const elD=document.getElementById(idDespesa),elC=document.getElementById(idCategoria);
+  if(!elD||!elC)return;
+  const cat=categoriaDoItem(elD.value);
+  let nota=document.getElementById(idNota);
+  if(!nota){
+    nota=document.createElement('span');
+    nota.id=idNota;nota.className='trava-nota';
+    elC.parentNode.appendChild(nota);
+  }
+  if(cat){
+    // Garante que a opção exista antes de selecionar
+    if(!Array.prototype.some.call(elC.options,function(o){return o.value===cat||o.text===cat;})){
+      const op=document.createElement('option');op.textContent=cat;elC.appendChild(op);
+    }
+    elC.value=cat;
+    elC.disabled=true;elC.classList.add('travado');
+    nota.className='trava-nota';
+    nota.textContent='🔒 definida no cadastro de "'+elD.value+'"';
+  }else{
+    elC.disabled=false;elC.classList.remove('travado');
+    nota.className='trava-nota livre';
+    nota.textContent=elD.value?'⚠️ item sem categoria no cadastro — escolha e cadastre depois':'';
+  }
+}
+
 function updDespFields(){
   const local=(document.getElementById('desp-local')||{}).value||'SORVETERIA';
   const cc=CAD_DATA['CAD_CENTRO_CUSTO']||[];
   populateSelect('desp-cc',cc,function(i){return i.DS_CENTRO_CUSTO||'';});
   const desps=CAD_DATA['CAD_DESPESAS']||[];
   populateSelect('desp-desp',desps,function(i){return i.DS_DESPESA||'';});
+  aplicarTravaCategoria('desp-desp','desp-cat','desp-cat-nota');
 }
 function switchCadTab(btn,tabId){
   document.querySelectorAll('.cad-tab').forEach(function(t){t.style.display='none';});
@@ -2798,7 +2845,7 @@ function switchCadTab(btn,tabId){
 function renderCadTab(tabId){
   if(tabId==='cad-sabores')renderCadList('CAD_SABORES','DS_SABORES','list-cad-sabores','chip-cad-sabores');
   else if(tabId==='cad-fp')renderCadList('CAD_FORMA_PAGAMENTO','DS_FORMA_PAGAMENTO','list-cad-fp','chip-cad-fp');
-  else if(tabId==='cad-despesas')renderCadList('CAD_DESPESAS','DS_DESPESA','list-cad-despesas','chip-cad-desp');
+  else if(tabId==='cad-despesas')renderCadDespesas();
   else if(tabId==='cad-cc')renderCadList('CAD_CENTRO_CUSTO','DS_CENTRO_CUSTO','list-cad-cc','chip-cad-cc');
   else if(tabId==='cad-func')renderCadFuncionarios();
   else if(tabId==='cad-taxas')renderCadTaxas();
@@ -2806,6 +2853,51 @@ function renderCadTab(tabId){
   else if(tabId==='cad-ingr')renderCadIngr();
   else if(tabId==='cad-um')renderCadUM();
 }
+// A aba de Despesas mostra a categoria de cada item — é ela que trava o
+// lançamento. Um item sem categoria aparece destacado, para ser resolvido.
+function renderCadDespesas(){
+  const rows=CAD_DATA['CAD_DESPESAS']||[];
+  const chip=document.getElementById('chip-cad-desp');
+  const semCat=rows.filter(function(r){return !String(r.DS_CATEGORIA_DESPESA||'').trim();}).length;
+  if(chip)chip.textContent=rows.length+' registros'+(semCat?' · '+semCat+' sem categoria':'');
+  const el=document.getElementById('list-cad-despesas');if(!el)return;
+  el.innerHTML=rows.length?'<table><thead><tr><th>#</th><th>Nome</th><th>Categoria</th><th>Status</th><th style="width:200px"></th></tr></thead><tbody>'+
+    rows.map(function(r,i){
+      const nm=r.DS_DESPESA||'—';
+      const cat=String(r.DS_CATEGORIA_DESPESA||'').trim();
+      const ativo=(r.ATIVO||'').toString().toUpperCase()!=='FALSE';
+      const row=parseInt(r._ROW)||0;
+      return'<tr><td class="tx-mu">'+(i+1)+'</td><td>'+_esc(nm)+'</td>'+
+        '<td>'+(cat?'<span class="bge bg-bl">'+_esc(cat)+'</span>'
+                   :'<span class="bge bg-rd">sem categoria</span>')+'</td>'+
+        '<td><span class="bge '+(ativo?'bg-gn':'bg-rd')+'">'+(ativo?'Ativo':'Inativo')+'</span></td>'+
+        '<td style="display:flex;gap:5px;padding:6px 11px;">'+
+        '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="openEditDespCad('+i+')">✏️ Editar</button>'+
+        '<button class="btn btn-g" style="padding:3px 8px;font-size:11px;" onclick="toggleAtivoCad(\'CAD_DESPESAS\','+row+',\'DS_DESPESA\','+i+')">'+(ativo?'⛔':'✅')+'</button>'+
+        '<button class="btn" style="padding:3px 8px;font-size:11px;background:#c0392b;color:#fff;" title="Excluir" onclick="delGeneric(\'CAD_DESPESAS\','+row+',\''+_jq(nm)+'\',_refreshCad)">🗑️</button>'+
+        '</td></tr>';
+    }).join('')+'</tbody></table>':'<p class="empty">Sem registros</p>';
+}
+
+// Editar item de despesa: nome + categoria (a categoria é a trava)
+function openEditDespCad(i){
+  const r=(CAD_DATA['CAD_DESPESAS']||[])[i];
+  if(!r){showToast('Registro não encontrado','error');return;}
+  _editCtx={type:'DESPCAD',sheet:'CAD_DESPESAS',row:parseInt(r._ROW)||0,idx:i};
+  const cats=(CAD_DATA['CAD_CATEGORIA_DESPESA']||[])
+    .filter(function(c){return String(c.ATIVO||'').toUpperCase()!=='FALSE';})
+    .map(function(c){return c.DS_CATEGORIA_DESPESA||'';}).filter(Boolean);
+  const atual=String(r.DS_CATEGORIA_DESPESA||'').trim();
+  if(atual&&cats.indexOf(atual)<0)cats.unshift(atual);
+  document.getElementById('edit-modal-title').textContent='✏️ Editar Despesa';
+  document.getElementById('edit-modal-body').innerHTML=
+    _field('Nome','<input type="text" class="fc" id="ed-dc-nome" value="'+_esc(r.DS_DESPESA||'')+'" style="text-transform:uppercase">')+
+    _field('Categoria (trava os lançamentos deste item)',
+           '<select class="fc" id="ed-dc-cat"><option value="">— sem categoria —</option>'+
+           cats.map(function(c){return'<option'+(c===atual?' selected':'')+'>'+_esc(c)+'</option>';}).join('')+'</select>');
+  _showEditModal();
+}
+
 function renderCadList(sheet,dsField,listId,chipId){
   const rows=CAD_DATA[sheet]||[];
   const chip=document.getElementById(chipId);if(chip)chip.textContent=rows.length+' registros';
@@ -3121,7 +3213,7 @@ function openEditDesp(idx){
   // Garante que o valor atual esteja na lista mesmo que não seja cadastrado
   if(d._desp&&despOpts.indexOf(d._desp)<0)despOpts.unshift(d._desp);
   const despSel=despOpts.length
-    ?'<select class="fc" id="ed-desp">'+_opt(despOpts,d._desp)+'</select>'
+    ?'<select class="fc" id="ed-desp" onchange="aplicarTravaCategoria(\'ed-desp\',\'ed-cat\',\'ed-cat-nota\')">'+_opt(despOpts,d._desp)+'</select>'
     :'<input type="text" class="fc" id="ed-desp" value="'+d._desp+'">';
   document.getElementById('edit-modal-body').innerHTML=
     '<div class="fg">'+
@@ -3176,13 +3268,19 @@ async function saveEdit(){
   if(_editCtx.type==='REC'){
     data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_MOVIMENTACAO:gv('ed-tipo'),DS_FORMA_PAGAMENTO:gv('ed-forma'),DS_TIPO_PAGAMENTO:gv('ed-tipag'),VALOR:parseFloat(gv('ed-val'))||0};
   }else if(_editCtx.type==='DESP'){
-    data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_LOCAL:gv('ed-local'),DS_TIPO_DESPESA:gv('ed-tipo'),DS_CATEGORIA_DESPESA:gv('ed-cat'),DS_DESPESA:gv('ed-desp'),VALOR:parseFloat(gv('ed-val'))||0};
+    const despEd=gv('ed-desp');
+    data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_LOCAL:gv('ed-local'),DS_TIPO_DESPESA:gv('ed-tipo'),
+          DS_CATEGORIA_DESPESA:(categoriaDoItem(despEd)||gv('ed-cat')),DS_DESPESA:despEd,VALOR:parseFloat(gv('ed-val'))||0};
   }else if(_editCtx.type==='PROD'){
     data={COMPETENCIA:gv('ed-comp'),DATA:gv('ed-data'),DIA_SEMANA:gv('ed-dia'),DS_SABOR:gv('ed-sabor'),LITROS:parseFloat(gv('ed-lts'))||0,QUANTIDADE:parseInt(gv('ed-qtd'))||1};
   }else if(_editCtx.type==='CAD'){
     const novoNome=gv('ed-cad-nome').trim().toUpperCase();
     if(!novoNome){showToast('Preencha o nome','error');return;}
     data={};data[_editCtx.dsField]=novoNome;
+  }else if(_editCtx.type==='DESPCAD'){
+    const nm=gv('ed-dc-nome').trim().toUpperCase();
+    if(!nm){showToast('Preencha o nome','error');return;}
+    data={DS_DESPESA:nm,DS_CATEGORIA_DESPESA:gv('ed-dc-cat')};
   }else if(_editCtx.type==='UM'){
     const sigla=gv('ed-um-sigla').trim().toUpperCase();
     const desc=gv('ed-um-desc').trim();
@@ -3205,7 +3303,7 @@ async function saveEdit(){
     if(r.ok){
       showToast('Alteração salva ✅','success');
       closeEditModal();
-      if(_editCtx&&(_editCtx.type==='CAD'||_editCtx.type==='FUNC'||_editCtx.type==='TAXA'||_editCtx.type==='UM')){
+      if(_editCtx&&(_editCtx.type==='CAD'||_editCtx.type==='FUNC'||_editCtx.type==='TAXA'||_editCtx.type==='UM'||_editCtx.type==='DESPCAD')){
         // Recarrega o cadastro específico e re-renderiza
         const sh=_editCtx.type==='FUNC'?'CAD_FUNCIONARIO':_editCtx.type==='TAXA'?'CAD_TAXAS_CARTAO':_editCtx.sheet;
         delete CAD_DATA[sh];
@@ -3240,11 +3338,18 @@ function switchTab(btn,id){btn.closest('.pg').querySelectorAll('.tab').forEach(f
 function updDia(p){const v=document.getElementById(p+'-data').value;if(!v)return;document.getElementById(p+'-dia').value=DS[new Date(v+'T12:00:00').getDay()];}
 function updCC(){updDespFields();}
 function setSS(m){document.getElementById('sync-status').textContent=m;}
-function forceRefresh(){
+async function forceRefresh(){
   try{Object.keys(localStorage).forEach(function(k){if(k.indexOf(LS_KEY)===0)localStorage.removeItem(k);});}catch(e){}
   _idbOp(IDB_DADOS,'readwrite',function(o){return o.clear();}).catch(function(){});
   CAD_DATA={};
+  ALL_PROD_HIST=[];
+  Object.keys(_SIM_REF||{}).forEach(function(k){delete _SIM_REF[k];});
   showToast('🔄 Atualizando dados...','success');
+  // O cache do servidor dura 6h e só é invalidado por escritas FEITAS PELO PAINEL.
+  // Quem edita a planilha direto no Google Sheets não dispara essa invalidação,
+  // e via de regra é exatamente por isso que se clica em Atualizar.
+  setSS('🧹 Limpando cache do servidor...');
+  try{ await _fetchApi({action:'clearCache'},30000); }catch(e){ console.warn('clearCache:',e); }
   syncAll(false);
 }
 let _tt;function showToast(m,t){const el=document.getElementById('toast');el.textContent=m;el.className='toast '+t+' show';clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},3500);}
@@ -3299,7 +3404,7 @@ function registrarServiceWorker(){
 // O frontend depende de um backend que verifica identidade antes de apagar ou
 // sobrescrever. Se o Apps Script não tiver sido reimplantado, avisa em vez de
 // deixar o usuário descobrir na hora de excluir.
-const API_VERSION_ESPERADA=5;
+const API_VERSION_ESPERADA=6;
 // null = ainda não verificado · true = backend verifica identidade · false = backend antigo
 let _backendVerifica=null;
 async function checarVersaoBackend(){
