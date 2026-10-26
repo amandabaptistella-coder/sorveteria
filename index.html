@@ -125,6 +125,14 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
 .selbar .sb-n{font-size:12px;color:var(--ac);font-weight:600;}
 .selbar .sb-v{font-family:'DM Serif Display',serif;font-size:18px;color:var(--tx);}
 .selbar .sb-x{margin-left:auto;display:flex;gap:8px;}
+.cmp-row.sel{cursor:pointer;transition:background .12s;border-radius:6px;padding-left:6px;padding-right:6px;}
+.cmp-row.sel:hover{background:var(--sf2);}
+.cmp-row.sel.off{opacity:.38;}
+.cmp-chk{accent-color:var(--ac);width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-right:8px;}
+.cmp-head{display:flex;align-items:center;gap:10px;padding:7px 6px 9px;border-bottom:1px solid var(--bd);margin-bottom:5px;}
+.cmp-head button{background:var(--sf2);border:1px solid var(--bd);color:var(--mu);border-radius:5px;padding:3px 9px;font-size:10px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.cmp-head button:hover{border-color:var(--ac);color:var(--ac);}
+.cmp-head .cnt{font-size:10px;color:var(--mu);margin-left:auto;}
 .sim-modo{display:flex;gap:6px;margin-bottom:14px;}
 .sim-modo button{flex:1;padding:8px 10px;border-radius:7px;border:1px solid var(--bd);background:var(--sf2);color:var(--mu);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
 .sim-modo button.on{background:var(--ac);border-color:var(--ac);color:#0f0e0d;}
@@ -250,6 +258,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
     <button class="ni" onclick="goTo('simulador',this)"><span class="ic">🎯</span> Simulador</button>
     <div class="nl">Análises</div>
     <button class="ni" onclick="goTo('producao-dash',this)"><span class="ic">🏭</span> Produção</button>
+    <button class="ni" onclick="goTo('financeiro',this)"><span class="ic">💹</span> Financeiro</button>
     <div class="nl">Lançamentos</div>
     <button class="ni" onclick="goTo('receitas',this)"><span class="ic">💰</span> Receitas</button>
     <button class="ni" onclick="goTo('despesas',this)"><span class="ic">💸</span> Despesas</button>
@@ -328,6 +337,54 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,.02
       <div class="ch"><span class="ct">📂 Detalhamento Completo das Despesas Sorveteria</span><span class="chip" id="dre-detail-chip">—</span></div>
       <div class="cb" id="dre-detail-body"></div>
     </div>
+  </div>
+</div>
+
+<!-- ===== FINANCEIRO (ANÁLISE) ===== -->
+<div class="pg" id="page-financeiro">
+  <div class="ph"><div><div class="pt">Análise Financeira</div><div class="ps" id="sub-fin">—</div></div></div>
+  <div class="kg" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
+    <div class="kc gn"><div class="kl">Receita</div><div class="kv fm" id="kpi-fin-rec">—</div><div class="ks" id="kpi-fin-rec-s"></div></div>
+    <div class="kc rd"><div class="kl">Despesas</div><div class="kv fm" id="kpi-fin-desp">—</div><div class="ks" id="kpi-fin-desp-s"></div></div>
+    <div class="kc yw"><div class="kl">Resultado</div><div class="kv fm" id="kpi-fin-res">—</div><div class="ks" id="kpi-fin-res-s"></div></div>
+    <div class="kc bl"><div class="kl">Margem</div><div class="kv fm" id="kpi-fin-marg">—</div><div class="ks" id="kpi-fin-marg-s"></div></div>
+  </div>
+  <div class="cd" style="margin-bottom:16px;">
+    <div class="ch">
+      <span class="ct">Evolução Financeira</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="vtog" id="fin-mtog">
+          <button class="active" onclick="setFinMetrica('ambos',this)">Receita e Despesa</button>
+          <button onclick="setFinMetrica('receita',this)">Receita</button>
+          <button onclick="setFinMetrica('despesa',this)">Despesa</button>
+          <button onclick="setFinMetrica('resultado',this)">Resultado</button>
+        </div>
+        <div class="vtog" id="fin-vtog">
+          <button class="active" onclick="setFinMode('diario',this)">Diário</button>
+          <button onclick="setFinMode('mensal',this)">Mensal</button>
+          <button onclick="setFinMode('anual',this)">Anual</button>
+        </div>
+      </div>
+    </div>
+    <div class="yr-chips" id="fin-year-sel"></div>
+    <div class="chart-wrap" id="fin-chart-wrap">
+      <svg id="fin-area-svg" style="width:100%;display:block;overflow:visible;"></svg>
+      <div class="area-tip" id="fin-area-tip"></div>
+    </div>
+  </div>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="cd">
+      <div class="ch"><span class="ct">Comparativo de Período</span><span id="fin-comp-lbl" style="font-size:11px;color:var(--mu)"></span></div>
+      <div class="cb tsc" id="fin-comparativo" style="max-height:300px;"></div>
+    </div>
+    <div class="cd">
+      <div class="ch"><span class="ct">Despesas por Categoria</span><span class="chip" id="fin-rank-chip">—</span></div>
+      <div class="cb tsc" id="fin-top-cats" style="max-height:300px;"></div>
+    </div>
+  </div>
+  <div class="cd">
+    <div class="ch"><span class="ct">Resumo por Ano</span><span class="chip" id="fin-total-chip">—</span></div>
+    <div class="tsc" id="tbl-fin-anos"></div>
   </div>
 </div>
 
@@ -1814,6 +1871,7 @@ function renderPage(p,REC,DESP,PROD){
   else if(p==='dre'){renderDRE(REC,DESP);}
   else if(p==='simulador'){renderSimulador(REC,DESP);}
   else if(p==='producao-dash'){renderProdDash(PROD);}
+  else if(p==='financeiro'){renderFinanceiro(REC,DESP);}
   else if(p==='receitas'){renderTabelaRec(REC);}
   else if(p==='despesas'){renderTabelaDesp(DESP);}
   else if(p==='producao-lanc'){renderTabelaProd(PROD);}
@@ -2617,6 +2675,9 @@ function renderDRE(REC,DESP){
 // ── Produção Avançada ─────────────────────────────────────────
 let PROD_MODE='diario';
 let PROD_YEARS=new Set();
+// Sabores marcados no comparativo. Vazio = todos (é o padrão).
+let PROD_SABORES=new Set();
+function _prodSaborAtivo(s){return PROD_SABORES.size===0||PROD_SABORES.has(s);}
 
 // O gráfico de Produção compara ANOS, mas ALL_PROD passou a conter só o ano
 // selecionado e o anterior (carga por ano). Sem uma base completa, os anos
@@ -2653,6 +2714,290 @@ function toggleProdYear(y,chip){
   }
   _drawArea();_renderProdComp();
 }
+// ══════════════════════════════════════════════════════════════
+//  ANÁLISE FINANCEIRA
+//  Mesma mecânica do painel de Produção (diário/mensal/anual + chips de ano),
+//  trocando litros por reais e com um seletor de métrica.
+// ══════════════════════════════════════════════════════════════
+let FIN_MODE='diario';
+let FIN_METRICA='ambos';            // 'receita' | 'despesa' | 'resultado' | 'ambos'
+let FIN_YEARS=new Set();
+let FIN_CUR_REC=[],FIN_CUR_DESP=[];
+
+// Base histórica completa — os comparativos entre anos não cabem na carga por ano
+let ALL_FIN_REC=[],ALL_FIN_DESP=[],_finHistCarregando=false;
+function _finBaseRec(){return ALL_FIN_REC.length?ALL_FIN_REC:ALL_REC;}
+function _finBaseDesp(){return ALL_FIN_DESP.length?ALL_FIN_DESP:ALL_DESP;}
+async function carregarFinHistorico(){
+  if(ALL_FIN_REC.length||_finHistCarregando)return;
+  _finHistCarregando=true;
+  try{
+    const [rR,rD]=await Promise.all([
+      api({action:'read',sheet:'RECEITAS',competencia:'',ano:'',fmt:'rows'}),
+      api({action:'read',sheet:'DESPESAS',competencia:'',ano:'',fmt:'rows'})
+    ]);
+    ALL_FIN_REC=_expandir(rR).map(toRec);
+    ALL_FIN_DESP=_expandir(rD).map(toDesp);
+    if(getActivePage()==='financeiro')renderFinanceiro(filtrar(ALL_REC),filtrar(ALL_DESP));
+  }catch(e){console.warn('histórico financeiro não carregado:',e);}
+  finally{_finHistCarregando=false;}
+}
+
+// Só entradas contam como receita; despesas, só as da sorveteria
+function _finEntradas(arr){return (arr||[]).filter(function(r){return(r._tipo||'').toUpperCase()==='ENTRADA';});}
+function _finDespSorv(arr){return (arr||[]).filter(function(d){
+  const cc=(d._cc||'').toUpperCase(),loc=(d._local||'').toUpperCase();
+  return cc==='SORVETERIA'||(loc==='SORVETERIA'&&!cc);});}
+
+function setFinMode(m,btn){
+  FIN_MODE=m;
+  document.querySelectorAll('#fin-vtog button').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  _drawFin();
+}
+function setFinMetrica(m,btn){
+  FIN_METRICA=m;
+  document.querySelectorAll('#fin-mtog button').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  _drawFin();
+}
+function toggleFinYear(y,chip){
+  if(FIN_YEARS.has(y)){ if(FIN_YEARS.size>1){FIN_YEARS.delete(y);chip.classList.remove('active');chip.style.cssText='';} }
+  else{ FIN_YEARS.add(y);chip.classList.add('active');
+        chip.style.cssText='background:'+(YCMAP[y]||YC[0])+';border-color:'+(YCMAP[y]||YC[0])+';color:#0f0e0d;'; }
+  _drawFin();
+}
+
+function renderFinanceiro(REC,DESP){
+  carregarFinHistorico();
+  FIN_CUR_REC=_finEntradas(REC);
+  FIN_CUR_DESP=_finDespSorv(DESP);
+
+  const rec=soma(FIN_CUR_REC),desp=soma(FIN_CUR_DESP),res=rec-desp;
+  const marg=rec>0?res/rec*100:0;
+  document.getElementById('sub-fin').textContent=labelFiltro();
+  const set=function(id,v,sub){
+    const e=document.getElementById(id);if(e)e.textContent=v;
+    const t=document.getElementById(id+'-s');if(t)t.innerHTML=sub||'&nbsp;';
+  };
+  set('kpi-fin-rec',brl(rec),'<span class="kb pos">'+FIN_CUR_REC.length+' lançamentos</span>');
+  set('kpi-fin-desp',brl(desp),'<span class="kb neg">'+FIN_CUR_DESP.length+' lançamentos</span>');
+  set('kpi-fin-res',brl(res),'<span class="kb '+(res>=0?'pos':'neg')+'">'+(res>=0?'positivo':'negativo')+'</span>');
+  set('kpi-fin-marg',fDec(marg,1)+'%','<span class="kb '+(marg>=0?'pos':'neg')+'">sobre a receita</span>');
+
+  // Chips de ano, iguais aos da produção
+  const anoDe=function(r){return String(r._data||'').slice(0,4);};
+  const anos=[...new Set(_finBaseRec().map(anoDe).concat(_finBaseDesp().map(anoDe)))]
+    .filter(function(y){return/^\d{4}$/.test(y);}).sort();
+  anos.forEach(function(y,i){if(!YCMAP[y])YCMAP[y]=YC[i%YC.length];});
+  if(FIN_YEARS.size===0&&anos.length)FIN_YEARS.add(anos[anos.length-1]);
+  const sel=document.getElementById('fin-year-sel');
+  if(sel){
+    sel.innerHTML=anos.map(function(y){
+      const act=FIN_YEARS.has(y);
+      return'<button class="yr-chip'+(act?' active':'')+'" data-yr="'+y+'" style="'+
+        (act?'background:'+YCMAP[y]+';border-color:'+YCMAP[y]+';color:#0f0e0d;':'')+'">'+y+'</button>';
+    }).join('')+(_finHistCarregando?'<span style="font-size:10px;color:var(--mu);margin-left:8px;">⏳ carregando anos anteriores…</span>':'');
+    sel.querySelectorAll('.yr-chip').forEach(function(b){
+      b.addEventListener('click',function(){toggleFinYear(this.dataset.yr,this);});
+    });
+  }
+
+  _drawFin();_renderFinComp();_renderFinCats();_renderFinAnos();
+}
+
+// Soma por chave (dia AAAA-MM-DD ou mês AAAA-MM ou ano AAAA)
+function _finAgrupar(arr,corte){
+  const m={};
+  arr.forEach(function(r){
+    const d=String(r._data||'');if(!d)return;
+    const k=d.slice(0,corte);
+    m[k]=(m[k]||0)+(r._val||0);
+  });
+  return m;
+}
+
+function _drawFin(){
+  const svg=document.getElementById('fin-area-svg');
+  const wrap=document.getElementById('fin-chart-wrap');
+  if(!svg||!wrap)return;
+  const W=Math.max(wrap.offsetWidth-36,300);
+  const isD=FIN_MODE==='diario';
+  const H=isD?240:210,P={t:16,r:16,b:isD?56:38,l:62},CW=W-P.l-P.r,CH=H-P.t-P.b;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('height',H);
+
+  const quero=function(tipo){return FIN_METRICA==='ambos'?(tipo!=='resultado'):FIN_METRICA===tipo;};
+  let labels=[],series=[];
+
+  if(FIN_MODE==='anual'){
+    const anoDe=function(r){return String(r._data||'').slice(0,4);};
+    const anos=[...new Set(_finBaseRec().map(anoDe).concat(_finBaseDesp().map(anoDe)))]
+      .filter(function(y){return/^\d{4}$/.test(y);}).sort();
+    labels=anos;
+    const mR=_finAgrupar(_finEntradas(_finBaseRec()),4),mD=_finAgrupar(_finDespSorv(_finBaseDesp()),4);
+    if(quero('receita'))series.push({label:'Receita',color:'var(--gn)',pts:anos.map(function(y){return{l:y,v:mR[y]||0};})});
+    if(quero('despesa'))series.push({label:'Despesa',color:'var(--rd)',pts:anos.map(function(y){return{l:y,v:mD[y]||0};})});
+    if(quero('resultado'))series.push({label:'Resultado',color:'var(--yw)',pts:anos.map(function(y){return{l:y,v:(mR[y]||0)-(mD[y]||0)};})});
+  }else if(FIN_MODE==='mensal'){
+    labels=MN;
+    const mR=_finAgrupar(_finEntradas(_finBaseRec()),7),mD=_finAgrupar(_finDespSorv(_finBaseDesp()),7);
+    [...FIN_YEARS].sort().forEach(function(y){
+      const cor=YCMAP[y]||YC[0];
+      const pts=function(mapa,sinal){return MN.map(function(_,i){
+        const k=y+'-'+String(i+1).padStart(2,'0');
+        return{l:MN[i],v:(mapa[k]||0)*(sinal||1)};});};
+      if(quero('receita'))series.push({label:'Receita '+y,color:cor,pts:pts(mR)});
+      if(quero('despesa'))series.push({label:'Despesa '+y,color:cor,dash:true,pts:pts(mD)});
+      if(quero('resultado'))series.push({label:'Resultado '+y,color:cor,pts:MN.map(function(_,i){
+        const k=y+'-'+String(i+1).padStart(2,'0');
+        return{l:MN[i],v:(mR[k]||0)-(mD[k]||0)};})});
+    });
+  }else{
+    const mR=_finAgrupar(FIN_CUR_REC,10),mD=_finAgrupar(FIN_CUR_DESP,10);
+    const dias=[...new Set(Object.keys(mR).concat(Object.keys(mD)))].sort().slice(-60);
+    labels=dias;
+    if(quero('receita'))series.push({label:'Receita',color:'var(--gn)',pts:dias.map(function(d){return{l:fData(d),v:mR[d]||0};})});
+    if(quero('despesa'))series.push({label:'Despesa',color:'var(--rd)',pts:dias.map(function(d){return{l:fData(d),v:mD[d]||0};})});
+    if(quero('resultado'))series.push({label:'Resultado',color:'var(--yw)',pts:dias.map(function(d){return{l:fData(d),v:(mR[d]||0)-(mD[d]||0)};})});
+  }
+
+  if(!labels.length||!series.length){
+    svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" font-size="12" fill="#7a756e" font-family="DM Sans,sans-serif">Sem dados para o período</text>';
+    return;
+  }
+
+  const todos=series.reduce(function(a,sr){return a.concat(sr.pts.map(function(x){return x.v;}));},[]);
+  const maxV=Math.max.apply(null,todos.concat([1]));
+  const minV=Math.min.apply(null,todos.concat([0]));
+  const n=labels.length;
+  const xOf=function(i){return P.l+(n>1?i*(CW/(n-1)):CW/2);};
+  const span=(maxV-minV)||1;
+  const yOf=function(v){return P.t+CH-((v-minV)/span*CH);};
+
+  let h='';
+  [0,.25,.5,.75,1].forEach(function(r){
+    const y=P.t+CH*(1-r),v=minV+span*r;
+    h+='<line x1="'+P.l+'" y1="'+y+'" x2="'+(P.l+CW)+'" y2="'+y+'" class="chart-grid"/>';
+    h+='<text x="'+(P.l-5)+'" y="'+(y+4)+'" text-anchor="end" class="chart-lbl">'+
+       (Math.abs(v)>=1000?(v/1000).toFixed(0)+'k':v.toFixed(0))+'</text>';
+  });
+  if(minV<0){
+    const yz=yOf(0);
+    h+='<line x1="'+P.l+'" y1="'+yz+'" x2="'+(P.l+CW)+'" y2="'+yz+'" class="chart-axis"/>';
+  }
+  h+='<line x1="'+P.l+'" y1="'+(P.t+CH)+'" x2="'+(P.l+CW)+'" y2="'+(P.t+CH)+'" class="chart-axis"/>';
+
+  const step=isD?Math.max(1,Math.ceil(n/14)):(FIN_MODE==='mensal'?1:Math.max(1,Math.ceil(n/12)));
+  labels.forEach(function(l,i){
+    if(i%step===0||i===n-1){
+      const txt=isD?String(l).slice(8,10)+'/'+String(l).slice(5,7):l;
+      h+='<text x="'+xOf(i)+'" y="'+(H-6)+'" text-anchor="middle" class="chart-lbl">'+txt+'</text>';
+    }
+  });
+
+  series.forEach(function(sr){
+    const d=sr.pts.map(function(pt,i){return(i?'L':'M')+xOf(i)+','+yOf(pt.v);}).join(' ');
+    h+='<path d="'+d+'" fill="none" stroke="'+sr.color+'" stroke-width="2"'+
+       (sr.dash?' stroke-dasharray="5,4"':'')+' stroke-linejoin="round"/>';
+    sr.pts.forEach(function(pt,i){
+      h+='<circle cx="'+xOf(i)+'" cy="'+yOf(pt.v)+'" r="2.5" fill="'+sr.color+'">'+
+         '<title>'+_esc(sr.label)+' · '+_esc(String(pt.l))+': '+brl(pt.v)+'</title></circle>';
+    });
+  });
+
+  // Legenda
+  let lx=P.l;
+  series.slice(0,6).forEach(function(sr){
+    h+='<rect x="'+lx+'" y="2" width="9" height="3" fill="'+sr.color+'"/>'+
+       '<text x="'+(lx+13)+'" y="7" class="chart-lbl" style="font-size:9px">'+_esc(sr.label)+'</text>';
+    lx+=Math.max(70,sr.label.length*5.5+22);
+  });
+  svg.innerHTML=h;
+}
+
+// Comparativo de período: receita, despesa e resultado contra o período anterior
+function _renderFinComp(){
+  const el=document.getElementById('fin-comparativo'),lbl=document.getElementById('fin-comp-lbl');
+  if(!el)return;
+  const ano=getAno(),mes=getMes();
+  const anoDe=function(r){return String(r._data||'').slice(0,4);};
+  const mesDe=function(r){return String(r._data||'').slice(0,7);};
+  let pr=[],pd=[],prevLbl='';
+  if(ano&&mes){
+    const m=parseInt(mes),y=parseInt(ano);
+    const pc=m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0');
+    pr=_finEntradas(_finBaseRec()).filter(function(r){return mesDe(r)===pc;});
+    pd=_finDespSorv(_finBaseDesp()).filter(function(r){return mesDe(r)===pc;});
+    prevLbl='vs '+MF[parseInt(pc.slice(5))-1]+' '+pc.slice(0,4);
+  }else if(ano){
+    const py=String(parseInt(ano)-1);
+    pr=_finEntradas(_finBaseRec()).filter(function(r){return anoDe(r)===py;});
+    pd=_finDespSorv(_finBaseDesp()).filter(function(r){return anoDe(r)===py;});
+    prevLbl='vs '+py;
+  }else{prevLbl='Todos os períodos';}
+  lbl.textContent=prevLbl;
+
+  const linhas=[
+    {n:'Receita',    c:soma(FIN_CUR_REC),  p:soma(pr), bom:1},
+    {n:'Despesas',   c:soma(FIN_CUR_DESP), p:soma(pd), bom:-1},
+    {n:'Resultado',  c:soma(FIN_CUR_REC)-soma(FIN_CUR_DESP), p:soma(pr)-soma(pd), bom:1}
+  ];
+  el.innerHTML=linhas.map(function(l){
+    const d=l.p!==0?(l.c-l.p)/Math.abs(l.p)*100:null;
+    const positivo=l.bom>0?(d>=0):(d<0);
+    const dh=d!==null?'<span class="kb '+(positivo?'pos':'neg')+'">'+(d>=0?'▲':'▼')+' '+fDec(Math.abs(d),0)+'%</span>':'—';
+    return'<div class="cmp-row"><span class="cmp-name">'+l.n+'</span>'+
+      '<span class="cmp-val">'+brl(l.c)+'</span><span class="cmp-delta">'+dh+'</span></div>';
+  }).join('');
+}
+
+// Despesas por categoria, com barra proporcional
+function _renderFinCats(){
+  const el=document.getElementById('fin-top-cats');
+  if(!el)return;
+  const m={};
+  FIN_CUR_DESP.forEach(function(d){const c=(d._cat||'(sem categoria)').toUpperCase();m[c]=(m[c]||0)+(d._val||0);});
+  const itens=Object.keys(m).sort(function(a,b){return m[b]-m[a];});
+  const tot=itens.reduce(function(a,k){return a+m[k];},0);
+  const chip=document.getElementById('fin-rank-chip');
+  if(chip)chip.textContent=itens.length+' categorias';
+  const cores=['var(--yw)','var(--bl)','var(--rd)','var(--pu)','var(--gn)','#70b8e8'];
+  el.innerHTML=itens.length?itens.map(function(k,i){
+    const pct=tot>0?m[k]/tot*100:0;
+    return'<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;">'+
+      '<span style="font-size:12px;">'+_esc(k)+'</span>'+
+      '<span style="font-size:12px;color:var(--mu)">'+brl(m[k])+' · '+fDec(pct,1)+'%</span></div>'+
+      '<div class="pb"><div class="pf" style="width:'+pct+'%;background:'+cores[i%cores.length]+'"></div></div></div>';
+  }).join(''):'<p class="empty">Sem despesas no período</p>';
+}
+
+// Resumo por ano — a visão que mostra a trajetória
+function _renderFinAnos(){
+  const el=document.getElementById('tbl-fin-anos');
+  if(!el)return;
+  const anoDe=function(r){return String(r._data||'').slice(0,4);};
+  const mR=_finAgrupar(_finEntradas(_finBaseRec()),4),mD=_finAgrupar(_finDespSorv(_finBaseDesp()),4);
+  const anos=[...new Set(Object.keys(mR).concat(Object.keys(mD)))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
+  const chip=document.getElementById('fin-total-chip');
+  if(chip)chip.textContent=anos.length+' anos';
+  if(!anos.length){el.innerHTML='<p class="empty">Sem dados</p>';return;}
+  let html='<table><thead><tr><th>Ano</th><th class="tx-r">Receita</th><th class="tx-r">Despesas</th>'+
+           '<th class="tx-r">Resultado</th><th class="tx-r">Margem</th><th class="tx-r">vs ano anterior</th></tr></thead><tbody>';
+  anos.forEach(function(y,i){
+    const r=mR[y]||0,d=mD[y]||0,res=r-d,mg=r>0?res/r*100:0;
+    const ant=i>0?((mR[anos[i-1]]||0)-(mD[anos[i-1]]||0)):null;
+    const dl=(ant!==null&&ant!==0)?(res-ant)/Math.abs(ant)*100:null;
+    html+='<tr><td class="fm">'+y+'</td>'+
+      '<td class="tx-r tx-gn fm">'+brl(r)+'</td>'+
+      '<td class="tx-r tx-rd fm">'+brl(d)+'</td>'+
+      '<td class="tx-r fm '+(res>=0?'tx-gn':'tx-rd')+'">'+brl(res)+'</td>'+
+      '<td class="tx-r fm">'+fDec(mg,1)+'%</td>'+
+      '<td class="tx-r">'+(dl!==null?'<span class="kb '+(dl>=0?'pos':'neg')+'">'+(dl>=0?'▲':'▼')+' '+fDec(Math.abs(dl),0)+'%</span>':'—')+'</td></tr>';
+  });
+  el.innerHTML=html+'</tbody></table>';
+}
+
 function renderProdDash(PROD){
   PROD_CUR=PROD;
   carregarProdHistorico(); // base completa p/ comparar anos (não bloqueia)
@@ -2682,6 +3027,16 @@ function renderProdDash(PROD){
   });
   _drawArea();_renderProdComp();_renderProdRanking(PROD);_renderProdHist(PROD);
 }
+// Base do gráfico já filtrada pelos sabores marcados no comparativo
+function _prodBaseSel(){
+  if(PROD_SABORES.size===0)return _prodBase();
+  return _prodBase().filter(function(p){return PROD_SABORES.has(p._sabor);});
+}
+function _prodCurSel(){
+  if(PROD_SABORES.size===0)return PROD_CUR;
+  return (PROD_CUR||[]).filter(function(p){return PROD_SABORES.has(p._sabor);});
+}
+
 function _drawArea(){
   const svg=document.getElementById('prod-area-svg');
   const wrap=document.getElementById('prod-chart-wrap');
@@ -2694,10 +3049,11 @@ function _drawArea(){
   if(PROD_MODE==='anual'){
     // Extrai ano de _data (mais confiável) ou de _comp como fallback
     const anoOf=function(p){return(p._data||'').slice(0,4)||(p._comp||'').slice(0,4);};
-    const anos=[...new Set(_prodBase().map(anoOf))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
+    const base=_prodBaseSel();
+    const anos=[...new Set(base.map(anoOf))].filter(function(y){return/^\d{4}$/.test(y);}).sort();
     labels=anos;
     const vals=anos.map(function(y){
-      return _prodBase().filter(function(p){return anoOf(p)===y;}).reduce(function(s,p){return s+p._qtd;},0);
+      return base.filter(function(p){return anoOf(p)===y;}).reduce(function(s,p){return s+p._qtd;},0);
     });
     series=[{label:'Qtd',color:YC[0],pts:vals.map(function(v,i){return{l:anos[i],v:v};})}];
   }else if(PROD_MODE==='mensal'){
@@ -2706,7 +3062,7 @@ function _drawArea(){
     series=yearsArr.map(function(y){return{label:y,color:YCMAP[y]||YC[0],pts:MN.map(function(_,i){
       const m=String(i+1).padStart(2,'0');
       // Usa _data para o mês (consistente com filtrar)
-      const sum=_prodBase().filter(function(p){
+      const sum=_prodBaseSel().filter(function(p){
         const yrmo=(p._data||'').slice(0,7)||(p._comp||'').slice(0,7);
         return yrmo===y+'-'+m;
       }).reduce(function(s,p){return s+p._qtd;},0);
@@ -2714,7 +3070,7 @@ function _drawArea(){
     })};});
   }else{
     const dmap={};
-    PROD_CUR.forEach(function(p){if(p._data)dmap[p._data]=(dmap[p._data]||0)+p._qtd;});
+    _prodCurSel().forEach(function(p){if(p._data)dmap[p._data]=(dmap[p._data]||0)+p._qtd;});
     const show=Object.keys(dmap).sort().slice(-60);
     labels=show;
     series=[{label:'Qtd',color:YC[0],pts:show.map(function(d){return{l:fData(d),v:dmap[d]||0};})}];
@@ -2833,41 +3189,100 @@ function _renderProdComp(){
   const el=document.getElementById('prod-comparativo');
   const lbl=document.getElementById('prod-comp-lbl');
   const ano=getAno(),mes=getMes();
+  // Período é sempre pela DATA do lançamento. A coluna COMPETENCIA carrega o
+  // ano da importação, e usá-la fazia o período anterior vir vazio — todo
+  // sabor aparecia como "Novo".
+  const anoDe=function(p){return String(p._data||'').slice(0,4);};
+  const mesDe=function(p){return String(p._data||'').slice(0,7);};
+
   let cur=PROD_CUR,prev=[],prevLbl='';
   if(ano&&mes){
     const m=parseInt(mes),y=parseInt(ano);
     const pc=m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0');
-    prev=_prodBase().filter(function(p){return p._comp===pc;});
+    prev=_prodBase().filter(function(p){return mesDe(p)===pc;});
     prevLbl='vs '+MF[parseInt(pc.slice(5))-1]+' '+pc.slice(0,4);
   }else if(ano){
     const py=String(parseInt(ano)-1);
-    prev=_prodBase().filter(function(p){return p._comp.startsWith(py);});
+    prev=_prodBase().filter(function(p){return anoDe(p)===py;});
     prevLbl='vs '+py;
   }else{
-    // Sem filtro: compara último ano com o anterior
-    const anos=[...new Set(_prodBase().map(function(p){return p._comp.slice(0,4);}))].filter(Boolean).sort();
+    const anos=[...new Set(_prodBase().map(anoDe))].filter(function(a){return/^\d{4}$/.test(a);}).sort();
     if(anos.length>=2){
       const curAno=anos[anos.length-1],prevAno=anos[anos.length-2];
-      cur=_prodBase().filter(function(p){return p._comp.startsWith(curAno);});
-      prev=_prodBase().filter(function(p){return p._comp.startsWith(prevAno);});
+      cur=_prodBase().filter(function(p){return anoDe(p)===curAno;});
+      prev=_prodBase().filter(function(p){return anoDe(p)===prevAno;});
       prevLbl='vs '+prevAno;
     }else if(anos.length===1){
-      cur=ALL_PROD;prev=[];prevLbl='Sem período anterior';
+      cur=_prodBase();prev=[];prevLbl='Sem período anterior';
     }else{
       el.innerHTML='<p class="empty">Sem dados</p>';lbl.textContent='';return;
     }
   }
   lbl.textContent=prevLbl;
+
   const mc={},mp={};
   cur.forEach(function(p){if(p._sabor)mc[p._sabor]=(mc[p._sabor]||0)+p._qtd;});
   prev.forEach(function(p){if(p._sabor)mp[p._sabor]=(mp[p._sabor]||0)+p._qtd;});
-  const sabores=[...new Set(Object.keys(mc).concat(Object.keys(mp)))].filter(Boolean).sort(function(a,b){return(mc[b]||0)-(mc[a]||0);}).slice(0,20);
-  el.innerHTML=sabores.length?sabores.map(function(s){
+  // TODOS os sabores do período, não só os 20 primeiros — a lista é o seletor
+  const sabores=[...new Set(Object.keys(mc).concat(Object.keys(mp)))].filter(Boolean)
+    .sort(function(a,b){return(mc[b]||0)-(mc[a]||0);});
+  _PROD_SAB_LISTA=sabores.filter(function(x){return(mc[x]||0)>0;});
+
+  if(!sabores.length){el.innerHTML='<p class="empty">Sem dados de sabores</p>';return;}
+
+  // Sabores que só existiram no período anterior não têm o que mostrar no gráfico
+  const comProducao=sabores.filter(function(s){return(mc[s]||0)>0;});
+  const nSel=PROD_SABORES.size===0?comProducao.length:comProducao.filter(_prodSaborAtivo).length;
+  const todos=PROD_SABORES.size===0;
+  const saiuDeLinha=sabores.length-comProducao.length;
+  const head='<div class="cmp-head">'+
+    '<input type="checkbox" class="cmp-chk" '+(todos?'checked':'')+' onchange="prodSaboresTodos(this.checked)" title="Selecionar todos">'+
+    '<button onclick="prodSaboresTodos(true)">Todos</button>'+
+    '<button onclick="prodSaboresNenhum()">Limpar</button>'+
+    '<span class="cnt">'+nSel+' de '+comProducao.length+' no gráfico'+
+      (saiuDeLinha?' · '+saiuDeLinha+' sem produção':'')+'</span></div>';
+
+  el.innerHTML=head+sabores.map(function(s){
     const c=mc[s]||0,p=mp[s]||0;
     const dlt=p>0?(c-p)/p*100:null;
-    const dHtml=dlt!==null?'<span class="kb '+(dlt>=0?'pos':'neg')+'">'+(dlt>=0?'▲':'▼')+' '+fDec(Math.abs(dlt),0)+'%</span>':(c>0?'<span class="chip" style="font-size:10px">Novo</span>':'—');
-    return'<div class="cmp-row"><span class="cmp-name">'+s+'</span><span class="cmp-val">'+c+' un.</span><span class="cmp-delta">'+dHtml+'</span></div>';
-  }).join(''):'<p class="empty">Sem dados de sabores</p>';
+    const dHtml=c===0
+      ?'<span class="chip" style="font-size:10px;opacity:.7">Sem produção</span>'
+      :(dlt!==null
+        ?'<span class="kb '+(dlt>=0?'pos':'neg')+'">'+(dlt>=0?'▲':'▼')+' '+fDec(Math.abs(dlt),0)+'%</span>'
+        :'<span class="chip" style="font-size:10px">Novo</span>');
+    const on=_prodSaborAtivo(s);
+    return'<div class="cmp-row sel'+(on?'':' off')+'" onclick="prodSaborToggle(\''+_jq(s)+'\')">'+
+      '<input type="checkbox" class="cmp-chk" '+(on?'checked':'')+' onclick="event.stopPropagation();prodSaborToggle(\''+_jq(s)+'\')">'+
+      '<span class="cmp-name">'+_esc(s)+'</span>'+
+      '<span class="cmp-val">'+c+' un.</span>'+
+      '<span class="cmp-delta">'+dHtml+'</span></div>';
+  }).join('');
+}
+
+let _PROD_SAB_LISTA=[];
+
+function prodSaborToggle(sabor){
+  // Conjunto vazio significa "todos": ao desmarcar o primeiro, materializa a lista
+  if(PROD_SABORES.size===0)_PROD_SAB_LISTA.forEach(function(s){PROD_SABORES.add(s);});
+  if(PROD_SABORES.has(sabor))PROD_SABORES.delete(sabor);else PROD_SABORES.add(sabor);
+  if(PROD_SABORES.size===_PROD_SAB_LISTA.length)PROD_SABORES.clear(); // todos marcados = sem filtro
+  _prodAtualizarSelecao();
+}
+function prodSaboresTodos(marcar){
+  PROD_SABORES.clear();                 // vazio = todos
+  if(!marcar&&_PROD_SAB_LISTA.length)PROD_SABORES.add(_PROD_SAB_LISTA[0]);
+  _prodAtualizarSelecao();
+}
+function prodSaboresNenhum(){
+  // "Limpar" deixa só o primeiro sabor — gráfico vazio não ajuda ninguém
+  PROD_SABORES.clear();
+  if(_PROD_SAB_LISTA.length)PROD_SABORES.add(_PROD_SAB_LISTA[0]);
+  _prodAtualizarSelecao();
+}
+function _prodAtualizarSelecao(){
+  _drawArea();
+  _renderProdComp();
+  _renderProdRanking(PROD_CUR);
 }
 function _renderProdRanking(PROD){
   const map={};
